@@ -3,6 +3,7 @@ package com.centraldungeon.features.catalogs;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -168,6 +169,44 @@ class AdminCatalogApiIT {
         create(owner, "Horror").andExpect(status().isCreated());
         create(plainPlayer, "Mystery").andExpect(status().isForbidden());
         create(admin, "one-shot").andExpect(status().isConflict());
+    }
+
+    /** A tag group's definition is the admin's to write, on its canonical entry, and every member reads it. */
+    @Test
+    void anAdminAndAnOwnerDefineATagGroup() throws Exception {
+        define(admin, head, "{\"category\":\"Format\",\"description\":\"A single session.\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("Format"))
+                .andExpect(jsonPath("$.description").value("A single session."));
+        define(owner, head, "{\"category\":null,\"description\":\"One night only.\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").doesNotExist());
+
+        as(get("/api/v1/admin/catalogs/tags/" + alias + "/group"), admin)
+                .andExpect(jsonPath("$[1].description").value("One night only."));
+    }
+
+    @Test
+    void definingAnAliasIsAConflictWithItsOwnCode() throws Exception {
+        define(admin, alias, "{\"category\":\"Format\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("CATALOG_VALUE_NOT_CANONICAL"));
+    }
+
+    @Test
+    void aDefinitionIsValidated() throws Exception {
+        define(admin, head, "{\"description\":\"" + "x".repeat(501) + "\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+        define(admin, head, "{\"category\":\"NotACategory\"}")
+                .andExpect(status().isBadRequest());
+        define(plainPlayer, head, "{\"category\":\"Format\"}").andExpect(status().isForbidden());
+    }
+
+    private ResultActions define(User actor, String id, String body) throws Exception {
+        return mockMvc.perform(bearer(put("/api/v1/tags/" + id + "/definition"), actor)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
     }
 
     private ResultActions create(User actor, String name) throws Exception {

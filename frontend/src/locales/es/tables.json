@@ -94,6 +94,7 @@
     "applyReviewNoFiles": "Sin archivos adjuntos",
     "applyFilesFailed": "No se pudieron subir: {{names}}. La postulación se envió igual con lo que sí se subió.",
     "permitted": "Qué se permite",
+    "safetyTags": "Advertencias de contenido y seguridad",
     "schedule": "Agenda",
     "scheduleTimeZone": "Horarios en tu zona ({{timeZone}}).",
     "scheduleConflict": "Choca con una mesa tuya",
@@ -148,5 +149,24 @@
     "table_system": "sistema",
     "table_tag": "tag",
     "table_platform": "plataforma"
+  },
+  "sections": {
+    "remove": "Quitar",
+    "characterCreation": {
+      "label": "Creación de personaje",
+      "hint": "Nivel inicial, método, fuentes permitidas: lo que alguien necesita saber para armar su personaje."
+    },
+    "whatToExpect": {
+      "label": "Qué esperar",
+      "hint": "Cómo es una sesión: el tono, el ritmo, cuánto combate y cuánto rol."
+    },
+    "equipment": {
+      "label": "Equipo",
+      "hint": "Lo que cada jugador necesita tener a mano: dados, micrófono, hoja de personaje."
+    },
+    "safety": {
+      "label": "Seguridad y content warnings",
+      "hint": "Las herramientas de seguridad que usas y los temas sensibles, en tus palabras. Para que la mesa se pueda filtrar por ellos, márcalos también con las etiquetas de seguridad."
+    }
   }
 }

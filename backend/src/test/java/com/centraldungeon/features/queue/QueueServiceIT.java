@@ -697,7 +697,7 @@ class QueueServiceIT {
 
     private String pendingRequest(User asker, ApprovalRequestType type, String justification) {
         return approvalService
-                .submit(type, justification, new CurrentUser(asker.getId(), Set.of(PlatformRole.PLAYER.roleName())))
+                .submit(type, justification, null, new CurrentUser(asker.getId(), Set.of(PlatformRole.PLAYER.roleName())))
                 .id();
     }
 

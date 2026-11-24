@@ -28,6 +28,10 @@ export function createGameTableSchema(maxPlayersCap: number) {
     description: z.string().max(10000).optional(),
     permitted: z.string().max(10000).optional(),
     requirements: z.string().max(10000).optional(),
+    characterCreation: z.string().max(10000).optional(),
+    whatToExpect: z.string().max(10000).optional(),
+    equipment: z.string().max(10000).optional(),
+    safety: z.string().max(10000).optional(),
     tableTypeId: z.string().optional(),
     /** `YYYY-MM-DDTHH:mm` exactly as an `<input type="datetime-local">` gives it, in local time. */
     startDate: z.string().optional(),

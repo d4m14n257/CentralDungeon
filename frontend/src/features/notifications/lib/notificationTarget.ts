@@ -40,6 +40,8 @@ export function notificationTarget(notification: Notification): string | null {
 
   // A request that was resolved. Its reference says where the requester finds the outcome:
   // - `user` (`MasterGrant`, `TableOpen`, `General`): their own profile, where a granted role becomes visible.
+  //   An approved `TableOpen` created a draft and carries its id: the click lands on that draft, in the
+  //   master context, because writing it is the next thing to do.
   // - `game_table` (`TablePause`): the requester is a master of that table, so their own view of it,
   //   whose status notice shows the outcome. Never the public detail, which is the player's view.
   // - `table_registration` (`PlayerBan`): the veto was asked from the table's players tab, so that is where
@@ -52,6 +54,9 @@ export function notificationTarget(notification: Notification): string | null {
     }
     if (relatedEntityType === 'table_registration') {
       return notification.params?.tableId ? masterTablePlayersPath(notification.params.tableId) : null
+    }
+    if (notification.notificationType === 'ApprovalRequestApproved' && notification.params?.tableId) {
+      return masterTableDetailPath(notification.params.tableId)
     }
     return profilePath()
   }

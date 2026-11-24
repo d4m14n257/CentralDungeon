@@ -122,6 +122,15 @@ public final class ConflictException extends ApiException {
     public static final String MASTER_ROLE_ALREADY_HELD = "MASTER_ROLE_ALREADY_HELD";
 
     /**
+     * Approving a request whose effect is handed to the requester - a table to open in their name -
+     * when their account is no longer in good standing.
+     *
+     * <p>Its own code because no retry fixes it and the admin has something else to do: refuse the
+     * request instead, or wait until the account is restored.
+     */
+    public static final String REQUESTER_NOT_ACTIVE = "REQUESTER_NOT_ACTIVE";
+
+    /**
      * Acting on an item of the shared admin tray that <b>another admin holds</b> (ADR-16 §5) - reserving
      * it, giving it back, or resolving it.
      *
@@ -197,6 +206,12 @@ public final class ConflictException extends ApiException {
 
     /** Editing the profile before onboarding is done (ADR-10 §4): the first fill-in has its own endpoint. */
     public static final String ONBOARDING_PENDING = "ONBOARDING_PENDING";
+
+    /**
+     * Writing on an alias what only its group's canonical entry stores, such as a tag's category and
+     * definition. Its own code because the way out is specific: do it on the canonical entry.
+     */
+    public static final String CATALOG_VALUE_NOT_CANONICAL = "CATALOG_VALUE_NOT_CANONICAL";
 
     /**
      * @param message what state made the request impossible, in English and for a log (ADR-23 §3)

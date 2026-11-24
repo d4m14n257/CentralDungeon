@@ -78,6 +78,13 @@ public class ApprovalRequest {
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String justification;
 
+    /**
+     * The name the requester proposes for the table they ask to open. Set only on a {@code TableOpen}
+     * request, where approving it creates a draft with this name; null for every other type.
+     */
+    @Column(name = "proposed_table_name", length = 128)
+    private @Nullable String proposedTableName;
+
     /** Where the request is. It leaves {@link ApprovalStatus#Pending} exactly once. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
@@ -146,11 +153,32 @@ public class ApprovalRequest {
             String entityId,
             User requestedBy,
             String justification) {
+        this(requestType, entityType, entityId, requestedBy, justification, null);
+    }
+
+    /**
+     * Opens a request, Pending and unreserved, that carries the name of the table it asks to open.
+     *
+     * @param requestType       which request this is
+     * @param entityType        what kind of thing it is about
+     * @param entityId          the id of that thing, validated by the caller
+     * @param requestedBy       who is asking
+     * @param justification     why, never blank
+     * @param proposedTableName the name of the table to open, for a {@code TableOpen}; null otherwise
+     */
+    public ApprovalRequest(
+            ApprovalRequestType requestType,
+            String entityType,
+            String entityId,
+            User requestedBy,
+            String justification,
+            @Nullable String proposedTableName) {
         this.requestType = requestType;
         this.entityType = entityType;
         this.entityId = entityId;
         this.requestedBy = requestedBy;
         this.justification = justification;
+        this.proposedTableName = proposedTableName;
     }
 
     /** Assigns the id and stamps {@code createdAt} on insert. Called by JPA, never by application code. */
@@ -266,6 +294,15 @@ public class ApprovalRequest {
      */
     public String getJustification() {
         return justification;
+    }
+
+    /**
+     * Returns the name proposed for the table a {@code TableOpen} request asks to open.
+     *
+     * @return the proposed name, or null for every other type
+     */
+    public @Nullable String getProposedTableName() {
+        return proposedTableName;
     }
 
     /**

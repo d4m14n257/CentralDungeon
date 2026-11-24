@@ -1,5 +1,8 @@
 package com.centraldungeon.features.catalogs.dto;
 
+import com.centraldungeon.features.catalogs.TagCategory;
+import org.jspecify.annotations.Nullable;
+
 /**
  * One catalog value as everyone outside /admin/catalogs sees it: the combobox of the wizard, and
  * later the explorer's filters.
@@ -15,6 +18,13 @@ package com.centraldungeon.features.catalogs.dto;
  *               {@code Rejected}, {@code Disabled}). It travels because the master who just
  *               proposed a value has to be told it is pending: a table tagged with something the
  *               other players cannot see yet has to say so (ADR-12 §3)
+ * @param category    the category of the value's group, read from its canonical entry when the
+ *                    value is an alias. Only tags have one: always null for systems and platforms,
+ *                    and null for a tag group nobody has classified
+ * @param description the definition of the value's group in plain text, read from its canonical
+ *                    entry when the value is an alias. Only tags have one: always null for systems
+ *                    and platforms, and null for a tag group nobody has defined
  */
-public record CatalogValueResponse(String id, String name, String status) {
+public record CatalogValueResponse(
+        String id, String name, String status, @Nullable TagCategory category, @Nullable String description) {
 }

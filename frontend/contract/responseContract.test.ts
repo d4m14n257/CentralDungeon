@@ -68,6 +68,7 @@ const MIRRORS: Record<string, string> = {
   TableFileResponse: 'TableFile',
   TablePlayerResponse: 'TablePlayer',
   TableScheduleEntry: 'TableScheduleEntry',
+  TableSections: 'TableSections',
   TableSessionResponse: 'TableSession',
   TableStatusChangeResponse: 'TableStatusChange',
   TableTypeResponse: 'TableType',

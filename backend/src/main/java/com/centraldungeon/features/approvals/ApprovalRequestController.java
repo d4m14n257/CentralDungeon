@@ -54,8 +54,8 @@ public class ApprovalRequestController {
      * @param request     what is being asked for, and why. No entity id: the request is about the
      *                    actor, who comes from the token
      * @param currentUser the actor, from the token (ADR-05 §5)
-     * @return 201 with the request and a {@code Location} header. 400 when the reason is blank or the
-     *         type is not one of the three, 409 when the same request is already open or when the
+     * @return 201 with the request and a {@code Location} header. 400 when the reason is blank, the
+     *         type is not one of the three, or a {@code TableOpen} names no table, 409 when the same request is already open or when the
      *         Master role is already held
      */
     @PostMapping
@@ -64,7 +64,7 @@ public class ApprovalRequestController {
             @Valid @RequestBody SubmitApprovalRequestRequest request,
             @AuthenticationPrincipal CurrentUser currentUser) {
         ApprovalRequestDetailResponse created =
-                approvalService.submit(request.type(), request.justification(), currentUser);
+                approvalService.submit(request.type(), request.justification(), request.tableName(), currentUser);
         // The Location points at the admin route, which is the only one that reads a request by id.
         // It is the resource's canonical address even though this caller cannot open it: a 201 whose
         // Location is invented, or absent, is worse than one pointing where the thing actually lives.

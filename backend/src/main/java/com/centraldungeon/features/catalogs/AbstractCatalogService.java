@@ -102,6 +102,36 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      */
     protected abstract List<CatalogUsageCount> countUses(Collection<String> valueIds);
 
+    /**
+     * What each value's group says about itself, for a whole page at once. Only a catalog whose
+     * groups carry a category and a definition overrides it; for the others there is nothing to
+     * read, so the default answers without a query.
+     *
+     * <p>An alias gets its canonical entry's definition, never one of its own: the definition
+     * belongs to the group. An override reads the canonical entries the page needs in one query,
+     * not one per row.
+     *
+     * @param values the page's values
+     * @return value id to its group's definition. A value that is absent reads as {@link CatalogDefinition#NONE}
+     */
+    protected Map<String, CatalogDefinition> definitionsOf(List<E> values) {
+        return Map.of();
+    }
+
+    /**
+     * Moves a group's definition from the canonical entry that stops heading it to the one that
+     * takes over, when a merge, a promotion, a disable with a successor or an acceptance into a
+     * group changes who heads it. Only the fields the receiver has empty are filled - what it
+     * already says wins - and the giver is left empty, since only a canonical entry stores one.
+     *
+     * <p>Does nothing by default: only a catalog whose groups carry a definition overrides it.
+     *
+     * @param from the value that stops being a canonical entry
+     * @param to   the canonical entry that heads the group from now on
+     */
+    protected void handOverDefinition(E from, E to) {
+    }
+
     // ----------------------------------------------------------------- reads
 
     /**
@@ -118,7 +148,8 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     public PageResponse<CatalogValueResponse> search(@Nullable String query, Pageable pageable) {
         SearchQuery parsed = SearchQueryParser.parse(query, CatalogSearchField.wireNames());
         Page<E> page = repository.findAll(CatalogSearchSpecification.accepted(parsed), pageable);
-        return PageResponse.from(page.map(catalogMapper::toResponse));
+        Map<String, CatalogDefinition> definitions = definitionsOf(page.getContent());
+        return PageResponse.from(page.map(value -> toResponse(value, definitions)));
     }
 
     /**
@@ -131,7 +162,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      */
     @Transactional(readOnly = true)
     public CatalogValueResponse find(String id) {
-        return catalogMapper.toResponse(getById(id));
+        return toResponse(getById(id));
     }
 
     /**
@@ -160,8 +191,9 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
         Map<String, String> canonicalNames = canonicalNamesOf(values);
         Map<String, Long> uses = usesOf(values);
         Map<String, Long> aliasCounts = aliasCountsOf(values);
+        Map<String, CatalogDefinition> definitions = definitionsOf(values);
 
-        return PageResponse.from(page.map(value -> toAdminResponse(value, canonicalNames, uses, aliasCounts)));
+        return PageResponse.from(page.map(value -> toAdminResponse(value, canonicalNames, uses, aliasCounts, definitions)));
     }
 
     /**
@@ -187,9 +219,10 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
         Map<String, String> canonicalNames = canonicalNamesOf(members);
         Map<String, Long> uses = usesOf(members);
         Map<String, Long> aliasCounts = aliasCountsOf(members);
+        Map<String, CatalogDefinition> definitions = definitionsOf(members);
         return members.stream()
                 .sorted(Comparator.comparing((E member) -> !member.isCanonical()).thenComparing(CatalogValue::getName))
-                .map(member -> toAdminResponse(member, canonicalNames, uses, aliasCounts))
+                .map(member -> toAdminResponse(member, canonicalNames, uses, aliasCounts, definitions))
                 .toList();
     }
 
@@ -293,7 +326,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
             throw new ConflictException(
                     type().singular() + " '" + existing.getName() + "' already exists - pick it instead of proposing it again");
         });
-        return catalogMapper.toResponse(repository.save(newValue(name)));
+        return toResponse(repository.save(newValue(name)));
     }
 
     // -------------------------------------------------- the admin operations
@@ -347,7 +380,15 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
                     type().singular() + " '" + value.getName() + "' is " + value.getStatus() + " and cannot be accepted"
                             + (value.getStatus() == CatalogStatus.Disabled ? " - restore it instead" : ""));
         }
-        value.setCanonicalId(canonicalId == null ? null : validatedCanonicalTarget(value, canonicalId).getId());
+        if (canonicalId == null) {
+            value.setCanonicalId(null);
+        } else {
+            E target = validatedCanonicalTarget(value, canonicalId);
+            // A proposal heads a group of one until now, so joining another is a merge of that group.
+            handOverDefinition(value, target);
+            value.setCanonicalId(target.getId());
+            repository.save(target);
+        }
         value.setStatus(CatalogStatus.Accepted);
         value.setDeletedAt(null);
         return toAdminResponse(repository.save(value));
@@ -409,10 +450,11 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
         List<E> aliases = repository.findByCanonicalId(source.getId());
         aliases.forEach(alias -> alias.setCanonicalId(target.getId()));
         source.setCanonicalId(target.getId());
+        handOverDefinition(source, target);
 
         repository.saveAll(aliases);
         repository.save(source);
-        return toAdminResponse(target);
+        return toAdminResponse(repository.save(target));
     }
 
     /**
@@ -504,6 +546,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
         siblings.forEach(sibling -> sibling.setCanonicalId(member.getId()));
         formerHead.setCanonicalId(member.getId());
         member.setCanonicalId(null);
+        handOverDefinition(formerHead, member);
 
         repository.saveAll(siblings);
         repository.save(formerHead);
@@ -546,6 +589,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
                     .filter(alias -> !alias.getId().equals(successor.getId()))
                     .forEach(alias -> alias.setCanonicalId(successor.getId()));
             value.setCanonicalId(successor.getId());
+            handOverDefinition(value, successor);
             repository.saveAll(aliases);
         }
 
@@ -689,14 +733,37 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Single-value flavour: one extra lookup is fine outside a listing.
+     * Single-value flavour of the public view: one extra lookup is fine outside a listing.
      *
      * @param value the value to describe
-     * @return the admin view of it, with its canonical name and usage count resolved
+     * @return the public view of it, with its group's definition resolved
      */
-    private AdminCatalogValueResponse toAdminResponse(E value) {
+    private CatalogValueResponse toResponse(E value) {
+        return toResponse(value, definitionsOf(List.of(value)));
+    }
+
+    /**
+     * Builds the public view from definitions already resolved for the whole page.
+     *
+     * @param value       the value to describe
+     * @param definitions value id to its group's definition, for the page. A missing entry means none
+     * @return the public view of the value
+     */
+    private CatalogValueResponse toResponse(E value, Map<String, CatalogDefinition> definitions) {
+        CatalogDefinition definition = definitions.getOrDefault(value.getId(), CatalogDefinition.NONE);
+        return catalogMapper.toResponse(value, definition.category(), definition.description());
+    }
+
+    /**
+     * Single-value flavour of the admin view: one extra lookup is fine outside a listing. Protected
+     * so an operation a concrete catalog adds answers in the same shape as the shared ones.
+     *
+     * @param value the value to describe
+     * @return the admin view of it, with its canonical name, usage count and definition resolved
+     */
+    protected AdminCatalogValueResponse toAdminResponse(E value) {
         List<E> single = List.of(value);
-        return toAdminResponse(value, canonicalNamesOf(single), usesOf(single), aliasCountsOf(single));
+        return toAdminResponse(value, canonicalNamesOf(single), usesOf(single), aliasCountsOf(single), definitionsOf(single));
     }
 
     /**
@@ -706,16 +773,24 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      * @param canonicalNames canonical id to name, for the page
      * @param uses           value id to usage count, for the page. A missing entry means zero
      * @param aliasCounts    canonical id to how many aliases point at it. A missing entry means zero
+     * @param definitions    value id to its group's definition, for the page. A missing entry means none
      * @return the admin view of the value
      */
     private AdminCatalogValueResponse toAdminResponse(
-            E value, Map<String, String> canonicalNames, Map<String, Long> uses, Map<String, Long> aliasCounts) {
+            E value,
+            Map<String, String> canonicalNames,
+            Map<String, Long> uses,
+            Map<String, Long> aliasCounts,
+            Map<String, CatalogDefinition> definitions) {
         String canonicalId = value.getCanonicalId();
+        CatalogDefinition definition = definitions.getOrDefault(value.getId(), CatalogDefinition.NONE);
         return catalogMapper.toAdminResponse(
                 value,
                 canonicalId == null ? null : canonicalNames.get(canonicalId),
                 uses.getOrDefault(value.getId(), 0L),
-                aliasCounts.getOrDefault(value.getId(), 0L));
+                aliasCounts.getOrDefault(value.getId(), 0L),
+                definition.category(),
+                definition.description());
     }
 
     /**

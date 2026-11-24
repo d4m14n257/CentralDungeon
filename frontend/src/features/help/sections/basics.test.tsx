@@ -126,15 +126,15 @@ describe('RequestsHelp', () => {
     expect(document.body.textContent).toMatch(/respuesta también lleva motivo obligatorio/i)
   })
 
-  /** The three kinds, each said where it is asked for - and the one that surprises people. */
-  it('names the three kinds and warns that approving a table does not create it', () => {
+  /** The three kinds, each said where it is asked for - and that a single table comes without the role. */
+  it('names the three kinds and says approving a table creates a draft without the role', () => {
     render(<RequestsHelp />)
 
     const body = document.body.textContent ?? ''
     expect(body).toMatch(/Rol de master/)
     expect(body).toMatch(/Mesa nueva/)
     expect(body).toMatch(/Consulta/)
-    expect(body).toMatch(/no crea la mesa/i)
+    expect(body).toMatch(/se crea un borrador con ese nombre que diriges tú, sin recibir el rol/i)
   })
 
   /** ADR-20 §6: the help teaches the doing and not only the rule. */

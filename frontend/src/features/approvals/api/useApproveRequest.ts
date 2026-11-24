@@ -13,10 +13,9 @@ import type { ResolveApprovalRequestInput } from '../types'
  * invalidates the users branch as well: the role it just moved is on a screen this one knows nothing
  * about, and leaving that cache in place would show an account without a role it now holds.
  *
- * **Approving a `TableOpen` does not create the table.** The request carries no name, no system, no
- * seats and no agenda, so there is nothing to create it from; what approving records is that the
- * request stands, and the table is created by an admin from `/admin/tables` (ADR-06 §7). `General` has no
- * effect beyond being closed — that is its nature.
+ * **Approving a `TableOpen` creates a draft** with the name the requester proposed, run by them as
+ * its Primary and without granting them the role; they fill it in and send it to review themselves.
+ * `General` has no effect beyond being closed — that is its nature.
  *
  * Refused with `REQUEST_ALREADY_RESOLVED` when somebody else got there first, with
  * `REQUEST_ENTITY_GONE` when what the request pointed at no longer exists (ADR-16 §2), and since F3.3 with

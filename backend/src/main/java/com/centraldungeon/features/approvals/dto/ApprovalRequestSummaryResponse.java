@@ -32,6 +32,8 @@ import org.jspecify.annotations.Nullable;
  * @param subjectName       for a veto request, the display name of the person it is about - an admin
  *                          deciding it has to read whom it concerns, not only who asked. Null for
  *                          every other type, whose subject is the requester
+ * @param proposedTableName for a {@code TableOpen}, the name proposed for the table; null for every
+ *                          other type
  * @param createdAt         when it was asked, in UTC
  */
 public record ApprovalRequestSummaryResponse(
@@ -44,5 +46,6 @@ public record ApprovalRequestSummaryResponse(
         @Nullable String claimedByName,
         @Nullable String gameTableId,
         @Nullable String subjectName,
+        @Nullable String proposedTableName,
         LocalDateTime createdAt) {
 }

@@ -60,6 +60,22 @@ public class GameTable extends BaseEntity {
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String requirements;
 
+    /** Optional section: how characters are made for this table. Rich text, same sanitization as the description. */
+    @Column(name = "character_creation", columnDefinition = "LONGTEXT")
+    private @Nullable String characterCreation;
+
+    /** Optional section: what a session at this table is like. Rich text, same sanitization as the description. */
+    @Column(name = "what_to_expect", columnDefinition = "LONGTEXT")
+    private @Nullable String whatToExpect;
+
+    /** Optional section: what a player needs to have at hand. Rich text, same sanitization as the description. */
+    @Column(name = "equipment", columnDefinition = "LONGTEXT")
+    private @Nullable String equipment;
+
+    /** Optional section: the safety tools used and the content warnings. Rich text, same sanitization as the description. */
+    @Column(name = "safety", columnDefinition = "LONGTEXT")
+    private @Nullable String safety;
+
     /**
      * The day the table starts running - the cut-off the calendar is laid out from (ADR-08 §3, ADR-07 §4).
      *
@@ -239,6 +255,78 @@ public class GameTable extends BaseEntity {
      */
     public void setRequirements(@Nullable String requirements) {
         this.requirements = requirements;
+    }
+
+    /**
+     * Returns the optional section on how characters are made for this table.
+     *
+     * @return the section as rich text, or null when the master did not write it
+     */
+    public @Nullable String getCharacterCreation() {
+        return characterCreation;
+    }
+
+    /**
+     * Sets the optional section on how characters are made for this table.
+     *
+     * @param characterCreation rich text, already sanitized by the service
+     */
+    public void setCharacterCreation(@Nullable String characterCreation) {
+        this.characterCreation = characterCreation;
+    }
+
+    /**
+     * Returns the optional section on what a session at this table is like.
+     *
+     * @return the section as rich text, or null when the master did not write it
+     */
+    public @Nullable String getWhatToExpect() {
+        return whatToExpect;
+    }
+
+    /**
+     * Sets the optional section on what a session at this table is like.
+     *
+     * @param whatToExpect rich text, already sanitized by the service
+     */
+    public void setWhatToExpect(@Nullable String whatToExpect) {
+        this.whatToExpect = whatToExpect;
+    }
+
+    /**
+     * Returns the optional section on what a player needs to have at hand.
+     *
+     * @return the section as rich text, or null when the master did not write it
+     */
+    public @Nullable String getEquipment() {
+        return equipment;
+    }
+
+    /**
+     * Sets the optional section on what a player needs to have at hand.
+     *
+     * @param equipment rich text, already sanitized by the service
+     */
+    public void setEquipment(@Nullable String equipment) {
+        this.equipment = equipment;
+    }
+
+    /**
+     * Returns the optional section on the safety tools used and the content warnings.
+     *
+     * @return the section as rich text, or null when the master did not write it
+     */
+    public @Nullable String getSafety() {
+        return safety;
+    }
+
+    /**
+     * Sets the optional section on the safety tools used and the content warnings.
+     *
+     * @param safety rich text, already sanitized by the service
+     */
+    public void setSafety(@Nullable String safety) {
+        this.safety = safety;
     }
 
     /**

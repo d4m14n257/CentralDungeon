@@ -1,6 +1,7 @@
 import { XIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 import type { CatalogValue } from '../types'
@@ -27,6 +28,9 @@ export interface CatalogChipProps {
  *   lying about what is published. The same goes for one that was rejected or disabled after it
  *   was linked: it stays on the table, dimmed and wearing its status badge, and the form keeps it.
  *
+ * A tag whose group has a definition shows it in a tooltip on its name, which can be focused so the
+ * keyboard reaches it too.
+ *
  * @param props.value    the value to show
  * @param props.onRemove called with its id when removed; omit to render it read-only
  */
@@ -43,7 +47,23 @@ export function CatalogChip({ value, onRemove }: CatalogChipProps) {
       )}
       title={isPending ? t('chip.pendingHint') : undefined}
     >
-      {value.name}
+      {value.description ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                tabIndex={0}
+                className="focus-visible:ring-ring rounded-sm underline decoration-dotted underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
+              >
+                {value.name}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-64">{value.description}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        value.name
+      )}
       {isPending && <span className="text-fg-subtle">{t('chip.pending')}</span>}
       {isOut && <CatalogStatusBadge status={value.status} />}
       {onRemove && (

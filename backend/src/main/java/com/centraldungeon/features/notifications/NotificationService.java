@@ -289,9 +289,10 @@ public class NotificationService {
      * the first (ADR-23 §3).
      *
      * <p><b>It names nothing in its sentence</b>: the rendered text says "aprobaron tu pedido" without
-     * saying which request, so no name is stored for it. The one value it may carry is the table's id,
-     * and only for a veto, whose related entity is an application: that value is not for the sentence
-     * but for the click, which has to land on the table's players.
+     * saying which request, so no name is stored for it. The one value it may carry is the table's id:
+     * for a veto, whose related entity is an application, and for an approved request to open a table,
+     * which created a draft. That value is not for the sentence but for the click, which has to land
+     * on the table.
      *
      * <p>Where it links is the request's own polymorphic reference, passed in by the caller. For the
      * three types of F3.2 that is {@code user} and the requester themselves, so a click lands on
@@ -305,8 +306,9 @@ public class NotificationService {
      * @param relatedEntityType what the request is about, so the click knows where to go
      * @param relatedEntityId   the id of that thing
      * @param tableId           the table the request belongs to when the entity is not the table
-     *                          itself (a veto points at an application), so the click can land on it;
-     *                          null otherwise
+     *                          itself - a veto points at an application, and an approved request to
+     *                          open a table points at the requester while the click has to land on the
+     *                          draft it created; null otherwise
      */
     @Transactional
     public void notifyApprovalResolved(

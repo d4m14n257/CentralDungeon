@@ -95,7 +95,7 @@
     "rejectDialogDescription": "Write why. It is the only thing whoever asked will receive, so it has to be enough for them to understand.",
     "effect": {
       "MasterGrant": "On approval the person is given the master role by the same road as in “Users”, recorded with your note as the reason.",
-      "TableOpen": "On approval it is recorded that the request stands. The table is not created on its own: the request carries no name, system, seats or schedule, so you create it from “Tables”.",
+      "TableOpen": "On approval a draft with the proposed name is created for whoever asked, who runs it as its primary master without being granted the role. They fill it in and send it to review like any other table.",
       "General": "On approval the request is closed and your answer reaches whoever asked. Nothing else on the platform changes.",
       "TablePause": "On approval the table is paused: it stops promising dates and its pending sessions are hidden until it is resumed. Your note becomes the reason in its history.",
       "PlayerBan": "On approval, the person is banned from that table: they stop seeing it and, if they were playing, their seat is freed. Rejecting changes nothing. Your note reaches whoever asked for the ban."
@@ -112,11 +112,14 @@
     "detailStillPending": "It has not been resolved yet.",
     "viewPerson": "View who asked",
     "viewTable": "View the table",
+    "proposedTableName": "Proposed name: {{name}}",
     "errors": {
       "REQUEST_ALREADY_PENDING": "You already have a request of this kind waiting for an answer. That one has to be resolved before you make another.",
       "REQUEST_ALREADY_RESOLVED": "Somebody has already resolved this request. Refresh the screen to see how it went.",
       "REQUEST_ENTITY_GONE": "What this request pointed at no longer exists, so it cannot be resolved.",
-      "MASTER_ROLE_ALREADY_HELD": "You already have the master role.",
+      "MASTER_ROLE_ALREADY_HELD": "You already have the master role, so you can create your own tables.",
+      "TABLE_NAME_REQUIRED": "Write the name of the table you want to run.",
+      "REQUESTER_NOT_ACTIVE": "The account that asked for the table is no longer active, so it cannot be created for them. You can reject the request.",
       "OWN_REQUEST_NOT_APPROVABLE": "You can't approve a veto you requested: another admin decides it.",
       "generic": "We could not complete the action. Try again."
     },
@@ -124,6 +127,7 @@
       "success": "Your request was recorded",
       "flowReviewed": "An admin will read it and answer with a reason of their own.",
       "justificationLabel": "Reason",
+      "nameLabel": "Table name",
       "action": "Send the request",
       "MasterGrant": {
         "title": "Ask for the master role",
@@ -132,10 +136,10 @@
         "placeholder": "What you want to run, what experience you have, whatever you think helps."
       },
       "TableOpen": {
-        "title": "Ask for a table to be opened",
-        "description": "Tell an admin what table you would like to exist.",
-        "effect": "If it is approved, an admin finds a master and creates the table. It is not created on its own.",
-        "placeholder": "Which system, which day, for how many people. The more concrete, the better."
+        "title": "Ask to run a single table",
+        "description": "Tell an admin what table you want to run. You do not need the master role.",
+        "effect": "If it is approved, a draft with that name is created and you run it. You fill it in and send it to review.",
+        "placeholder": "Which system, which day, for how many people, what experience you have. The more concrete, the better."
       },
       "General": {
         "title": "Ask an admin something",
@@ -149,19 +153,19 @@
     },
     "ask": {
       "MasterGrant": "Ask for the master role",
-      "TableOpen": "Ask for a table to be opened",
+      "TableOpen": "Ask to run a single table",
       "General": "Write to an admin"
     },
     "pending": {
       "MasterGrant": "You already asked for the master role and have not been answered yet.",
-      "TableOpen": "You already asked for a table to be opened and have not been answered yet.",
+      "TableOpen": "You already asked to run a table and have not been answered yet.",
       "General": "You already wrote to an admin and have not been answered yet."
     },
     "pendingSince": "You asked on {{date}}.",
     "submitHelpHint": "The reason is required, and so is the answer you get back.",
     "submitHelpLink": "How it works",
     "masterGrantPitchTitle": "Do you want to run tables?",
-    "masterGrantPitchDescription": "The master role is given by an admin. Ask for it, saying what you would like to run.",
+    "masterGrantPitchDescription": "You can ask for the master role, to create your own tables, or ask to run a single table without the role. An admin approves either one.",
     "generalPitchTitle": "Did you not find your answer?",
     "generalPitchDescription": "Write to an admin. They answer right here, with a notification.",
     "supportTitle": "Help",

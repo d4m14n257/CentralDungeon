@@ -29,6 +29,7 @@ function request(overrides: Partial<ApprovalRequestSummary> = {}): ApprovalReque
     claimedByName: null,
     gameTableId: null,
     subjectName: null,
+    proposedTableName: null,
     createdAt: '2026-03-04T12:00:00',
     ...overrides,
   }
@@ -108,7 +109,7 @@ describe('SubmitRequestSection', () => {
 
     renderSection('TableOpen')
 
-    expect(await screen.findByRole('button', { name: 'Pedir que se abra una mesa' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Pedir dirigir una sola mesa' })).toBeInTheDocument()
   })
 
   /**
@@ -152,12 +153,58 @@ describe('SubmitRequestSection', () => {
     mine.mockResolvedValue(page([]))
     submit.mockResolvedValue(request())
 
-    renderSection('TableOpen')
-    await userEvent.click(await screen.findByRole('button', { name: 'Pedir que se abra una mesa' }))
-    await userEvent.type(await screen.findByRole('textbox'), 'Quiero una mesa de terror los jueves')
+    renderSection('MasterGrant')
+    await userEvent.click(await screen.findByRole('button', { name: 'Pedir el rol de master' }))
+    await userEvent.type(await screen.findByRole('textbox'), 'Quiero dirigir mesas de terror')
     await userEvent.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
     await acceptReview()
 
-    await waitFor(() => expect(submit).toHaveBeenCalledWith({ type: 'TableOpen', justification: 'Quiero una mesa de terror los jueves' }))
+    await waitFor(() =>
+      expect(submit).toHaveBeenCalledWith({ type: 'MasterGrant', justification: 'Quiero dirigir mesas de terror', tableName: '' }),
+    )
+  })
+
+  /** Only a single table asks for a name: the other kinds have nothing to name. */
+  it('asks for the table name only when asking for a single table', async () => {
+    mine.mockResolvedValue(page([]))
+
+    renderSection('MasterGrant')
+    await userEvent.click(await screen.findByRole('button', { name: 'Pedir el rol de master' }))
+
+    expect(await screen.findByRole('button', { name: 'Enviar el pedido' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Nombre de la mesa')).not.toBeInTheDocument()
+  })
+
+  /** Approving a single table creates a draft with this name, so it cannot be sent without one. */
+  it('refuses to ask for a single table without its name', async () => {
+    mine.mockResolvedValue(page([]))
+
+    renderSection('TableOpen')
+    await userEvent.click(await screen.findByRole('button', { name: 'Pedir dirigir una sola mesa' }))
+    await userEvent.type(await screen.findByLabelText('Motivo'), 'Quiero una mesa de terror los jueves')
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+
+    expect(await screen.findByText('Esto es obligatorio')).toBeInTheDocument()
+    expect(submit).not.toHaveBeenCalled()
+  })
+
+  it('sends a single table with its name and the reason', async () => {
+    mine.mockResolvedValue(page([]))
+    submit.mockResolvedValue(request({ type: 'TableOpen', proposedTableName: 'La cripta' }))
+
+    renderSection('TableOpen')
+    await userEvent.click(await screen.findByRole('button', { name: 'Pedir dirigir una sola mesa' }))
+    await userEvent.type(await screen.findByLabelText('Nombre de la mesa'), '  La cripta ')
+    await userEvent.type(screen.getByLabelText('Motivo'), 'Quiero una mesa de terror los jueves')
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+    await acceptReview()
+
+    await waitFor(() =>
+      expect(submit).toHaveBeenCalledWith({
+        type: 'TableOpen',
+        justification: 'Quiero una mesa de terror los jueves',
+        tableName: 'La cripta',
+      }),
+    )
   })
 })

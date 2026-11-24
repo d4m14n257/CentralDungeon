@@ -67,6 +67,11 @@ export interface ApprovalRequestDetail {
    * not about whoever asked. Null for every other kind, whose subject is the requester.
    */
   subjectName: string | null
+  /**
+   * For a `TableOpen`, the name the requester proposed for the table — the name of the draft that
+   * approving it creates. Null for every other kind.
+   */
+  proposedTableName: string | null
   createdAt: string
 }
 
@@ -125,6 +130,12 @@ export interface BanRequest {
 export interface SubmitApprovalRequestInput {
   type: SubmittableRequestType
   justification: string
+  /**
+   * The name of the table a `TableOpen` asks to open: required for that kind, because approving it
+   * creates a draft with this name. The server ignores it for the other kinds, so the form always
+   * sends it and leaves it empty there.
+   */
+  tableName: string
 }
 
 /**

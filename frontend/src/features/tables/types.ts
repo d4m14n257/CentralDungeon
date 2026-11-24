@@ -106,6 +106,25 @@ export interface GameTableHistoryEntry {
 }
 
 /**
+ * Mirror of TableSections: the four optional sections of rich text a master can add to a table. The
+ * same shape travels in the create and edit requests and in the detail. A null section is one the
+ * master did not write, and the detail does not show it.
+ */
+export interface TableSections {
+  /** How characters are made for this table: level, method, allowed sources. */
+  characterCreation: string | null
+  /** What a session is like, so a player can tell whether it is for them. */
+  whatToExpect: string | null
+  /** What a player needs to have at hand. */
+  equipment: string | null
+  /** The safety tools used and the content warnings; the filterable part lives in the tags. */
+  safety: string | null
+}
+
+/** The keys of {@link TableSections}, in the order the form offers them and the detail shows them. */
+export type TableSectionKey = keyof TableSections
+
+/**
  * Mirror of CreateGameTableRequest - an input shape, not derived from GameTableDetail: a table goes
  * in by type id and catalog id, and comes out by name and by whole value.
  */
@@ -124,6 +143,8 @@ export interface CreateGameTableRequest {
   maxPlayers?: number | null
   /** The weekly agenda, already converted to UTC by `lib/date.ts` before it is sent (ADR-03 §6). */
   schedule?: TableScheduleEntry[] | null
+  /** The four optional sections. Absent or null means none was written. */
+  sections?: TableSections | null
 }
 
 /**
@@ -140,6 +161,8 @@ export interface GameTableDetail {
   description: string | null
   permitted: string | null
   requirements: string | null
+  /** The four optional sections, always present; each is sanitized rich text or null. */
+  sections: TableSections
   tableTypeName: string | null
   /** The code to translate the label by, or null when a person named the type (ADR-23 §4). */
   tableTypeCode: string | null

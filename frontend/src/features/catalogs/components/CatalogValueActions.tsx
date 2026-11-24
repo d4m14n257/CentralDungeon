@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Ban, Check, Crown, Ellipsis, FolderInput, Merge, RotateCcw, Split, X } from 'lucide-react'
+import { ArrowRightLeft, Ban, Check, Crown, Ellipsis, FolderInput, Merge, RotateCcw, Split, Tag, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -23,6 +23,7 @@ import { AcceptCatalogValueDialog } from './AcceptCatalogValueDialog'
 import { DisableCatalogValueDialog } from './DisableCatalogValueDialog'
 import { MergeCatalogGroupsDialog } from './MergeCatalogGroupsDialog'
 import { ReassignCatalogValueDialog } from './ReassignCatalogValueDialog'
+import { TagDefinitionDialog } from './TagDefinitionDialog'
 
 /** What the menu needs. */
 export interface CatalogValueActionsProps {
@@ -51,6 +52,8 @@ export interface CatalogValueActionsProps {
  * - **accepted head** - merge into another group, disable
  * - **accepted alias** - make it the head, move it, split it out, disable
  * - **disabled** - restore
+ * - **a tag that heads its group, accepted or disabled** - define its category and definition,
+ *   which belong to the group and so are only written on its head
  *
  * @param props.kind          which catalog
  * @param props.value         the value it acts on
@@ -68,11 +71,13 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
   const mergeDialog = useDisclosure()
   const reassignDialog = useDisclosure()
   const disableDialog = useDisclosure()
+  const definitionDialog = useDisclosure()
 
   const isPending = value.status === 'Created'
   const isAccepted = value.status === 'Accepted'
   const isDisabled = value.status === 'Disabled'
   const isHead = value.canonicalId === null
+  const canDefine = kind === 'tags' && isHead && (isAccepted || isDisabled)
 
   async function handleAcceptAsGroup() {
     // A review before anything is written (ADR-21 §9), like the dialogs: one click on a menu item is
@@ -167,6 +172,12 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
               </DropdownMenuItem>
             </>
           )}
+          {canDefine && (
+            <DropdownMenuItem onSelect={() => definitionDialog.open()}>
+              <Tag className="size-4" aria-hidden="true" />
+              {t('definition.action')}
+            </DropdownMenuItem>
+          )}
           {isAccepted && isHead && (
             <DropdownMenuItem onSelect={() => mergeDialog.open()}>
               <Merge className="size-4" aria-hidden="true" />
@@ -214,6 +225,7 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
       {isAccepted && !isHead && (
         <ReassignCatalogValueDialog kind={kind} value={value} open={reassignDialog.isOpen} onOpenChange={reassignDialog.close} />
       )}
+      {canDefine && <TagDefinitionDialog value={value} open={definitionDialog.isOpen} onOpenChange={definitionDialog.close} />}
       {isAccepted && <DisableCatalogValueDialog kind={kind} value={value} open={disableDialog.isOpen} onOpenChange={disableDialog.close} />}
     </>
   )

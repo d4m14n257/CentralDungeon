@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { SubmitRequestSection } from '@/features/approvals'
 import { HelpLink } from '@/features/help'
 import { explorerSearchFields, GameTableCard, useGameTables } from '@/features/tables'
+import { useMe } from '@/features/users'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 
 /**
@@ -35,9 +36,9 @@ import { useSearchQuery } from '@/hooks/useSearchQuery'
  *
  * **Asking for a table to be opened happens from the empty explorer** and not from a screen for
  * making requests (roles-y-alcance.md §4, F3.2): this is the moment somebody looked for a table and
- * found none, which is the whole of what a `TableOpen` request says. Approving it does not create
- * the table — the request carries no name, no system, no seats and no agenda — it records that the
- * request stands, and an admin opens one (ADR-06 §7).
+ * found none, which is the whole of what a `TableOpen` request says. Approving it creates a draft
+ * with the proposed name, which the requester runs and fills in. Somebody who holds the master role
+ * is not offered it: they create their own tables.
  */
 export function TableListPage() {
   const { t } = useTranslation('tables')
@@ -45,6 +46,7 @@ export function TableListPage() {
   // what a request is, read by whoever makes one and by whoever resolves it.
   const { t: tAdmin } = useTranslation('admin')
   const [searchParams, setSearchParams] = useSearchParams()
+  const { data: me } = useMe()
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
   // of ADR-22 §1. One list of commands, given to the box, used to read `?q=` and shown in the help (ADR-22 §3).
@@ -74,7 +76,8 @@ export function TableListPage() {
   // Offered from both empty states and written once: "nothing is open yet" and "nothing matched what
   // you typed" are two different facts, but the thing somebody can do about either of them is the
   // same one. The help arrives as a node, because a feature never imports another one (§3.1.5).
-  const askForATable = (
+  // Somebody who holds the master role creates their own tables, so there is nothing to ask for.
+  const askForATable = me?.roles.includes('Master') ? undefined : (
     <SubmitRequestSection
       type="TableOpen"
       help={

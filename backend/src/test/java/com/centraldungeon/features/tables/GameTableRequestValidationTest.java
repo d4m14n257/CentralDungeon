@@ -41,7 +41,7 @@ class GameTableRequestValidationTest {
     void createRefusesMoreThanSixtyFourValuesInEachCatalog() {
         List<String> tooMany = ids(65);
         CreateGameTableRequest request = new CreateGameTableRequest(
-                "Mesa", null, null, null, null, tooMany, tooMany, tooMany, null, null, null, null);
+                "Mesa", null, null, null, null, tooMany, tooMany, tooMany, null, null, null, null, null);
 
         assertThat(invalidFields(validator.validate(request))).containsExactlyInAnyOrder("systemIds", "tagIds", "platformIds");
     }
@@ -50,7 +50,7 @@ class GameTableRequestValidationTest {
     void updateRefusesMoreThanSixtyFourValuesInEachCatalog() {
         List<String> tooMany = ids(65);
         UpdateGameTableRequest request = new UpdateGameTableRequest(
-                "Mesa", null, null, null, null, tooMany, tooMany, tooMany, null, null, null, null);
+                "Mesa", null, null, null, null, tooMany, tooMany, tooMany, null, null, null, null, null);
 
         assertThat(invalidFields(validator.validate(request))).containsExactlyInAnyOrder("systemIds", "tagIds", "platformIds");
     }
@@ -59,7 +59,7 @@ class GameTableRequestValidationTest {
     void sixtyFourValuesAreStillAccepted() {
         List<String> enough = ids(64);
         CreateGameTableRequest request = new CreateGameTableRequest(
-                "Mesa", null, null, null, null, enough, enough, enough, null, null, null, null);
+                "Mesa", null, null, null, null, enough, enough, enough, null, null, null, null, null);
 
         assertThat(validator.validate(request)).isEmpty();
     }

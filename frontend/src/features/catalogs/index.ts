@@ -13,12 +13,14 @@ export { CatalogGraph } from './components/CatalogGraph'
 export { CatalogPicker } from './components/CatalogPicker'
 export { CatalogStatusBadge } from './components/CatalogStatusBadge'
 export { CreateCatalogValueDialog } from './components/CreateCatalogValueDialog'
+export { TagGroups } from './components/TagGroups'
 
 export { useAcceptCatalogValue } from './api/useAcceptCatalogValue'
 export { useAdminCatalog } from './api/useAdminCatalog'
 export { useCatalogGroup } from './api/useCatalogGroup'
 export { useCatalogValues } from './api/useCatalogValues'
 export { useCreateCatalogValue } from './api/useCreateCatalogValue'
+export { useDefineTag } from './api/useDefineTag'
 export { useDisableCatalogValue } from './api/useDisableCatalogValue'
 export { useMergeCatalogGroups } from './api/useMergeCatalogGroups'
 export { useProposeCatalogValue } from './api/useProposeCatalogValue'
@@ -32,9 +34,11 @@ export type {
   CatalogKind,
   CatalogStatus,
   CatalogValue,
+  DefineTagInput,
   DisableCatalogValueInput,
   MergeCatalogGroupsInput,
   ProposeCatalogValueInput,
   ReassignCatalogValueInput,
   SplitCatalogGroupInput,
+  TagCategory,
 } from './types'

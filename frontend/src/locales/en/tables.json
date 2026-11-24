@@ -94,6 +94,7 @@
     "applyReviewNoFiles": "No files attached",
     "applyFilesFailed": "Could not upload: {{names}}. The application was still sent with what did upload.",
     "permitted": "What is allowed",
+    "safetyTags": "Content warnings and safety",
     "schedule": "Agenda",
     "scheduleTimeZone": "Times in your zone ({{timeZone}}).",
     "scheduleConflict": "Clashes with a table of yours",
@@ -148,5 +149,24 @@
     "table_system": "system",
     "table_tag": "tag",
     "table_platform": "platform"
+  },
+  "sections": {
+    "remove": "Remove",
+    "characterCreation": {
+      "label": "Character creation",
+      "hint": "Starting level, method, allowed sources: what someone needs to know to build their character."
+    },
+    "whatToExpect": {
+      "label": "What to expect",
+      "hint": "What a session is like: the tone, the pace, how much combat and how much roleplay."
+    },
+    "equipment": {
+      "label": "Equipment",
+      "hint": "What each player needs to have at hand: dice, a microphone, a character sheet."
+    },
+    "safety": {
+      "label": "Safety and content warnings",
+      "hint": "The safety tools you use and the sensitive topics, in your own words. So the table can be filtered by them, mark them with the safety tags as well."
+    }
   }
 }

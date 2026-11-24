@@ -33,6 +33,7 @@ function request(overrides: Partial<ApprovalRequestSummary> = {}): ApprovalReque
     claimedByName: null,
     gameTableId: null,
     subjectName: null,
+    proposedTableName: null,
     createdAt: '2026-03-04T12:00:00',
     ...overrides,
   }
@@ -285,10 +286,9 @@ describe('AdminRequestsPage', () => {
   })
 
   /**
-   * The two approvals look identical on screen and do completely different things: one hands out a
-   * role, the other creates nothing at all. An admin who assumes the second builds the table will
-   * approve it, tell nobody, and leave whoever asked waiting for a table that is never coming — so
-   * the dialog says which act it is about to perform.
+   * The two approvals look identical on screen and do different things: one hands out a role, the
+   * other creates a draft for whoever asked without granting it — so the dialog says which act it is
+   * about to perform.
    */
   it('says what approving this particular kind will do', async () => {
     list.mockResolvedValue(page([request({ type: 'TableOpen' })]))
@@ -298,7 +298,27 @@ describe('AdminRequestsPage', () => {
     await userEvent.click(row.getByRole('button', { name: 'Aprobar' }))
 
     const dialog = within(await screen.findByRole('dialog'))
-    expect(dialog.getByText(/La mesa no se crea sola/)).toBeInTheDocument()
+    expect(dialog.getByText(/se crea un borrador con el nombre propuesto/)).toBeInTheDocument()
+  })
+
+  /** The name a single table was asked under is the draft's name, so the admin reads it before deciding. */
+  it('shows the proposed table name in the detail of a single table request', async () => {
+    list.mockResolvedValue(page([request({ type: 'TableOpen', proposedTableName: 'La cripta' })]))
+    byId.mockResolvedValue({
+      ...request({ type: 'TableOpen', proposedTableName: 'La cripta' }),
+      entityType: 'user',
+      entityId: 'user-1',
+      resolvedByName: null,
+      resolutionNote: null,
+      resolvedAt: null,
+    })
+
+    renderPage()
+    const row = await rowFor('dami')
+    await userEvent.click(row.getByRole('button', { name: 'Ver detalle' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+    expect(await dialog.findByText('Nombre propuesto: La cripta')).toBeInTheDocument()
   })
 
   it('sends the note with the resolution', async () => {
@@ -349,7 +369,7 @@ describe('AdminRequestsPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona' }))
 
     const dialog = within(await screen.findByRole('dialog'))
-    expect(dialog.getByText(/no crea la mesa/i)).toBeInTheDocument()
+    expect(dialog.getByText(/crea un borrador con el nombre propuesto/i)).toBeInTheDocument()
   })
 
   /** ADR-22 §3: the search help documents **this** box's commands rather than a fixed list. */

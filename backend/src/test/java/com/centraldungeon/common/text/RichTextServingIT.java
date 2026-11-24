@@ -90,7 +90,9 @@ class RichTextServingIT {
     private static final String KEPT = "<p>kept</p>";
 
     /** The names under which a response carries user-written rich text. */
-    private static final Set<String> RICH_FIELDS = Set.of("description", "permitted", "requirements", "content");
+    private static final Set<String> RICH_FIELDS = Set.of(
+            "description", "permitted", "requirements", "characterCreation", "whatToExpect", "equipment", "safety",
+            "content");
 
     /**
      * A tag the allowlist can leave: its name, and at most the nofollow rel and an href that is either
@@ -100,6 +102,9 @@ class RichTextServingIT {
     private static final Pattern SAFE_TAG = Pattern.compile(
             "<(?:/?(?:p|br|strong|em|u|s|code|pre|blockquote|h1|h2|h3|ul|ol|li)\\s*/?"
                     + "|/a|a(?:\\s+href=\"(?:https?:[^\"<>]*|[^\":<>]*)\")?(?:\\s+rel=\"nofollow\")?)>");
+
+    /** The rich fields a table's detail carries: the three long texts and the four sections. */
+    private static final int TABLE_FIELDS = 7;
 
     /** Anything that looks like the start or end of a tag. */
     private static final Pattern ANY_TAG = Pattern.compile("<[^>]*>");
@@ -238,11 +243,47 @@ class RichTextServingIT {
         assertEveryEndpointServes(KEPT + hostile);
     }
 
+    /**
+     * The way in, for the four optional sections: a master creates a table with a script in every one
+     * of them, and what comes back - on the create and on a later read - is the kept text alone.
+     */
+    @Test
+    void theSectionsOfANewTableAreStoredAndServedWithoutTheScript() throws Exception {
+        String hostile = KEPT + "<script>alert(1)</script>";
+        String body = """
+                {"name": "Sections %s", "systemIds": ["%s"], "tagIds": ["%s"], "platformIds": ["%s"],
+                 "schedule": [{"weekday": "Sunday", "hourtime": "20:00:00", "duration": "03:00:00"}],
+                 "sections": {"characterCreation": "%s", "whatToExpect": "%s", "equipment": "%s", "safety": "%s"}}
+                """.formatted(UUID.randomUUID(), acceptedId("systems"), acceptedId("tags"), acceptedId("platforms"),
+                hostile, hostile, hostile, hostile);
+
+        JsonNode created = JSON.readTree(as(
+                post("/api/v1/game-tables").contentType(MediaType.APPLICATION_JSON).content(body), primary));
+        JsonNode read = JSON.readTree(as(get("/api/v1/game-tables/" + created.get("id").asString() + "/managed"), primary));
+
+        for (JsonNode response : List.of(created, read)) {
+            JsonNode sections = response.get("sections");
+            for (String section : List.of("characterCreation", "whatToExpect", "equipment", "safety")) {
+                assertThat(sections.get(section).asString()).as(section).isEqualTo(KEPT);
+            }
+        }
+        String stored = jdbcTemplate.queryForObject(
+                "SELECT safety FROM game_tables WHERE id = ?", String.class, created.get("id").asString());
+        assertThat(stored).isEqualTo(KEPT);
+    }
+
+    /** One accepted value of a seeded catalog, whatever the seed's ids are. */
+    private String acceptedId(String catalog) {
+        return jdbcTemplate.queryForObject(
+                "SELECT id FROM " + catalog + " WHERE status = 'Accepted' AND canonical_id IS NULL LIMIT 1", String.class);
+    }
+
     /** Writes the same text into every rich-text column, bypassing the services entirely. */
     private void writeRichText(String html) {
         jdbcTemplate.update(
-                "UPDATE game_tables SET description = ?, permitted = ?, requirements = ? WHERE id = ?",
-                html, html, html, table.getId());
+                "UPDATE game_tables SET description = ?, permitted = ?, requirements = ?, character_creation = ?,"
+                        + " what_to_expect = ?, equipment = ?, safety = ? WHERE id = ?",
+                html, html, html, html, html, html, html, table.getId());
         jdbcTemplate.update("UPDATE table_tasks SET description = ? WHERE game_table_id = ?", html, table.getId());
         jdbcTemplate.update("UPDATE task_submissions SET content = ? WHERE id = ?", html, submission.getId());
     }
@@ -258,12 +299,13 @@ class RichTextServingIT {
         String tableId = table.getId();
         String tasks = "/api/v1/game-tables/" + tableId + "/tasks";
 
-        // The table: three fields each, for the reader, for the people running it, and for an admin.
-        assertSafe(as(get("/api/v1/game-tables/" + tableId), player), 3, written);
-        assertSafe(as(get("/api/v1/game-tables/" + tableId), primary), 3, written);
-        assertSafe(as(get("/api/v1/game-tables/" + tableId), admin), 3, written);
-        assertSafe(as(get("/api/v1/game-tables/" + tableId + "/managed"), primary), 3, written);
-        assertSafe(as(get("/api/v1/game-tables/" + tableId + "/managed"), admin), 3, written);
+        // The table: three long texts and four sections each, for the reader, for the people running
+        // it, and for an admin.
+        assertSafe(as(get("/api/v1/game-tables/" + tableId), player), TABLE_FIELDS, written);
+        assertSafe(as(get("/api/v1/game-tables/" + tableId), primary), TABLE_FIELDS, written);
+        assertSafe(as(get("/api/v1/game-tables/" + tableId), admin), TABLE_FIELDS, written);
+        assertSafe(as(get("/api/v1/game-tables/" + tableId + "/managed"), primary), TABLE_FIELDS, written);
+        assertSafe(as(get("/api/v1/game-tables/" + tableId + "/managed"), admin), TABLE_FIELDS, written);
 
         // The tasks: the board of the masters and the admin, and the list of whoever is asked.
         assertSafe(as(get(tasks), primary), 2, written);
@@ -280,7 +322,7 @@ class RichTextServingIT {
                 as(put("/api/v1/game-tables/" + tableId + "/seeking-players")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"seeking\":true}"), primary),
-                3,
+                TABLE_FIELDS,
                 written);
         assertSafe(as(post("/api/v1/tasks/" + candidatesTask.getId() + "/close"), primary), 1, written);
     }

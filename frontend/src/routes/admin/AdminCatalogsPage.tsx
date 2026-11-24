@@ -202,6 +202,16 @@ export function AdminCatalogsPage() {
       ),
     },
     { id: 'status', header: t('admin.columnStatus'), role: 'badge', cell: (value) => <CatalogStatusBadge status={value.status} /> },
+    // Only tags carry a category, and only a group's head stores it - which is every row here.
+    ...(kind === 'tags'
+      ? [
+          {
+            id: 'category',
+            header: t('admin.columnCategory'),
+            cell: (value: AdminCatalogValue) => t(`tagCategory.${value.category ?? 'none'}`),
+          },
+        ]
+      : []),
     { id: 'aliases', header: t('admin.columnAliases'), cell: (value) => value.aliasCount },
     { id: 'uses', header: t('admin.columnUses'), cell: (value) => value.uses },
   ]

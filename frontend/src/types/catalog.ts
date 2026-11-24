@@ -22,6 +22,12 @@
 export type CatalogStatus = 'Created' | 'Accepted' | 'Rejected' | 'Disabled'
 
 /**
+ * What kind of thing a tag says about a table. A fixed set the backend owns and sends as a code;
+ * the label is translated here, under `catalogs:tagCategory.<code>`. A tag has one or none.
+ */
+export type TagCategory = 'Theme' | 'PlayStyle' | 'ContentWarning' | 'SafetyTool' | 'Experience' | 'Language' | 'Age' | 'Format'
+
+/**
  * Mirror of `CatalogValueResponse`: one system, tag or platform as everyone outside
  * /admin/catalogs sees it.
  *
@@ -36,4 +42,14 @@ export interface CatalogValue {
   /** The value as its author wrote it — the alias, never rewritten to the group's canonical entry (ADR-12 §4). */
   name: string
   status: CatalogStatus
+  /**
+   * The category of the value's group, which an alias reads from its canonical entry. Only tags have
+   * one: always null for systems and platforms, and null for a tag nobody has classified.
+   */
+  category: TagCategory | null
+  /**
+   * What the value's group means, in plain text, read from the canonical entry for an alias. Only
+   * tags have one; null otherwise. Rendered as text, never as markup.
+   */
+  description: string | null
 }

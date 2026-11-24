@@ -30,6 +30,8 @@ import {
   useTableTypes,
   useAdminUpdateTable,
   useUpdateTable,
+  sectionsToRequest,
+  TableSectionsFields,
   ADMIN_EDITABLE_STATUSES,
   MASTER_EDITABLE_STATUSES,
 } from '@/features/tables'
@@ -149,6 +151,10 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
       description: table.description ?? '',
       permitted: table.permitted ?? '',
       requirements: table.requirements ?? '',
+      characterCreation: table.sections.characterCreation ?? '',
+      whatToExpect: table.sections.whatToExpect ?? '',
+      equipment: table.sections.equipment ?? '',
+      safety: table.sections.safety ?? '',
       // By code when the application shipped the type, by name when a person created it (ADR-23 §4):
       // matching on the label alone broke as soon as the label started being translated.
       tableTypeId:
@@ -184,6 +190,10 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
       description: '',
       permitted: '',
       requirements: '',
+      characterCreation: '',
+      whatToExpect: '',
+      equipment: '',
+      safety: '',
       tableTypeId: '',
       startDate: '',
       maxPlayers: '',
@@ -288,6 +298,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
         maxPlayers: values.maxPlayers ? Number(values.maxPlayers) : null,
         totalSessions: values.totalSessions ? Number(values.totalSessions) : null,
         schedule,
+        sections: sectionsToRequest(values),
       },
       {
         onSuccess: () => {
@@ -401,6 +412,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
                 </FormItem>
               )}
             />
+            <TableSectionsFields />
           </section>
 
           <Separator />

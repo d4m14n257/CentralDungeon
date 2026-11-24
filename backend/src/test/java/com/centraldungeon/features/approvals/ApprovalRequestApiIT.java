@@ -88,6 +88,9 @@ class ApprovalRequestApiIT {
     private static final String MINE = "/api/v1/requests";
     private static final String ADMIN = "/api/v1/admin/requests";
 
+    /** Sent with every request; only a {@code TableOpen} keeps it. */
+    private static final String TABLE_NAME = "La cripta del terror";
+
     /**
      * Built by hand rather than with {@code @AutoConfigureMockMvc}: Boot 4 moved that annotation into
      * a {@code spring-boot-webmvc-test} module this project does not depend on, and the security
@@ -125,7 +128,7 @@ class ApprovalRequestApiIT {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    /** Only ever asked how many rows it has: approving a {@code TableOpen} must not add one. */
+    /** Where the draft an approved {@code TableOpen} creates is looked for. */
     @Autowired
     private GameTableRepository gameTableRepository;
 
@@ -319,11 +322,22 @@ class ApprovalRequestApiIT {
         // A different type from the same person is not the same request.
         submit(player, "TableOpen", "another kind").andExpect(status().isCreated());
 
+        // TABLE_NAME_REQUIRED: a request to open a table has to name it.
+        mockMvc.perform(bearer(post(MINE), other)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"type\":\"TableOpen\",\"justification\":\"sin nombre\",\"tableName\":\" \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("TABLE_NAME_REQUIRED"));
+
         // MASTER_ROLE_ALREADY_HELD: asking for what is already held.
         User master = person("already-a-master");
         grant(master, PlatformRole.MASTER);
         userService.evictAuthCache(master.getId());
         submit(master, "MasterGrant", "again please")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("MASTER_ROLE_ALREADY_HELD"));
+        // And asking for a single table: somebody holding the role creates their own.
+        submit(master, "TableOpen", "one table please")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("MASTER_ROLE_ALREADY_HELD"));
 
@@ -401,22 +415,56 @@ class ApprovalRequestApiIT {
     }
 
     /**
-     * <b>Approving a {@code TableOpen} creates no table.</b> The rule that is easiest to implement
-     * one step too far: the request carries no name, no system, no seats and no agenda, so there is
-     * nothing to create - the admin creates it {@code Unassigned} and assigns a master (ADR-06 §7), which
-     * is the same circuit from its other end (ADR-16 §1).
+     * <b>Approving a {@code TableOpen} creates the requester's draft</b>, with the name they proposed,
+     * and grants nothing: they run that one table as its Primary, and the role stays as it was. The
+     * listing shows the proposed name, and the bell carries the draft for the click to land on.
      */
     @Test
-    void approvingATableOpenCreatesNoTable() throws Exception {
-        long before = countGameTables();
+    void approvingATableOpenCreatesTheRequestersDraftAndGrantsNothing() throws Exception {
         String request = openRequest(player, ApprovalRequestType.TableOpen, "no hay mesas de terror");
+        as(get(ADMIN).param("q", "/request_type TableOpen"), admin)
+                .andExpect(jsonPath("$.content[0].proposedTableName").value(TABLE_NAME));
 
-        approve(admin, request, "abrimos una").andExpect(status().isOk());
+        try {
+            approve(admin, request, "abrimos una")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.proposedTableName").value(TABLE_NAME));
 
-        assertThat(countGameTables()).as("approving a TableOpen must not create a table").isEqualTo(before);
-        assertThat(userRoleRepository.findActiveRoleNames(player.getId()))
-                .as("and it must not grant anything either")
-                .doesNotContain(PlatformRole.MASTER.roleName());
+            GameTable draft = gameTableRepository.findAll().stream()
+                    .filter(table -> table.getCreatedBy().getId().equals(player.getId()))
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(draft.getName()).isEqualTo(TABLE_NAME);
+            assertThat(jdbcTemplate.queryForObject(
+                            "select master_type from masters where game_table_id = ? and user_id = ?",
+                            String.class, draft.getId(), player.getId()))
+                    .isEqualTo("Primary");
+            assertThat(userRoleRepository.findActiveRoleNames(player.getId()))
+                    .as("running one table is a master row, never the role")
+                    .doesNotContain(PlatformRole.MASTER.roleName());
+            assertThat(notificationRepository.findAll())
+                    .filteredOn(notification -> notification.getNotificationType() == NotificationType.ApprovalRequestApproved)
+                    .singleElement()
+                    .satisfies(notification -> assertThat(notification.getParams().tableId()).isEqualTo(draft.getId()));
+        } finally {
+            jdbcTemplate.update("delete from masters where user_id = ?", player.getId());
+            jdbcTemplate.update("delete from game_tables where created_by = ?", player.getId());
+        }
+    }
+
+    /** A draft handed to an account that can no longer use it is a table nobody runs: the approval is refused. */
+    @Test
+    void aTableOpenOfABlockedRequesterIsNotApproved() throws Exception {
+        String request = openRequest(other, ApprovalRequestType.TableOpen, "una sola mesa");
+        other.setStatus(com.centraldungeon.features.users.UserStatus.Blocked);
+        userRepository.save(other);
+
+        approve(admin, request, "adelante")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("REQUESTER_NOT_ACTIVE"));
+
+        assertThat(approvalRequestRepository.findById(request).orElseThrow().getStatus())
+                .isEqualTo(ApprovalStatus.Pending);
     }
 
     /** Rejecting has no effect beyond being resolved - and the reason is as mandatory as on a yes (ADR-16 §1). */
@@ -703,7 +751,8 @@ class ApprovalRequestApiIT {
     private ResultActions submit(User actor, String type, String justification) throws Exception {
         return mockMvc.perform(bearer(post(MINE), actor)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"type\":\"" + type + "\",\"justification\":\"" + justification + "\"}"));
+                .content("{\"type\":\"" + type + "\",\"justification\":\"" + justification
+                        + "\",\"tableName\":\"" + TABLE_NAME + "\"}"));
     }
 
     private ResultActions approve(User actor, String id, String note) throws Exception {
@@ -745,10 +794,6 @@ class ApprovalRequestApiIT {
     private static String idOf(String json) {
         int start = json.indexOf("\"id\":\"") + 6;
         return json.substring(start, json.indexOf('"', start));
-    }
-
-    private long countGameTables() {
-        return gameTableRepository.count();
     }
 
     private ResultActions as(MockHttpServletRequestBuilder request, User actor) throws Exception {

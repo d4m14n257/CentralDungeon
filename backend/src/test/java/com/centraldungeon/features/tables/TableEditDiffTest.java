@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.centraldungeon.features.catalogs.CatalogType;
 import com.centraldungeon.features.catalogs.dto.CatalogValueResponse;
+import com.centraldungeon.features.tables.dto.TableSections;
 import com.centraldungeon.features.tables.dto.UpdateGameTableRequest;
 import com.centraldungeon.features.users.User;
 import java.time.LocalDate;
@@ -24,7 +25,7 @@ class TableEditDiffTest {
         GameTable table = table();
         UpdateGameTableRequest request = request("Renamed", List.of("s1", "s2"), List.of("t2"), List.of("p1"), LocalDate.parse("2026-12-01"));
 
-        List<String> changes = TableEditDiff.of(table, request, "Different", "Rules", null, 5, LINKS);
+        List<String> changes = TableEditDiff.of(table, request, "Different", "Rules", null, 5, LINKS, TableSections.EMPTY);
 
         assertThat(changes).containsExactly("name", "description", "startDate", "maxPlayers", "tags");
     }
@@ -34,7 +35,7 @@ class TableEditDiffTest {
         GameTable table = table();
         UpdateGameTableRequest request = request("Table", List.of("s2", "s1", "s1"), List.of("t1"), List.of("p1"), null);
 
-        assertThat(TableEditDiff.of(table, request, "Description", "Rules", null, 4, LINKS)).isEmpty();
+        assertThat(TableEditDiff.of(table, request, "Description", "Rules", null, 4, LINKS, TableSections.EMPTY)).isEmpty();
     }
 
     @Test
@@ -43,7 +44,34 @@ class TableEditDiffTest {
         table.setRequirements("");
         UpdateGameTableRequest request = request("Table", List.of("s1", "s2"), List.of("t1"), List.of("p1"), null);
 
-        assertThat(TableEditDiff.of(table, request, "Description", "Rules", null, 4, LINKS)).isEmpty();
+        assertThat(TableEditDiff.of(table, request, "Description", "Rules", null, 4, LINKS, TableSections.EMPTY)).isEmpty();
+    }
+
+    /** The four sections are reported as one change, whichever of them moved. */
+    @Test
+    void anyOfTheSectionsChangingIsReportedOnceAsSections() {
+        GameTable table = table();
+        table.setSafety("<p>Lines and veils</p>");
+        UpdateGameTableRequest request = request("Table", List.of("s1", "s2"), List.of("t1"), List.of("p1"), null);
+
+        List<String> changes = TableEditDiff.of(
+                table, request, "Description", "Rules", null, 4, LINKS,
+                new TableSections("<p>Point buy</p>", null, null, "<p>X card</p>"));
+
+        assertThat(changes).containsExactly("sections");
+    }
+
+    /** Sections that stay as they are, empty or written, are not a change. */
+    @Test
+    void unchangedSectionsAreNotReported() {
+        GameTable table = table();
+        table.setEquipment("<p>Dice</p>");
+        UpdateGameTableRequest request = request("Table", List.of("s1", "s2"), List.of("t1"), List.of("p1"), null);
+
+        assertThat(TableEditDiff.of(
+                        table, request, "Description", "Rules", null, 4, LINKS,
+                        new TableSections("", null, "<p>Dice</p>", null)))
+                .isEmpty();
     }
 
     private static GameTable table() {
@@ -56,10 +84,10 @@ class TableEditDiffTest {
 
     private static UpdateGameTableRequest request(
             String name, List<String> systems, List<String> tags, List<String> platforms, LocalDate startDate) {
-        return new UpdateGameTableRequest(name, null, null, null, null, systems, tags, platforms, startDate, null, null, List.of());
+        return new UpdateGameTableRequest(name, null, null, null, null, systems, tags, platforms, startDate, null, null, List.of(), null);
     }
 
     private static CatalogValueResponse value(String id) {
-        return new CatalogValueResponse(id, id, "Accepted");
+        return new CatalogValueResponse(id, id, "Accepted", null, null);
     }
 }

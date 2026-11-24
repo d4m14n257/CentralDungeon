@@ -45,6 +45,7 @@
     "tableLabel": "{{kind}} del catálogo",
     "columnStatus": "Estado",
     "columnUses": "Mesas",
+    "columnCategory": "Categoría",
     "emptyTitle": "Todavía no hay nada en este catálogo",
     "emptyDescription": "Lo que propongan los masters desde el asistente de mesa va a aparecer acá para que lo revises.",
     "emptySearchDescription": "Ningún valor coincide con lo que buscaste.",
@@ -146,5 +147,34 @@
     "acceptIntoConfirmDescription": "Pasa a mostrarse y a filtrar, y buscar cualquiera de los dos encuentra las mesas de ambos.",
     "proposeConfirmTitle": "¿Proponer «{{name}}»?",
     "proposeConfirmDescription": "Lo revisa un admin. Mientras tanto tu mesa lo puede usar, pero no se muestra a los jugadores ni filtra."
+  },
+  "tagCategory": {
+    "Theme": "Temas",
+    "PlayStyle": "Estilo de juego",
+    "ContentWarning": "Advertencias de contenido",
+    "SafetyTool": "Herramientas de seguridad",
+    "Experience": "Experiencia",
+    "Language": "Idioma",
+    "Age": "Edad",
+    "Format": "Formato y duración",
+    "none": "Sin categoría"
+  },
+  "definition": {
+    "action": "Definir el tag",
+    "title": "Definir «{{name}}»",
+    "description": "La categoría y la definición son del grupo: las ven todos sus equivalentes, en el buscador y en cada mesa.",
+    "categoryLabel": "Categoría",
+    "descriptionLabel": "Definición",
+    "descriptionHint": "Texto simple, sin formato. {{count}}/{{max}} caracteres.",
+    "descriptionTooLong": "La definición puede tener hasta {{max}} caracteres.",
+    "save": "Guardar",
+    "confirmTitle": "¿Guardar la definición de «{{name}}»?",
+    "confirmDescription": "Reemplaza la categoría y la definición que tenía el grupo. Se ven enseguida en el buscador y en las mesas que lo usan.",
+    "success": "Se guardó la definición de «{{name}}»",
+    "failed": "No pudimos guardar la definición. Inténtalo de nuevo.",
+    "acceptedWithoutDefinition": "«{{name}}» quedó aceptado, pero sin categoría ni definición: {{reason}} Puedes agregarlas desde su menú."
+  },
+  "errors": {
+    "CATALOG_VALUE_NOT_CANONICAL": "Ese valor es un equivalente de otro grupo. La categoría y la definición se guardan en el principal del grupo."
   }
 }

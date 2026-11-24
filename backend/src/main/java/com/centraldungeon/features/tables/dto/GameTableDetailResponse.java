@@ -21,6 +21,9 @@ import org.jspecify.annotations.Nullable;
  * @param description   what the table is about, as sanitized rich text (ADR-03 §8)
  * @param permitted     the house rules, as sanitized rich text
  * @param requirements  what is asked of a player to be accepted, as sanitized rich text
+ * @param sections      the four optional sections, each sanitized rich text or null when it was not
+ *                      written. Always present, so a reader never has to tell a missing object from
+ *                      four empty sections
  * @param tableTypeName how the table is run, resolved to its label. Null when none was chosen
  * @param tableTypeCode the identifier the frontend translates by, when the application shipped
  *                      that type. Null for one a person named, whose label is read verbatim (ADR-23 §4)
@@ -74,6 +77,7 @@ public record GameTableDetailResponse(
         @Nullable String description,
         @Nullable String permitted,
         @Nullable String requirements,
+        TableSections sections,
         @Nullable String tableTypeName,
         @Nullable String tableTypeCode,
         String status,

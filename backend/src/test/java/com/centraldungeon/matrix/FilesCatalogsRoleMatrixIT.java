@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.MvcResult;
 /**
  * The role matrix of the {@code files} and {@code catalogs} features: uploads, the personal and the
  * platform library, a table's files, and the systems, platforms and tags with their administration.
- * Thirty-four endpoints, several of them multipart.
+ * Thirty-five endpoints, several of them multipart.
  */
 class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
 
@@ -519,6 +519,20 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
+            MatrixRow.of("PUT /api/v1/tags/{id}/definition",
+                            w -> MatrixRequest.path(w.catalog(CatalogType.TAGS, CatalogStatus.Accepted, null).getId())
+                                    .json("{\"category\": \"Theme\", \"description\": \"Fear and dread.\"}"))
+                    .cell(denied(401), ANONYMOUS)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
+                    .cell(denied(403), PLAYER, MASTER)
+                    .cell(allowed(200), ADMIN, OWNER),
+            // Only the group's canonical entry stores its definition: an alias is a conflict, never a refusal.
+            MatrixRow.variant("an alias", "PUT /api/v1/tags/{id}/definition", w -> {
+                        CatalogValue head = w.catalog(CatalogType.TAGS, CatalogStatus.Accepted, null);
+                        return MatrixRequest.path(w.catalog(CatalogType.TAGS, CatalogStatus.Accepted, head.getId()).getId())
+                                .json("{\"category\": \"Theme\"}");
+                    })
+                    .cell(denied(409, "CATALOG_VALUE_NOT_CANONICAL"), ADMIN, OWNER),
 
             // ------------------------------------------------------------ catalogs: reading and proposing
             publicList("GET /api/v1/platforms", CatalogType.PLATFORMS),

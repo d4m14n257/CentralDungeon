@@ -34,6 +34,8 @@ import org.jspecify.annotations.Nullable;
  * @param maxPlayers    the player cap (ADR-07 §5). Positive when present; absent means no cap
  * @param schedule      the weekly agenda, in UTC (ADR-03 §6). Null and empty mean no agenda yet, and a
  *                      table without one never clashes with anything
+ * @param sections      the four optional sections of rich text. Null means none was written, the same
+ *                      as four nulls; each one is sanitized before it is stored
  */
 public record CreateGameTableRequest(
         @NotBlank @Size(max = 128) String name,
@@ -47,5 +49,6 @@ public record CreateGameTableRequest(
         @Nullable LocalDate startDate,
         @Positive @Nullable Integer totalSessions,
         @Positive @Nullable Integer maxPlayers,
-        @Valid @Nullable List<TableScheduleEntry> schedule) {
+        @Valid @Nullable List<TableScheduleEntry> schedule,
+        @Valid @Nullable TableSections sections) {
 }

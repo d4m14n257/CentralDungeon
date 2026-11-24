@@ -11,10 +11,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { playerHomePath, userProfilePath } from '@/config/paths'
 import { HelpButton, HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
-import { CatalogChip } from '@/features/catalogs'
+import { CatalogChip, TagGroups } from '@/features/catalogs'
 import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
 import { ApplyToTableDialog } from '@/features/registrations'
-import { SessionList, TableStatusBadge, acceptsApplications, useGameTable } from '@/features/tables'
+import { SessionList, TableSectionsView, TableStatusBadge, acceptsApplications, useGameTable } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
 import { useMe } from '@/features/users'
 import type { GameTableDetail, MasterSummary } from '@/features/tables'
@@ -199,13 +199,14 @@ export function TableDetailPage() {
       )}
 
       <div className="border-border-strong bg-surface flex flex-col gap-4 rounded-xl border p-6">
-        {(table.systems.length > 0 || table.tags.length > 0 || table.platforms.length > 0) && (
+        {(table.systems.length > 0 || table.platforms.length > 0) && (
           <div className="flex flex-wrap gap-1.5">
-            {[...table.systems, ...table.tags, ...table.platforms].map((value: CatalogValue) => (
+            {[...table.systems, ...table.platforms].map((value: CatalogValue) => (
               <CatalogChip key={value.id} value={value} />
             ))}
           </div>
         )}
+        <TagGroups tags={table.tags} safetyHeading={t('detail.safetyTags')} />
 
         <RichTextView html={table.description} className="text-fg-muted max-w-prose" />
 
@@ -222,6 +223,8 @@ export function TableDetailPage() {
             <RichTextView html={table.requirements} className="mt-1.5" />
           </section>
         )}
+
+        <TableSectionsView sections={table.sections} />
 
         {localSchedule.length > 0 && (
           <section>

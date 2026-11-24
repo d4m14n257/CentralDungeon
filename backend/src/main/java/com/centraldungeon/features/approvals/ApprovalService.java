@@ -64,6 +64,9 @@ import org.springframework.transaction.annotation.Transactional;
  *       (roles-y-alcance.md §4). Not a second path that writes the same row: who may move which
  *       rank, the exclusion of ADR-06 §1 and the owner invariant all live over there, and a copy here
  *       would be a copy of the rules or - worse - a version without them.</li>
+ *   <li><b>Approving a {@code TableOpen} creates a draft owned by the requester</b>, through
+ *       {@link GameTableService#createDraftFor}: they become its Primary master and are granted no
+ *       role, because running one table is a row in {@code masters} and not the Master role.</li>
  * </ul>
  *
  * <p><b>Submitting notifies nobody</b> (ADR-16 §5). Admin work items are not duplicated as notifications;
@@ -173,6 +176,8 @@ public class ApprovalService {
      *
      * @param type          what is being asked for
      * @param justification why, never blank - the request validates it
+     * @param tableName     the name of the table a {@code TableOpen} asks to open, required for that
+     *                      type and ignored for the others
      * @param actor         the actor, from the token (ADR-05 §5). The request is always about them: the
      *                      body carries no id and could not be trusted with one (arquitectura §2.6)
      * @return the request as it was opened
@@ -180,13 +185,16 @@ public class ApprovalService {
      *                                  run before the insert
      * @throws ForbiddenActionException 403 when the account is not Allowed
      * @throws InvalidRequestException  400 when the type is one whose entity is not the requester -
-     *                                  those are opened from the resource they are about
-     * @throws ConflictException        409 {@code MASTER_ROLE_ALREADY_HELD} when asking for a role
-     *                                  already held, or {@code REQUEST_ALREADY_PENDING} when one of
-     *                                  this type is already open
+     *                                  those are opened from the resource they are about - or
+     *                                  {@code TABLE_NAME_REQUIRED} when a {@code TableOpen} names no table
+     * @throws ConflictException        409 {@code MASTER_ROLE_ALREADY_HELD} when asking for the role,
+     *                                  or for a single table, while already holding the role, or
+     *                                  {@code REQUEST_ALREADY_PENDING} when one of this type is
+     *                                  already open
      */
     @Transactional
-    public ApprovalRequestDetailResponse submit(ApprovalRequestType type, String justification, CurrentUser actor) {
+    public ApprovalRequestDetailResponse submit(
+            ApprovalRequestType type, String justification, @Nullable String tableName, CurrentUser actor) {
         // The locking read is the FIRST thing this transaction does with the requester's row, and it
         // has to be (ADR-06 §2). Two submits of the same type by one person each read "no pending request
         // of this type" from their own snapshot, both pass the guard below, and both insert - the
@@ -197,7 +205,10 @@ public class ApprovalService {
         // refresh. So the lock comes first, and everything below reads through it.
         User requester = requireAllowedRequester(actor);
 
-        if (type == ApprovalRequestType.MasterGrant && holdsMaster(requester.getId())) {
+        // Somebody who holds the role creates their own tables; asking an admin for one is asking
+        // for nothing.
+        boolean asksToRun = type == ApprovalRequestType.MasterGrant || type == ApprovalRequestType.TableOpen;
+        if (asksToRun && holdsMaster(requester.getId())) {
             throw new ConflictException(
                     "User " + requester.getId() + " already holds the Master role",
                     ConflictException.MASTER_ROLE_ALREADY_HELD);
@@ -217,7 +228,16 @@ public class ApprovalService {
                     "REQUEST_TYPE_NOT_ACCEPTED_HERE");
         }
 
-        return detailOf(openRequest(type, requester.getId(), requester, justification));
+        String proposedTableName = null;
+        if (type == ApprovalRequestType.TableOpen) {
+            proposedTableName = tableName == null ? "" : tableName.strip();
+            if (proposedTableName.isEmpty()) {
+                throw new InvalidRequestException(
+                        "A TableOpen request needs the name of the table", "TABLE_NAME_REQUIRED");
+            }
+        }
+
+        return detailOf(openRequest(type, requester.getId(), requester, justification, proposedTableName));
     }
 
     /**
@@ -252,7 +272,7 @@ public class ApprovalService {
     public GameTableDetailResponse submitTablePause(String gameTableId, String justification, CurrentUser actor) {
         User requester = requireAllowedRequester(actor);
         GameTableDetailResponse table = gameTableService.markPauseRequested(gameTableId, actor.userId());
-        openRequest(ApprovalRequestType.TablePause, gameTableId, requester, justification);
+        openRequest(ApprovalRequestType.TablePause, gameTableId, requester, justification, null);
         return table;
     }
 
@@ -299,7 +319,7 @@ public class ApprovalService {
         }
         registrationService.requireBlockableOn(gameTableId, registrationId);
         User requester = requireAllowed(userService.getById(actor.userId()));
-        return detailOf(openRequest(ApprovalRequestType.PlayerBan, registrationId, requester, justification));
+        return detailOf(openRequest(ApprovalRequestType.PlayerBan, registrationId, requester, justification, null));
     }
 
     /**
@@ -507,16 +527,17 @@ public class ApprovalService {
     /**
      * Says yes, and applies whatever saying yes means for this type.
      *
-     * <p>The effect per type, and two of the three are deliberately nothing:
+     * <p>The effect per type:
      *
      * <ul>
      *   <li>{@code MasterGrant} grants the role through {@link UserRoleService#grantRole} - the one
      *       place that writes a role, with the reason it was granted being the resolution note.</li>
-     *   <li>{@code TableOpen} <b>does not create the table</b>. Approving records that the request
-     *       stands; an admin then creates it {@code Unassigned} and assigns a master (ADR-06 §7), which is
-     *       the same circuit from its other end (ADR-16 §1). Creating it automatically is not a refused
-     *       option but an impossible one: the request carries no name, no system, no seats and no
-     *       agenda. The screen links to the form; the backend does not invent a table.</li>
+     *   <li>{@code TableOpen} creates a {@code Draft} with the proposed name, authored and run by the
+     *       requester as its Primary master, through {@link GameTableService#createDraftFor}. No role is
+     *       granted: they run that one table and nothing more. The rest of the table - systems, agenda,
+     *       seats - is theirs to write, and is demanded when they send it to review. The requester has
+     *       to be in good standing at the moment of approving: a draft handed to a blocked account is a
+     *       table nobody can run.</li>
      *   <li>{@code General} has no effect beyond being resolved. That is its nature, and saying so
      *       here is the point - an admin reading this class should not have to wonder what it
      *       silently did.</li>
@@ -532,14 +553,17 @@ public class ApprovalService {
      * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending,
      *                           {@code ITEM_ALREADY_CLAIMED} when <em>another</em> admin reserved it
      *                           from the shared queue (ADR-16 §5), {@code OWN_REQUEST_NOT_APPROVABLE}
-     *                           when it is a veto the actor asked for themselves, or
-     *                           {@code REQUEST_ENTITY_GONE} when what it points at no longer exists
+     *                           when it is a veto the actor asked for themselves,
+     *                           {@code REQUEST_ENTITY_GONE} when what it points at no longer exists, or
+     *                           {@code REQUESTER_NOT_ACTIVE} when it asks to open a table and the
+     *                           requester's account is no longer Allowed
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public ApprovalRequestDetailResponse approve(String requestId, String resolutionNote, CurrentUser actor) {
         lockTableFirstIfVeto(requestId);
         ApprovalRequest request = resolve(requestId, ApprovalStatus.Approved, resolutionNote, actor);
 
+        String createdTableId = null;
         switch (request.getRequestType()) {
             case MasterGrant -> userRoleService.grantRole(
                     request.getRequestedBy().getId(), PlatformRole.MASTER, resolutionNote, actor);
@@ -553,11 +577,12 @@ public class ApprovalService {
             // with the deciding admin's name on it.
             case PlayerBan -> registrationService.applyApprovedBlock(
                     request.getEntityId(), actor.userId(), resolutionNote);
-            // Nothing to do, and each for its own reason - see the Javadoc above.
-            case TableOpen, General -> { }
+            case TableOpen -> createdTableId = createRequestedDraft(request);
+            // Nothing to do: resolving it is all a general request is.
+            case General -> { }
         }
 
-        notifyRequester(request, NotificationType.ApprovalRequestApproved);
+        notifyRequester(request, NotificationType.ApprovalRequestApproved, createdTableId);
         return detailOf(request);
     }
 
@@ -599,8 +624,29 @@ public class ApprovalService {
             case PlayerBan, MasterGrant, TableOpen, General -> { }
         }
 
-        notifyRequester(request, NotificationType.ApprovalRequestRejected);
+        notifyRequester(request, NotificationType.ApprovalRequestRejected, null);
         return detailOf(request);
+    }
+
+    /**
+     * The effect of approving a {@code TableOpen}: a draft in the requester's name.
+     *
+     * @return the id of the draft
+     * @throws ConflictException 409 {@code REQUESTER_NOT_ACTIVE} when the requester's account is no
+     *                           longer Allowed
+     */
+    private String createRequestedDraft(ApprovalRequest request) {
+        User requester = request.getRequestedBy();
+        if (requester.getStatus() != UserStatus.Allowed) {
+            throw new ConflictException(
+                    "User " + requester.getId() + " is " + requester.getStatus()
+                            + " and cannot be handed the table of request " + request.getId(),
+                    ConflictException.REQUESTER_NOT_ACTIVE);
+        }
+        // Validated at submit; only a row written before the column existed has no name to give.
+        String name = Objects.requireNonNull(
+                request.getProposedTableName(), "TableOpen request " + request.getId() + " has no table name");
+        return gameTableService.createDraftFor(requester.getId(), name);
     }
 
     /**
@@ -701,11 +747,12 @@ public class ApprovalService {
     }
 
     /** The resolution is the only thing that rings a bell, and only for the person who asked (ADR-16 §5). */
-    private void notifyRequester(ApprovalRequest request, NotificationType type) {
-        // A veto points at an application; the requester's click has to land on the table, so it travels too.
+    private void notifyRequester(ApprovalRequest request, NotificationType type, @Nullable String createdTableId) {
+        // A veto points at an application and an approved TableOpen at the requester; in both the
+        // requester's click has to land on the table, so it travels too.
         String tableId = request.getRequestType() == ApprovalRequestType.PlayerBan
                 ? registrationService.tableIdOf(request.getEntityId())
-                : null;
+                : createdTableId;
         notificationService.notifyApprovalResolved(
                 request.getRequestedBy().getId(), type, request.getEntityType(), request.getEntityId(), tableId);
     }
@@ -764,17 +811,23 @@ public class ApprovalService {
      * <p>What the duplicate guard is actually for survives intact, because it moves with the entity:
      * «this table is already waiting on a pause» and «somebody already asked about this person».
      *
-     * @param entityId what the request is about. For the first three types it is the requester; for
-     *                 {@code TablePause} and {@code PlayerBan} it is the table or the application
+     * @param entityId          what the request is about. For the first three types it is the
+     *                          requester; for {@code TablePause} and {@code PlayerBan} it is the table or
+     *                          the application
+     * @param proposedTableName the name of the table a {@code TableOpen} asks to open; null otherwise
      */
     private ApprovalRequest openRequest(
-            ApprovalRequestType type, String entityId, User requester, String justification) {
+            ApprovalRequestType type,
+            String entityId,
+            User requester,
+            String justification,
+            @Nullable String proposedTableName) {
         requireNoPendingDuplicate(type, entityId, requester);
         // ADR-16 §2, the part the database cannot do: the reference is checked BEFORE the row exists.
         requireEntityExists(type.entityType(), entityId, null);
         // No notification to the admins, on purpose (ADR-16 §5): the queue is a view over this row.
         return approvalRequestRepository.save(
-                new ApprovalRequest(type, type.entityType(), entityId, requester, justification));
+                new ApprovalRequest(type, type.entityType(), entityId, requester, justification, proposedTableName));
     }
 
     /**

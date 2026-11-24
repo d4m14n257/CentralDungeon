@@ -16,6 +16,9 @@ export { JustifiedTableActionDialog } from './components/JustifiedTableActionDia
 export { SessionList } from './components/SessionList'
 export { SessionStatusBadge } from './components/SessionStatusBadge'
 export { TableStatusBadge } from './components/TableStatusBadge'
+export { TableSectionsFields } from './components/TableSectionsFields'
+export { TableSectionsView } from './components/TableSectionsView'
+export { sectionsToRequest } from './lib/tableSections'
 export { useAddMaster } from './api/useAddMaster'
 export { useAdminTables } from './api/useAdminTables'
 export { useApproveTable } from './api/useApproveTable'
@@ -92,4 +95,6 @@ export type {
   WeeklyCommitment,
   UpdateGameTableRequest,
   UpdateSessionRequest,
+  TableSectionKey,
+  TableSections,
 } from './types'

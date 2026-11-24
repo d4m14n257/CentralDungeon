@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { FormDialog } from '@/components/FormDialog'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
 import { useSubmitRequest } from '../api/useSubmitRequest'
@@ -49,6 +50,9 @@ interface SubmitRequestDialogProps {
  * request carries no other information about why it should be granted, and one with an empty reason
  * is one nobody can decide on. The server enforces it too, with `@NotBlank`.
  *
+ * **A single table also asks for its name**, because approving that request creates a draft with
+ * it; the other kinds have nothing to name.
+ *
  * The dialog is never reached with a request of the same kind already waiting: the section that
  * raises it shows the pending one instead of the button. `REQUEST_ALREADY_PENDING` and
  * `MASTER_ROLE_ALREADY_HELD` are still rendered inline, for the race and for whoever arrives by
@@ -67,12 +71,12 @@ export function SubmitRequestDialog({ type, open, onOpenChange, help }: SubmitRe
 
   const form = useForm<SubmitApprovalRequestForm>({
     resolver: zodResolver(submitApprovalRequestSchema),
-    defaultValues: { type, justification: '' },
+    defaultValues: { type, justification: '', tableName: '' },
   })
 
   function handleOpenChange(next: boolean) {
     if (!next) {
-      form.reset({ type, justification: '' })
+      form.reset({ type, justification: '', tableName: '' })
       submit.reset()
     }
     onOpenChange(next)
@@ -113,6 +117,22 @@ export function SubmitRequestDialog({ type, open, onOpenChange, help }: SubmitRe
           </ul>
 
           {help}
+
+          {type === 'TableOpen' && (
+            <FormField
+              control={form.control}
+              name="tableName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('requests.submit.nameLabel')}</FormLabel>
+                  <FormControl>
+                    <Input maxLength={128} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}

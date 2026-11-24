@@ -23,6 +23,9 @@ propia migración, y se anota acá para que este documento no mienta por omisió
 | `V14__file_library_states.sql` | La biblioteca de la plataforma gana ciclo de vida (ADR-14 §7). `file_type` suma **`Library`** —en la biblioteca, ofrecido a nadie—, que no necesita DDL porque es `VARCHAR` (ADR-03 §5). Lo que sí la necesita es **`published_at DATETIME NULL`**: sin publicar y oculto son los dos `Library`, y la pantalla los nombra distinto; la columna guarda la primera publicación y nunca se borra, porque ocultar un archivo no hace que nunca haya estado publicado |
 | `V15__table_seeking_players.sql` | Una mesa `InProgress` puede volver a buscar jugadores (ADR-07 «Mesas: ciclo de vida» §11 «Una mesa en curso puede buscar jugadores, y no es un estado»): **`game_tables.seeking_players BOOLEAN NOT NULL DEFAULT FALSE`**. No es un estado nuevo del ciclo de vida —la mesa sigue jugando y sus sesiones no se tocan—, solo si acepta postulaciones y si aparece en el explorador. Cualquier master la enciende; el service la apaga al llenarse el cupo y al salir de `InProgress` |
 | `V16__refresh_tokens.sql` | F4.4: **`refresh_tokens`**, cada refresh que el servidor entrega (ADR-05 «Seguridad, sesión y login» §2 «Tres tokens: el de Discord se descarta, el access es corto y el refresh rota en una familia revocable»). Guarda `jti_hash` —SHA-256 hex del `jti`, `CHAR(64)` `UNIQUE`, nunca el token ni el `jti`—, `family_id` (todos los de un login), `user_id` (FK a `users`), `expires_at`, `revoked_at` nulo mientras es el vivo, y `created_at`; índices por `family_id` y `expires_at`. Se escribe para insertar, para sellar `revoked_at` y para purgar: `RefreshTokenPurgeService` borra a diario (06:00) las filas vencidas hace más de 7 días y las revocadas ya vencidas (§4.5, al lado de «El refresh se gasta al usarse»). El comentario de la migración todavía dice que las vencidas no se purgan; no se corrige, porque la migración está aplicada y el checksum cubre el archivo entero |
+| `V17__table_open_proposed_name.sql` | **`approval_requests.proposed_table_name VARCHAR(128) NULL`**: el nombre que propone quien pide abrir una sola mesa (`TableOpen`). Solo lo llena ese tipo; aprobarlo crea un `Draft` con ese nombre, a nombre del solicitante y con él como `Primary`, sin otorgarle el rol (ADR-16 «Pedidos con aprobación y bandeja de admins» §1, ADR-06 «Roles y alcance» §4) |
+| `V18__tag_definitions.sql` | **`tags`** gana `category VARCHAR(32) NULL` —un código de `TagCategory`: `Theme`, `PlayStyle`, `ContentWarning`, `SafetyTool`, `Experience`, `Language`, `Age`, `Format`— y `description VARCHAR(500) NULL`, texto plano (ADR-12 «Catálogos» §10 «Los tags tienen categoría y definición, y son del grupo»). Las dos son del grupo: **solo las guarda el canónico** y los alias las leen de él; nulo es «sin clasificar». Clasifica los cinco tags que siembra `V3__catalog_seed.sql`: Principiantes → `Experience`; Rol y Combate → `PlayStyle`; One-shot y Homebrew → `Format` |
+| `V19__table_sections.sql` | **`game_tables`** gana cuatro secciones opcionales de texto enriquecido, `character_creation`, `what_to_expect`, `equipment` y `safety`, todas `LONGTEXT NULL`: nulo es una sección que el master no escribió. El service las sanea al guardar y al servir, como `description`; viajan juntas como `TableSections` en los requests de crear y editar y en el detalle, y editar cualquiera se notifica como un único cambio `sections` |
 
 ```sql
 SET NAMES utf8mb4;
@@ -86,6 +89,10 @@ CREATE TABLE game_tables (
     description    LONGTEXT      NULL,
     permitted      LONGTEXT      NULL,
     requirements   LONGTEXT      NULL,   -- rich text (ADR-03 §8)
+    character_creation LONGTEXT  NULL,   -- optional section, rich text (V19)
+    what_to_expect LONGTEXT      NULL,   -- optional section, rich text (V19)
+    equipment      LONGTEXT      NULL,   -- optional section, rich text (V19)
+    safety         LONGTEXT      NULL,   -- optional section: safety tools and content warnings (V19)
     start_date     DATETIME      NULL,   -- UTC (ADR-03 §6)
     duration       TIME          NULL,   -- duration of ONE session
     total_sessions INT           NULL,   -- planned number of sessions (ADR-08 §3)
@@ -340,6 +347,8 @@ CREATE TABLE tags (
     name         VARCHAR(128) NOT NULL,
     canonical_id VARCHAR(64)  NULL,
     status       VARCHAR(32)  NOT NULL DEFAULT 'Created',
+    category     VARCHAR(32)  NULL,   -- TagCategory; solo en el canónico, los alias la heredan (V18)
+    description  VARCHAR(500) NULL,   -- texto plano; solo en el canónico (V18)
     created_at   DATETIME     NOT NULL,
     updated_at   DATETIME     NULL,
     deleted_at   DATETIME     NULL,
@@ -503,6 +512,7 @@ CREATE TABLE approval_requests (
     entity_id       VARCHAR(64)  NOT NULL,
     requested_by    VARCHAR(64)  NOT NULL,
     justification   LONGTEXT     NOT NULL,
+    proposed_table_name VARCHAR(128) NULL, -- only TableOpen: the name of the Draft its approval creates (V17)
     status          VARCHAR(32)  NOT NULL DEFAULT 'Pending', -- Pending | Approved | Rejected
     claimed_by      VARCHAR(64)  NULL,  -- admin who reserved this item (ADR-16 §5)
     claimed_at      DATETIME     NULL,  -- auto-released after a timeout (ADR-16 §5)

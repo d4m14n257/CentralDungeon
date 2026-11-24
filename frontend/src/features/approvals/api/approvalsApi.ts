@@ -82,8 +82,8 @@ export const approvalsApi = {
   /**
    * Approves a request. What that does depends on the kind, and it is the service that decides:
    * `MasterGrant` grants the role through `UserRoleService`, the same single road `/admin/users`
-   * uses; `TableOpen` records that the request stands and **does not create the table** — the request
-   * carries no name, no system, no seats and no agenda; `General` has no effect beyond being closed.
+   * uses; `TableOpen` creates a draft with the proposed name, run by the requester as its Primary
+   * and without the role; `General` has no effect beyond being closed.
    *
    * @param id    the request to approve
    * @param input the note, which is required

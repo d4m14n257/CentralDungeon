@@ -34,6 +34,7 @@ import com.centraldungeon.features.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.features.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.features.tables.dto.SetSeekingPlayersRequest;
 import com.centraldungeon.features.tables.dto.TableScheduleEntry;
+import com.centraldungeon.features.tables.dto.TableSections;
 import com.centraldungeon.features.tables.dto.TableStatusChangeResponse;
 import com.centraldungeon.features.tables.dto.UpdateGameTableRequest;
 import com.centraldungeon.features.users.PlatformRole;
@@ -394,16 +395,18 @@ public class GameTableService {
         String description = richTextSanitizer.sanitize(request.description());
         String permitted = richTextSanitizer.sanitize(request.permitted());
         String requirements = richTextSanitizer.sanitize(request.requirements());
+        TableSections sections = sanitize(request.sections());
         Integer maxPlayers = requireWithinPlayerCap(request.maxPlayers());
         TableType tableType = resolveTableType(request.tableTypeId());
         List<String> changes = new ArrayList<>(TableEditDiff.of(
                 gameTable, request, description, permitted, requirements, maxPlayers,
-                tableCatalogService.findLinks(gameTable.getId())));
+                tableCatalogService.findLinks(gameTable.getId()), sections));
 
         gameTable.setName(request.name());
         gameTable.setDescription(description);
         gameTable.setPermitted(permitted);
         gameTable.setRequirements(requirements);
+        applySections(gameTable, sections);
         gameTable.setStartDate(request.startDate());
         gameTable.setTotalSessions(request.totalSessions());
         gameTable.setMaxPlayers(maxPlayers);
@@ -436,6 +439,29 @@ public class GameTableService {
         // checked when the table gets its masters, in assignInitialMasters (ADR-08 §2).
         tableScheduleService.replace(gameTable, orEmpty(request.schedule()), null);
         return toDetail(gameTable);
+    }
+
+    /**
+     * A draft opened on somebody's behalf, when an admin approves their request to run a single table.
+     *
+     * <p>The requester becomes its author and its Primary, so they can write and send it to review like
+     * any master's draft - and that is all they get: no platform role is granted, because running this
+     * one table is what the Master row authorizes, while the role means creating tables of one's own.
+     * Nothing beyond the name is required here: the systems, tags, platforms and agenda are demanded
+     * when the master edits the draft, and checked again on the stored table when they send it to
+     * review, so the bare draft cannot reach a reviewer.
+     *
+     * @param ownerId who asked for the table, the one who will run it
+     * @param name    the name they proposed for it
+     * @return the id of the new table, in Draft
+     * @throws NotFoundException if the owner's account does not exist
+     */
+    @Transactional
+    public String createDraftFor(String ownerId, String name) {
+        User owner = userService.getById(ownerId);
+        GameTable gameTable = gameTableRepository.save(new GameTable(name, owner));
+        masterService.createPrimary(gameTable, owner);
+        return gameTable.getId();
     }
 
     /** Assigning masters to an Unassigned table skips review entirely and opens it directly (ADR-06 §7). */
@@ -550,7 +576,10 @@ public class GameTableService {
      * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
      *         answer as a table that does not exist
      * @throws ForbiddenActionException if the actor sees the table but is not its Primary
-     * @throws ConflictException if the table was not a draft, or the draft is not runnable yet
+     * @throws ConflictException if the table was not a draft
+     * @throws InvalidRequestException {@code TABLE_NEEDS_SYSTEM}, {@code TABLE_NEEDS_PLATFORM},
+     *         {@code TABLE_NEEDS_TAG} or {@code TABLE_NEEDS_SCHEDULE} when the draft lacks one of the
+     *         four things a table cannot run without - the same requirement editing it enforces
      */
     @Transactional
     public GameTableDetailResponse submitForReview(String gameTableId, String actorId) {
@@ -559,6 +588,7 @@ public class GameTableService {
         if (gameTable.getStatus() != GameTableStatus.Draft) {
             throw new ConflictException("Cannot send a table in status " + gameTable.getStatus() + " to review");
         }
+        requireRunnableAsStored(gameTableId);
         recordStatusChange(gameTable, GameTableStatus.Draft, GameTableStatus.Preparation, actorId, null);
         return toDetail(gameTable);
     }
@@ -573,6 +603,9 @@ public class GameTableService {
      *         answer as a table that does not exist
      * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      * @throws ConflictException if the table was not in ChangesRequested
+     * @throws InvalidRequestException {@code TABLE_NEEDS_SYSTEM}, {@code TABLE_NEEDS_PLATFORM},
+     *         {@code TABLE_NEEDS_TAG} or {@code TABLE_NEEDS_SCHEDULE} when the table lacks one of the
+     *         four things a table cannot run without
      */
     @Transactional
     public GameTableDetailResponse resubmit(String gameTableId, String actorId) {
@@ -581,6 +614,7 @@ public class GameTableService {
         if (gameTable.getStatus() != GameTableStatus.ChangesRequested) {
             throw new ConflictException("Cannot resubmit a table in status " + gameTable.getStatus());
         }
+        requireRunnableAsStored(gameTableId);
         recordStatusChange(gameTable, GameTableStatus.ChangesRequested, GameTableStatus.Preparation, actorId, null);
         return toDetail(gameTable);
     }
@@ -1276,6 +1310,7 @@ public class GameTableService {
         gameTable.setDescription(richTextSanitizer.sanitize(request.description()));
         gameTable.setPermitted(richTextSanitizer.sanitize(request.permitted()));
         gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
+        applySections(gameTable, sanitize(request.sections()));
         gameTable.setStartDate(request.startDate());
         gameTable.setTotalSessions(request.totalSessions());
         gameTable.setMaxPlayers(requireWithinPlayerCap(request.maxPlayers()));
@@ -1430,10 +1465,10 @@ public class GameTableService {
      *                                 which field to go fix rather than "invalid"
      */
     private void requireRunnableDraft(
-            @Nullable List<String> systemIds,
-            @Nullable List<String> tagIds,
-            @Nullable List<String> platformIds,
-            @Nullable List<TableScheduleEntry> schedule) {
+            @Nullable List<?> systemIds,
+            @Nullable List<?> tagIds,
+            @Nullable List<?> platformIds,
+            @Nullable List<?> schedule) {
         if (orEmpty(systemIds).isEmpty()) {
             throw new InvalidRequestException("A table must declare at least one system", "TABLE_NEEDS_SYSTEM");
         }
@@ -1446,6 +1481,20 @@ public class GameTableService {
         if (orEmpty(schedule).isEmpty()) {
             throw new InvalidRequestException("A table must declare at least one weekly slot", "TABLE_NEEDS_SCHEDULE");
         }
+    }
+
+    /**
+     * The same four requirements as {@link #requireRunnableDraft}, read from what the table has stored
+     * rather than from a request: what sending it to review checks, since a draft can be born with a
+     * name and nothing else when an admin approves a request to open a table.
+     */
+    private void requireRunnableAsStored(String gameTableId) {
+        Map<CatalogType, List<CatalogValueResponse>> links = tableCatalogService.findLinks(gameTableId);
+        requireRunnableDraft(
+                links.get(CatalogType.SYSTEMS),
+                links.get(CatalogType.TAGS),
+                links.get(CatalogType.PLATFORMS),
+                tableScheduleService.findByTable(gameTableId));
     }
 
     /**
@@ -1543,12 +1592,38 @@ public class GameTableService {
                 richTextSanitizer.sanitize(gameTable.getDescription()),
                 richTextSanitizer.sanitize(gameTable.getPermitted()),
                 richTextSanitizer.sanitize(gameTable.getRequirements()),
+                sanitize(new TableSections(
+                        gameTable.getCharacterCreation(), gameTable.getWhatToExpect(),
+                        gameTable.getEquipment(), gameTable.getSafety())),
                 conflictActorId != null && scheduleConflictService.findClashWith(conflictActorId, gameTable) != null,
                 conflictActorId != null && tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                         gameTable.getId(), conflictActorId, ACTIVE_REGISTRATION_STATUSES),
                 conflictActorId != null && tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                         gameTable.getId(), conflictActorId, List.of(TableRegistrationStatus.Player)),
                 conflictActorId == null ? null : registrationService.findMyRejection(gameTable.getId(), conflictActorId));
+    }
+
+    /**
+     * The optional sections with each one sanitized, the way the description is. Absent means none
+     * was written.
+     */
+    private TableSections sanitize(@Nullable TableSections sections) {
+        if (sections == null) {
+            return TableSections.EMPTY;
+        }
+        return new TableSections(
+                richTextSanitizer.sanitize(sections.characterCreation()),
+                richTextSanitizer.sanitize(sections.whatToExpect()),
+                richTextSanitizer.sanitize(sections.equipment()),
+                richTextSanitizer.sanitize(sections.safety()));
+    }
+
+    /** Writes the four sections, already sanitized, onto the table. */
+    private static void applySections(GameTable gameTable, TableSections sections) {
+        gameTable.setCharacterCreation(sections.characterCreation());
+        gameTable.setWhatToExpect(sections.whatToExpect());
+        gameTable.setEquipment(sections.equipment());
+        gameTable.setSafety(sections.safety());
     }
 
     private int countPlayers(String gameTableId) {

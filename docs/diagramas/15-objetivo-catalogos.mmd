@@ -21,6 +21,8 @@ erDiagram
         varchar name UK
         varchar canonical_id FK "NULL = es el canonico. Profundidad 1 SIEMPRE"
         varchar status "Created | Allowed | Rejected | Deleted"
+        varchar category "TagCategory, NULL. Solo el canonico; los alias la heredan"
+        varchar description "texto plano, max 500, NULL. Solo el canonico"
         datetime deleted_at
     }
 

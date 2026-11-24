@@ -12,10 +12,14 @@ import com.centraldungeon.features.registrations.TableRegistrationRepository;
 import com.centraldungeon.features.registrations.TableRegistrationStatus;
 import com.centraldungeon.features.tables.GameTable;
 import com.centraldungeon.features.tables.GameTableRepository;
+import com.centraldungeon.features.tables.GameTableService;
 import com.centraldungeon.features.tables.GameTableStatus;
 import com.centraldungeon.features.tables.Master;
 import com.centraldungeon.features.tables.MasterRepository;
 import com.centraldungeon.features.tables.MasterType;
+import com.centraldungeon.features.tables.Weekday;
+import com.centraldungeon.features.tables.dto.TableScheduleEntry;
+import com.centraldungeon.features.tables.dto.UpdateGameTableRequest;
 import com.centraldungeon.features.users.PlatformRole;
 import com.centraldungeon.features.users.Role;
 import com.centraldungeon.features.users.RoleRepository;
@@ -29,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.time.LocalTime;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -118,6 +123,9 @@ class ApprovalServiceIT {
     private MasterRepository masterRepository;
 
     @Autowired
+    private GameTableService gameTableService;
+
+    @Autowired
     private TableRegistrationRepository registrationRepository;
 
     @BeforeEach
@@ -126,13 +134,74 @@ class ApprovalServiceIT {
         notificationRepository.deleteAll();
         // The tables the orphan cases below create, children before parents, so the users can go.
         for (String table : List.of("registration_status_changes", "registration_rejections", "registration_files",
-                "table_registrations", "masters", "table_status_changes", "game_tables")) {
+                "table_registrations", "masters", "table_status_changes", "table_schedules", "table_systems",
+                "table_tags", "table_platforms", "game_tables")) {
             jdbcTemplate.update("delete from " + table);
         }
         userRoleChangeRepository.deleteAll();
         userStatusChangeRepository.deleteAll();
         userRoleRepository.deleteAll();
         userRepository.deleteAll();
+    }
+
+    // ---------------------------------------------------------- a request to open one table
+
+    /**
+     * The whole circuit of a single table, against real rows: a player asks, an admin approves, and
+     * the player - still without the Master role - runs the draft that was created for them, fills it
+     * in and sends it to review.
+     */
+    @Test
+    void anApprovedTableOpenGivesThePlayerADraftTheyCanFillInAndSendToReview() {
+        User asker = person("the-asker");
+        grant(asker, PlatformRole.PLAYER);
+        User admin = admin("the-admin");
+        Set<String> rolesBefore = userRoleRepository.findActiveRoleNames(asker.getId());
+
+        String requestId = approvalService
+                .submit(ApprovalRequestType.TableOpen, "quiero dirigir una sola", "La cripta", asPlayer(asker))
+                .id();
+        approvalService.approve(requestId, "adelante", asAdmin(admin));
+
+        GameTable draft = gameTableRepository.findAll().stream()
+                .filter(table -> table.getCreatedBy().getId().equals(asker.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(draft.getName()).isEqualTo("La cripta");
+        assertThat(draft.getStatus()).isEqualTo(GameTableStatus.Draft);
+        assertThat(masterRepository.findAll())
+                .filteredOn(master -> master.getGameTable().getId().equals(draft.getId()))
+                .singleElement()
+                .satisfies(master -> {
+                    assertThat(master.getUser().getId()).isEqualTo(asker.getId());
+                    assertThat(master.getMasterType()).isEqualTo(MasterType.Primary);
+                });
+        assertThat(userRoleRepository.findActiveRoleNames(asker.getId()))
+                .as("running one table is a master row, never the role")
+                .isEqualTo(rolesBefore);
+        assertThat(notificationRepository.findAll())
+                .singleElement()
+                .satisfies(notification -> assertThat(notification.getParams().tableId()).isEqualTo(draft.getId()));
+
+        gameTableService.update(draft.getId(), completeTable("La cripta"), asker.getId());
+        assertThat(gameTableService.submitForReview(draft.getId(), asker.getId()).status())
+                .isEqualTo(GameTableStatus.Preparation.name());
+    }
+
+    /** One accepted value of a seeded catalog, whatever the seed's ids are. */
+    private String acceptedId(String catalog) {
+        return jdbcTemplate.queryForObject(
+                "select id from " + catalog + " where status = 'Accepted' and canonical_id is null limit 1",
+                String.class);
+    }
+
+    /** Everything a table needs to go to review: a system, a tag, a platform and a weekly slot. */
+    private UpdateGameTableRequest completeTable(String name) {
+        return new UpdateGameTableRequest(
+                name, null, null, null, null,
+                List.of(acceptedId("systems")), List.of(acceptedId("tags")), List.of(acceptedId("platforms")),
+                null, null, null,
+                List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))), null);
     }
 
     // ---------------------------------------------------------------- the race of two admins
@@ -257,8 +326,8 @@ class ApprovalServiceIT {
         User asker = person("the-eager-asker");
 
         Outcome outcome = raceOn(
-                () -> approvalService.submit(ApprovalRequestType.MasterGrant, "primer clic", asPlayer(asker)),
-                () -> approvalService.submit(ApprovalRequestType.MasterGrant, "segundo clic", asPlayer(asker)));
+                () -> approvalService.submit(ApprovalRequestType.MasterGrant, "primer clic", null, asPlayer(asker)),
+                () -> approvalService.submit(ApprovalRequestType.MasterGrant, "segundo clic", null, asPlayer(asker)));
 
         assertThat(outcome.succeeded())
                 .as("one press, one request. Refusals seen: " + outcome.refusals())
@@ -556,7 +625,7 @@ class ApprovalServiceIT {
     }
 
     private String submitAs(User asker, ApprovalRequestType type, String justification) {
-        return approvalService.submit(type, justification, asPlayer(asker)).id();
+        return approvalService.submit(type, justification, null, asPlayer(asker)).id();
     }
 
     /**

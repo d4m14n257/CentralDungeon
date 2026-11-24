@@ -81,6 +81,8 @@ class ApprovalServiceTest {
 
     private static final String NOTE = "Tiene karma de sobra y dos mesas jugadas";
 
+    private static final String TABLE_NAME = "La cripta del terror";
+
     private static final Pageable FIRST_PAGE = PageRequest.of(0, 20);
 
     @Mock
@@ -145,7 +147,7 @@ class ApprovalServiceTest {
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
         when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
 
-        ApprovalRequestDetailResponse response = service().submit(ApprovalRequestType.TableOpen, WHY, REQUESTER);
+        ApprovalRequestDetailResponse response = service().submit(ApprovalRequestType.TableOpen, WHY, TABLE_NAME, REQUESTER);
 
         assertThat(response.status()).isEqualTo("Pending");
         assertThat(response.type()).isEqualTo("TableOpen");
@@ -159,6 +161,46 @@ class ApprovalServiceTest {
         assertThat(response.resolutionNote()).isNull();
         // ADR-16 §5: a request is born unreserved. Only the shared tray writes those two columns.
         assertThat(response.claimedByName()).isNull();
+        assertThat(response.proposedTableName()).isEqualTo(TABLE_NAME);
+    }
+
+    /** The draft an approval creates needs a name from the start, so a request without one is refused. */
+    @Test
+    void aTableOpenWithoutATableNameIsRefused() {
+        allowedRequester();
+        when(entityResolver.exists("user", "user-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.TableOpen, WHY, "   ", REQUESTER))
+                .isInstanceOf(InvalidRequestException.class)
+                .extracting("errorCode")
+                .isEqualTo("TABLE_NAME_REQUIRED");
+
+        verify(approvalRequestRepository, never()).save(any());
+    }
+
+    /** Somebody holding the role creates their own tables: asking for one is refused, not queued. */
+    @Test
+    void askingForASingleTableWhileHoldingTheRoleIsAConflict() {
+        allowedRequester();
+        when(userRoleRepository.findActiveRoleNames("user-1")).thenReturn(Set.of("Player", "Master"));
+
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.TableOpen, WHY, TABLE_NAME, REQUESTER))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isEqualTo(ConflictException.MASTER_ROLE_ALREADY_HELD);
+
+        verify(approvalRequestRepository, never()).save(any());
+    }
+
+    /** Only a TableOpen carries a name: on any other type the field is dropped, not stored. */
+    @Test
+    void anotherTypeStoresNoTableName() {
+        allowedRequester();
+        when(entityResolver.exists("user", "user-1")).thenReturn(true);
+        when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
+
+        assertThat(service().submit(ApprovalRequestType.General, WHY, TABLE_NAME, REQUESTER).proposedTableName())
+                .isNull();
     }
 
     /** The whole of ADR-16 §2 at the writing end: the reference is checked, and it is checked <em>first</em>. */
@@ -167,7 +209,7 @@ class ApprovalServiceTest {
         allowedRequester();
         when(entityResolver.exists("user", "user-1")).thenReturn(false);
 
-        assertThatThrownBy(() -> service().submit(ApprovalRequestType.General, WHY, REQUESTER))
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.General, WHY, null, REQUESTER))
                 .isInstanceOf(NotFoundException.class);
 
         verify(approvalRequestRepository, never()).save(any());
@@ -179,7 +221,7 @@ class ApprovalServiceTest {
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
         when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
 
-        service().submit(ApprovalRequestType.General, WHY, REQUESTER);
+        service().submit(ApprovalRequestType.General, WHY, null, REQUESTER);
 
         // ADR-16 §5: admin work items are not duplicated as notifications. The tray shows them; one
         // notification per request would be the copy ADR-16 §5 avoided.
@@ -194,7 +236,7 @@ class ApprovalServiceTest {
                         ApprovalRequestType.General, "user-1", ApprovalStatus.Pending))
                 .thenReturn(true);
 
-        assertThatThrownBy(() -> service().submit(ApprovalRequestType.General, WHY, REQUESTER))
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.General, WHY, null, REQUESTER))
                 .isInstanceOf(ConflictException.class)
                 .extracting("errorCode")
                 .isEqualTo(ConflictException.REQUEST_ALREADY_PENDING);
@@ -215,7 +257,7 @@ class ApprovalServiceTest {
                 .thenReturn(false);
         when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
 
-        assertThat(service().submit(ApprovalRequestType.General, WHY, REQUESTER).status()).isEqualTo("Pending");
+        assertThat(service().submit(ApprovalRequestType.General, WHY, null, REQUESTER).status()).isEqualTo("Pending");
     }
 
     @Test
@@ -223,7 +265,7 @@ class ApprovalServiceTest {
         allowedRequester();
         when(userRoleRepository.findActiveRoleNames("user-1")).thenReturn(Set.of("Player", "Master"));
 
-        assertThatThrownBy(() -> service().submit(ApprovalRequestType.MasterGrant, WHY, REQUESTER))
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.MasterGrant, WHY, null, REQUESTER))
                 .isInstanceOf(ConflictException.class)
                 .extracting("errorCode")
                 .isEqualTo(ConflictException.MASTER_ROLE_ALREADY_HELD);
@@ -239,7 +281,7 @@ class ApprovalServiceTest {
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
         when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
 
-        assertThat(service().submit(ApprovalRequestType.MasterGrant, WHY, REQUESTER).type())
+        assertThat(service().submit(ApprovalRequestType.MasterGrant, WHY, null, REQUESTER).type())
                 .isEqualTo("MasterGrant");
     }
 
@@ -248,7 +290,7 @@ class ApprovalServiceTest {
         User blocked = allowedRequester();
         blocked.setStatus(UserStatus.Blocked);
 
-        assertThatThrownBy(() -> service().submit(ApprovalRequestType.General, WHY, REQUESTER))
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.General, WHY, null, REQUESTER))
                 .isInstanceOf(ForbiddenActionException.class);
 
         verify(approvalRequestRepository, never()).save(any());
@@ -284,18 +326,51 @@ class ApprovalServiceTest {
     }
 
     /**
-     * Aprobar un {@code TableOpen} no crea la mesa: el pedido no trae nombre, sistema, cupo ni agenda,
-     * so creating it automatically is not a refused option but an impossible one (ADR-06 §7, ADR-16 §1).
+     * Approving a {@code TableOpen} creates the draft in the requester's name, with the name they
+     * proposed, and grants no role: running that one table is what they asked for.
      */
     @Test
-    void approvingATableOpenCreatesNoTableAndGrantsNoRole() {
-        ApprovalRequest request = pending(ApprovalRequestType.TableOpen);
+    void approvingATableOpenCreatesTheRequestersDraftAndGrantsNoRole() {
+        ApprovalRequest request = pendingTableOpen();
         resolvable(request);
+        when(gameTableService.createDraftFor("user-1", TABLE_NAME)).thenReturn("table-9");
 
         ApprovalRequestDetailResponse response = service().approve("req-1", NOTE, ADMIN);
 
         assertThat(response.status()).isEqualTo("Approved");
+        verify(gameTableService).createDraftFor("user-1", TABLE_NAME);
         verifyNoInteractions(userRoleService);
+        // The click on the bell lands on the draft, which the request itself does not point at.
+        verify(notificationService)
+                .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestApproved, "user", "user-1", "table-9");
+    }
+
+    /** A draft handed to an account that can no longer use it is a table nobody runs: refused, nothing done. */
+    @Test
+    void approvingATableOpenOfABlockedRequesterIsAConflict() {
+        ApprovalRequest request = pendingTableOpen();
+        request.getRequestedBy().setStatus(UserStatus.Blocked);
+        resolvable(request);
+
+        assertThatThrownBy(() -> service().approve("req-1", NOTE, ADMIN))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isEqualTo(ConflictException.REQUESTER_NOT_ACTIVE);
+
+        verifyNoInteractions(gameTableService);
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void rejectingATableOpenCreatesNothing() {
+        ApprovalRequest request = pendingTableOpen();
+        resolvable(request);
+
+        assertThat(service().reject("req-1", NOTE, ADMIN).status()).isEqualTo("Rejected");
+
+        verifyNoInteractions(gameTableService);
+        verify(notificationService)
+                .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestRejected, "user", "user-1", null);
     }
 
     @Test
@@ -791,7 +866,7 @@ class ApprovalServiceTest {
     void theGenericEndpointDoesNotOpenTheTypesThatAreAboutSomethingElse() {
         allowedRequester();
 
-        assertThatThrownBy(() -> service().submit(ApprovalRequestType.TablePause, WHY, REQUESTER))
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.TablePause, WHY, null, REQUESTER))
                 .isInstanceOf(InvalidRequestException.class);
         verify(approvalRequestRepository, never()).save(any());
     }
@@ -845,6 +920,11 @@ class ApprovalServiceTest {
     /** A pending request about something other than the requester - the two types F3.4 added. */
     private static ApprovalRequest pendingAbout(ApprovalRequestType type, String entityId) {
         return persisted(new ApprovalRequest(type, type.entityType(), entityId, user("user-1", "carla"), WHY));
+    }
+
+    private static ApprovalRequest pendingTableOpen() {
+        return persisted(new ApprovalRequest(
+                ApprovalRequestType.TableOpen, "user", "user-1", user("user-1", "carla"), WHY, TABLE_NAME));
     }
 
     private static ApprovalRequest pending(ApprovalRequestType type) {

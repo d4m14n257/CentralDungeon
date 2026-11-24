@@ -4,6 +4,7 @@ import com.centraldungeon.features.approvals.ApprovalRequestType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The body of {@code POST /requests}: what somebody is asking for, and why.
@@ -19,8 +20,11 @@ import jakarta.validation.constraints.Size;
  *                      cannot make sense of is one they cannot answer. The cap is explicit because
  *                      the column is a {@code LONGTEXT} - without it a 4 MB body goes in without a
  *                      word of complaint
+ * @param tableName     the name of the table to open. Required for a {@code TableOpen}, where approving
+ *                      the request creates a draft with this name; ignored for every other type
  */
 public record SubmitApprovalRequestRequest(
         @NotNull ApprovalRequestType type,
-        @NotBlank @Size(max = 4000) String justification) {
+        @NotBlank @Size(max = 4000) String justification,
+        @Nullable @Size(max = 128) String tableName) {
 }

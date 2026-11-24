@@ -119,16 +119,17 @@ describe('BlockingHelp', () => {
 /** The other half of F3.2's help: what the tray is, and what approving each kind actually does. */
 describe('RequestsAdminHelp', () => {
   /**
-   * The reason this section exists. The two approvals look identical on screen and do completely
-   * different things — an admin who assumes a `TableOpen` builds the table will approve it, tell
-   * nobody, and leave whoever asked waiting for a table that is never coming.
+   * The reason this section exists. The two approvals look identical on screen and do different
+   * things — a master grant hands out the role, and a table request creates a draft for whoever asked
+   * without granting it.
    */
-  it('says a master grant hands out the role and a table request creates nothing', () => {
+  it('says a master grant hands out the role and a table request creates a draft without it', () => {
     render(<RequestsAdminHelp />)
 
     const body = document.body.textContent ?? ''
     expect(body).toMatch(/le da el rol por el mismo camino que «Usuarios»/i)
-    expect(body).toMatch(/no crea la mesa/i)
+    expect(body).toMatch(/crea un borrador con el nombre propuesto/i)
+    expect(body).toMatch(/sin recibir el rol/i)
     expect(body).toMatch(/no hay una segunda forma de otorgarlo/i)
   })
 

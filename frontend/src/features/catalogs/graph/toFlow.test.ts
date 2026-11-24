@@ -13,6 +13,8 @@ function value(id: string, overrides: Partial<AdminCatalogValue> = {}): AdminCat
     uses: 0,
     aliasCount: 0,
     createdAt: '2026-09-01T00:00:00Z',
+    category: null,
+    description: null,
     ...overrides,
   }
 }

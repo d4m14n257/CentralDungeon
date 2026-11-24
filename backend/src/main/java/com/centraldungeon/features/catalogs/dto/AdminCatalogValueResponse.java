@@ -1,5 +1,6 @@
 package com.centraldungeon.features.catalogs.dto;
 
+import com.centraldungeon.features.catalogs.TagCategory;
 import java.time.LocalDateTime;
 import org.jspecify.annotations.Nullable;
 
@@ -24,6 +25,12 @@ import org.jspecify.annotations.Nullable;
  *                      groups-only listing say how big each group is without reading it (ADR-12 §7)
  * @param createdAt     when the value was proposed, in UTC. It is what orders a review queue: the
  *                      oldest proposal is the one that has been waiting longest
+ * @param category      the category of the value's group, read from its canonical entry when the
+ *                      value is an alias. Only tags have one: always null for systems and
+ *                      platforms, and null for a tag group nobody has classified
+ * @param description   the definition of the value's group in plain text, read from its canonical
+ *                      entry when the value is an alias. Only tags have one: always null for
+ *                      systems and platforms, and null for a tag group nobody has defined
  */
 public record AdminCatalogValueResponse(
         String id,
@@ -33,5 +40,7 @@ public record AdminCatalogValueResponse(
         @Nullable String canonicalName,
         long uses,
         long aliasCount,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt,
+        @Nullable TagCategory category,
+        @Nullable String description) {
 }

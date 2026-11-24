@@ -26,6 +26,7 @@ function table(): GameTableDetail {
     description: null,
     permitted: null,
     requirements: null,
+    sections: { characterCreation: null, whatToExpect: null, equipment: null, safety: null },
     tableTypeName: null,
     tableTypeCode: null,
     status: 'Opened',

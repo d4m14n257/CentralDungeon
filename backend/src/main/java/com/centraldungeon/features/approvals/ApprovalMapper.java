@@ -13,7 +13,7 @@ public interface ApprovalMapper {
     /**
      * One row of the admin listing, and of "my requests".
      *
-     * <p>Written by hand rather than generated: three of the nine fields are a person resolved to a
+     * <p>Written by hand rather than generated: three of the eleven fields are a person resolved to a
      * display name and two are enums flattened to strings, which is more mapping than there is
      * copying.
      *
@@ -35,6 +35,7 @@ public interface ApprovalMapper {
                 displayNameOrNull(request.getClaimedBy()),
                 gameTableId,
                 subjectName,
+                request.getProposedTableName(),
                 request.getCreatedAt());
     }
 
@@ -63,6 +64,7 @@ public interface ApprovalMapper {
                 request.getResolvedAt(),
                 gameTableId,
                 subjectName,
+                request.getProposedTableName(),
                 request.getCreatedAt());
     }
 

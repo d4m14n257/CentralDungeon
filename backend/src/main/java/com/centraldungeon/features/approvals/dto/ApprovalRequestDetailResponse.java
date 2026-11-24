@@ -29,6 +29,8 @@ import org.jspecify.annotations.Nullable;
  *                        its application - or null when it is about none
  * @param subjectName     for a veto request, the display name of the person it is about; null for
  *                        every other type
+ * @param proposedTableName for a {@code TableOpen}, the name proposed for the table - the name the
+ *                        draft is created with when it is approved; null for every other type
  * @param createdAt       when it was asked, in UTC
  */
 public record ApprovalRequestDetailResponse(
@@ -45,5 +47,6 @@ public record ApprovalRequestDetailResponse(
         @Nullable LocalDateTime resolvedAt,
         @Nullable String gameTableId,
         @Nullable String subjectName,
+        @Nullable String proposedTableName,
         LocalDateTime createdAt) {
 }

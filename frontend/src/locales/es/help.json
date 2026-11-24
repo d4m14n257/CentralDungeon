@@ -106,7 +106,7 @@
       },
       "kind": {
         "MasterGrant": "Se pide desde tu perfil, y solo aparece si todavía no sos master. Si te lo aprueban, podés crear y dirigir mesas.",
-        "TableOpen": "Se pide desde el explorador, cuando buscaste una mesa y no había ninguna. Aprobarlo no crea la mesa: un admin le busca master y la arma.",
+        "TableOpen": "Se pide desde tu perfil, o desde el explorador cuando buscaste una mesa y no había ninguna, y solo aparece si no tienes el rol de master. Le pones nombre a la mesa; si te lo aprueban, se crea un borrador con ese nombre que diriges tú, sin recibir el rol. Lo completas y lo envías a revisión como cualquier mesa.",
         "General": "Cualquier otra cosa. Se pide desde la pantalla de ayuda, para lo que las explicaciones no contestan."
       },
       "reason": "El motivo es obligatorio. Es todo lo que el admin va a leer: no hay nada más en el pedido que explique por qué corresponde.",
@@ -115,7 +115,7 @@
       "notified": "Te llega una notificación cuando lo resuelven, y al tocarla vas a donde se ve el resultado.",
       "noQueue": "No hay una pantalla donde mirar tu pedido esperando: lo que ves es el aviso en la pantalla donde lo hiciste, con la fecha en que lo mandaste.",
       "steps": {
-        "step1": "Entrá a la pantalla donde se pide: tu perfil para el rol de master, el explorador para una mesa, la ayuda para lo demás.",
+        "step1": "Entra a la pantalla donde se pide: tu perfil para el rol de master o para dirigir una sola mesa (también el explorador, para la mesa), la ayuda para lo demás.",
         "step2": "Tocá el botón de pedir. Si en su lugar ves un aviso, es porque ya hiciste ese pedido y todavía no te contestaron.",
         "step3": "Escribí el motivo. Cuanto más concreto, menos vueltas: el admin decide con eso y nada más.",
         "step4": "Enviá el pedido y esperá la notificación. No hace falta volver a pedirlo."
@@ -612,7 +612,7 @@
       "pendingFirst": "La pantalla abre filtrada por «Pendiente», que es lo que espera una acción. Sacá ese filtro del buscador para ver los que ya se resolvieron y con qué respuesta.",
       "note": "Aprobar y rechazar piden una nota obligatoria, y le llega a quien pidió. En el rechazo es lo único que va a recibir, así que tiene que alcanzarle para entender.",
       "masterGrant": "Aprobar un pedido de rol de master le da el rol por el mismo camino que «Usuarios», con tu nota como motivo. No hay una segunda forma de otorgarlo.",
-      "tableOpen": "Aprobar un pedido de mesa nueva no crea la mesa. El pedido no trae nombre, sistema, cupo ni horario: lo que hacés al aprobarlo es dejar constancia de que corresponde, y después la creás desde «Mesas».",
+      "tableOpen": "Aprobar un pedido de mesa nueva crea un borrador con el nombre propuesto, a nombre de quien lo pidió, que pasa a dirigirlo como master principal sin recibir el rol. Lo completa y lo envía a revisión como cualquier mesa. Si su cuenta ya no está activa, no se puede aprobar.",
       "general": "Aprobar una consulta no cambia nada más en la plataforma: queda resuelta y tu respuesta le llega a quien preguntó.",
       "playerBan": "Un pedido de veto lo abre un master de la mesa, con su motivo, y también llega a la bandeja. Aprobarlo es el veto: la persona deja de ver la mesa, no puede postularse y, si jugaba, pierde su lugar. Rechazarlo no cambia nada. Mientras esperaba, la persona siguió jugando. Tu nota le llega al master que lo pidió.",
       "liftVeto": "Levantar un veto no pasa por un pedido: lo hacés vos, o el master principal, desde la pestaña Jugadores de la mesa, con motivo obligatorio. La persona vuelve a donde estaba; si la mesa ya se llenó, queda con la postulación rechazada por falta de lugar y puede postularse de nuevo cuando se libere uno.",

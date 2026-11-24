@@ -7,6 +7,7 @@ import type {
   CatalogKind,
   CatalogStatus,
   CatalogValue,
+  DefineTagInput,
   DisableCatalogValueInput,
   MergeCatalogGroupsInput,
   ProposeCatalogValueInput,
@@ -156,4 +157,13 @@ export const catalogsApi = {
    * @param id   the value
    */
   restore: (kind: CatalogKind, id: string) => api.post<AdminCatalogValue>(`/api/v1/admin/catalogs/${kind}/${id}/restore`),
+
+  /**
+   * Sets a tag group's category and definition, replacing both. Only on the group's canonical entry:
+   * an alias answers 409 `CATALOG_VALUE_NOT_CANONICAL`.
+   *
+   * @param id    the group's canonical tag
+   * @param input the category and the definition, null for none
+   */
+  defineTag: (id: string, input: DefineTagInput) => api.put<AdminCatalogValue, DefineTagInput>(`/api/v1/tags/${id}/definition`, input),
 }

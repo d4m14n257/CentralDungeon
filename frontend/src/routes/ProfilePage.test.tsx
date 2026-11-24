@@ -84,6 +84,18 @@ describe('ProfilePage', () => {
   })
 
   /**
+   * Running tables has two doors, side by side: the role, to create tables of one's own, and a single
+   * table, whose approval creates a draft the reader runs without the role.
+   */
+  it('offers asking to run a single table next to the master role', async () => {
+    queryResult = { data: { ...PROFILE, roles: ['Player'] }, isPending: false, isLoadingError: false, refetch: vi.fn() }
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: 'Pedir dirigir una sola mesa' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Pedir el rol de master' })).toBeInTheDocument()
+  })
+
+  /**
    * And never to somebody who already runs tables: the backend refuses it with
    * `MASTER_ROLE_ALREADY_HELD`, and a button whose only possible outcome is a `409` is a button that
    * should not be there (principle 2 of diseno §1).
@@ -94,6 +106,7 @@ describe('ProfilePage', () => {
 
     await waitFor(() => expect(screen.getByText('Ana Valdez')).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'Pedir el rol de master' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Pedir dirigir una sola mesa' })).not.toBeInTheDocument()
     // Not the pitch either: there is nothing to explain to somebody the offer does not apply to.
     expect(screen.queryByText('¿Querés dirigir mesas?')).not.toBeInTheDocument()
   })

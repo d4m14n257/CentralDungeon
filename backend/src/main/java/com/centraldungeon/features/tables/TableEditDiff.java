@@ -2,6 +2,7 @@ package com.centraldungeon.features.tables;
 
 import com.centraldungeon.features.catalogs.CatalogType;
 import com.centraldungeon.features.catalogs.dto.CatalogValueResponse;
+import com.centraldungeon.features.tables.dto.TableSections;
 import com.centraldungeon.features.tables.dto.UpdateGameTableRequest;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -55,6 +56,9 @@ final class TableEditDiff {
     /** Code for the platforms. */
     static final String PLATFORMS = "platforms";
 
+    /** Code for the optional sections, reported once whichever of the four changed. */
+    static final String SECTIONS = "sections";
+
     /** Code for the weekly agenda. */
     static final String SCHEDULE = "schedule";
 
@@ -71,6 +75,7 @@ final class TableEditDiff {
      * @param requirements   the requirements after sanitizing
      * @param maxPlayers     the player cap after the platform ceiling was applied
      * @param currentLinks   the table's live catalog links before the rewrite
+     * @param sections       the optional sections after sanitizing
      * @return the codes of what changed, in a stable order; empty when nothing did
      */
     static List<String> of(
@@ -80,7 +85,8 @@ final class TableEditDiff {
             @Nullable String permitted,
             @Nullable String requirements,
             @Nullable Integer maxPlayers,
-            Map<CatalogType, List<CatalogValueResponse>> currentLinks) {
+            Map<CatalogType, List<CatalogValueResponse>> currentLinks,
+            TableSections sections) {
         List<String> changes = new ArrayList<>();
         addIf(changes, NAME, !Objects.equals(table.getName(), request.name()));
         addIf(changes, DESCRIPTION, textDiffers(table.getDescription(), description));
@@ -94,6 +100,10 @@ final class TableEditDiff {
         addIf(changes, SYSTEMS, idsDiffer(currentLinks.get(CatalogType.SYSTEMS), request.systemIds()));
         addIf(changes, TAGS, idsDiffer(currentLinks.get(CatalogType.TAGS), request.tagIds()));
         addIf(changes, PLATFORMS, idsDiffer(currentLinks.get(CatalogType.PLATFORMS), request.platformIds()));
+        addIf(changes, SECTIONS, textDiffers(table.getCharacterCreation(), sections.characterCreation())
+                || textDiffers(table.getWhatToExpect(), sections.whatToExpect())
+                || textDiffers(table.getEquipment(), sections.equipment())
+                || textDiffers(table.getSafety(), sections.safety()));
         return changes;
     }
 

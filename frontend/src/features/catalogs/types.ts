@@ -1,6 +1,6 @@
 import type { CatalogValue } from '@/types/catalog'
 
-export type { CatalogStatus, CatalogValue } from '@/types/catalog'
+export type { CatalogStatus, CatalogValue, TagCategory } from '@/types/catalog'
 
 /**
  * Which of the three catalogs a call is about. It is the path segment the API expects, so the value
@@ -74,3 +74,9 @@ export interface SplitCatalogGroupInput {
 export interface DisableCatalogValueInput {
   newCanonicalId: string | null
 }
+
+/**
+ * What defining a tag group sends: its category and its definition, both replacing what it had.
+ * Only a canonical tag can be defined; its aliases read the definition from it.
+ */
+export type DefineTagInput = Pick<AdminCatalogValue, 'category' | 'description'>

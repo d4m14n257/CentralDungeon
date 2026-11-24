@@ -12,6 +12,7 @@ import com.centraldungeon.features.tables.dto.PlayerSessionResponse;
 import com.centraldungeon.features.tables.dto.PublicSessionResponse;
 import com.centraldungeon.features.tables.dto.SessionAttendanceEntry;
 import com.centraldungeon.features.tables.dto.TableScheduleEntry;
+import com.centraldungeon.features.tables.dto.TableSections;
 import com.centraldungeon.features.tables.dto.TableSessionResponse;
 import com.centraldungeon.features.tables.dto.TableStatusChangeResponse;
 import com.centraldungeon.features.users.User;
@@ -53,7 +54,8 @@ public interface GameTableMapper {
     GameTableHistoryResponse toHistory(GameTable gameTable, AttendanceSummaryResponse attendance);
 
     /**
-     * The three rich-text fields arrive as parameters rather than being read off the entity: they are
+     * The rich-text fields - the three long texts and the optional sections - arrive as parameters
+     * rather than being read off the entity: they are
      * sanitized on the way out as well as on the way in (ADR-03 §8), and passing the cleaned strings in
      * keeps that from turning a read into a write on the managed entity.
      */
@@ -63,6 +65,7 @@ public interface GameTableMapper {
     @Mapping(target = "description", source = "description")
     @Mapping(target = "permitted", source = "permitted")
     @Mapping(target = "requirements", source = "requirements")
+    @Mapping(target = "sections", source = "sections")
     GameTableDetailResponse toDetail(
             GameTable gameTable,
             int playerCount,
@@ -76,6 +79,7 @@ public interface GameTableMapper {
             @Nullable String description,
             @Nullable String permitted,
             @Nullable String requirements,
+            TableSections sections,
             boolean scheduleConflict,
             boolean applied,
             boolean joined,

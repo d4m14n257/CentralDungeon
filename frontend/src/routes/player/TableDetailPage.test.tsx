@@ -32,6 +32,7 @@ function table(myRejection: MyRejection | null, overrides: Partial<GameTableDeta
     description: null,
     permitted: null,
     requirements: null,
+    sections: { characterCreation: null, whatToExpect: null, equipment: null, safety: null },
     tableTypeName: null,
     tableTypeCode: null,
     status: 'Opened',
@@ -125,5 +126,25 @@ describe('TableDetailPage applying to a running table', () => {
     renderPage()
 
     expect(await screen.findByRole('button', { name: 'No está abierta a postulaciones' })).toBeDisabled()
+  })
+})
+
+describe('TableDetailPage optional sections', () => {
+  /** Each section the master wrote is shown under its heading; one left unwritten has no empty heading. */
+  it('shows the written sections under their headings and leaves out the rest', async () => {
+    byId.mockResolvedValue(
+      table(null, {
+        sections: { characterCreation: '<p>Nivel 3, compra de puntos</p>', whatToExpect: null, equipment: null, safety: '<p>Carta X</p>' },
+      }),
+    )
+
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Creación de personaje' })).toBeInTheDocument()
+    expect(screen.getByText('Nivel 3, compra de puntos')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Seguridad y content warnings' })).toBeInTheDocument()
+    expect(screen.getByText('Carta X')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Qué esperar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Equipo' })).not.toBeInTheDocument()
   })
 })

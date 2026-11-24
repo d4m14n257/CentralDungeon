@@ -13,7 +13,7 @@ import type { CatalogValue } from '../types'
  * @returns a catalog value
  */
 function value(overrides: Partial<CatalogValue> = {}): CatalogValue {
-  return { id: 'c-1', name: 'D&D 5e', status: 'Accepted', ...overrides }
+  return { id: 'c-1', name: 'D&D 5e', status: 'Accepted', category: null, description: null, ...overrides }
 }
 
 describe('CatalogChip', () => {
@@ -72,5 +72,19 @@ describe('CatalogChip', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Quitar D&D 5e' }))
 
     expect(onRemove).toHaveBeenCalledWith('c-9')
+  })
+
+  it("shows its group's definition in a tooltip the keyboard can reach", async () => {
+    render(<CatalogChip value={value({ name: 'One-shot', description: 'A single session.' })} />)
+
+    await userEvent.tab()
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('A single session.')
+  })
+
+  it('offers no tooltip when the group has no definition', () => {
+    render(<CatalogChip value={value()} />)
+
+    expect(screen.getByText('D&D 5e')).not.toHaveAttribute('tabindex')
   })
 })

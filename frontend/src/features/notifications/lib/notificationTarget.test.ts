@@ -100,6 +100,33 @@ describe('notificationTarget', () => {
     },
   )
 
+  /**
+   * An approved request to run a single table points at the person who asked, but it created a draft
+   * and carries its id: the click lands on that draft, which is the next thing to write.
+   */
+  it('sends an approved single table to the master’s view of the draft it created', () => {
+    const approved = notification({
+      notificationType: 'ApprovalRequestApproved',
+      params: params({ tableId: 't7' }),
+      relatedEntityType: 'user',
+      relatedEntityId: 'user-1',
+    })
+
+    expect(notificationTarget(approved)).toBe(masterTableDetailPath('t7'))
+  })
+
+  /** A rejection created nothing, so it still lands on the profile. */
+  it('sends a rejected single table to the profile', () => {
+    const rejected = notification({
+      notificationType: 'ApprovalRequestRejected',
+      params: params({}),
+      relatedEntityType: 'user',
+      relatedEntityId: 'user-1',
+    })
+
+    expect(notificationTarget(rejected)).toBe('/profile')
+  })
+
   it('opens nothing for a veto outcome written before the table travelled with it', () => {
     const old = notification({
       notificationType: 'ApprovalRequestApproved',

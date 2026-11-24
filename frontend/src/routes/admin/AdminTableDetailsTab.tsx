@@ -2,8 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { useOutletContext } from 'react-router'
 
 import { RichTextView } from '@/components/RichTextView'
-import { CatalogChip } from '@/features/catalogs'
-import { tableTypeLabel, type GameTableDetail } from '@/features/tables'
+import { CatalogChip, TagGroups } from '@/features/catalogs'
+import { TableSectionsView, tableTypeLabel, type GameTableDetail } from '@/features/tables'
 import { formatPlainDate } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 
@@ -27,7 +27,7 @@ export function AdminTableDetailsTab() {
   const { t: tTables } = useTranslation('tables')
   const { t: tMaster } = useTranslation('master')
   const { table } = useOutletContext<OutletContext>()
-  const catalogs: CatalogValue[] = [...table.systems, ...table.tags, ...table.platforms]
+  const catalogs: CatalogValue[] = [...table.systems, ...table.platforms]
   const notSet = t('tables.detail.notSet')
 
   // The facts a moderator looks for first, each with its label and «Sin definir» rather than a blank:
@@ -63,6 +63,7 @@ export function AdminTableDetailsTab() {
           ))}
         </div>
       )}
+      <TagGroups tags={table.tags} safetyHeading={tTables('detail.safetyTags')} />
 
       <section>
         <h2 className="section-label">{tTables('detail.description')}</h2>
@@ -86,6 +87,8 @@ export function AdminTableDetailsTab() {
           <RichTextView html={table.requirements} className="mt-1.5 max-w-prose" />
         </section>
       )}
+
+      <TableSectionsView sections={table.sections} />
     </div>
   )
 }

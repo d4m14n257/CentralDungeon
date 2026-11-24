@@ -48,9 +48,8 @@ interface ResolveRequestDialogProps {
  *
  * **Approving is not the same act for every kind**, and the dialog says which one it is: a
  * `MasterGrant` hands out the role through the very same `UserRoleService` that `/admin/users` uses;
- * a `TableOpen` records that the request stands and creates nothing — the table is created
- * afterwards, by an admin, with a name and an agenda the request never carried (ADR-06 §7); a `General`
- * simply closes.
+ * a `TableOpen` creates a draft with the proposed name, run by the requester as its Primary and
+ * without granting them the role; a `General` simply closes.
  *
  * @param props.request      the request being resolved
  * @param props.action       approving or rejecting

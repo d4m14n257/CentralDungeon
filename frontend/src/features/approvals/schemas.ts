@@ -5,7 +5,10 @@ import type { ResolveApprovalRequestInput, SubmitApprovalRequestInput } from './
 import type { Equals, Expect } from '@/types/utils'
 
 /**
- * Validates a request before it is sent: which kind, and why (ADR-16 §1).
+ * Validates a request before it is sent: which kind, why, and — for a single table — its name.
+ *
+ * The name is required only for a `TableOpen`, whose approval creates a draft with it; the server
+ * answers `TABLE_NAME_REQUIRED` otherwise. The 128 cap is the column's.
  *
  * **The justification is required on this side too**, not only on the server. The backend answers
  * `VALIDATION_ERROR` to an empty one, but a round trip is a bad way to learn that a textarea was
@@ -15,12 +18,19 @@ import type { Equals, Expect } from '@/types/utils'
  * The 4000 cap is the server's `@Size`, repeated rather than guessed: the column is `LONGTEXT`, so
  * without it a four-megabyte body travels the whole way before being refused.
  */
-export const submitApprovalRequestSchema = z.object({
-  // The submittable three and not all five: the two F3.4 added are raised from their own entity's
-  // route, because `POST /requests` carries no `entityId` on purpose (F3.2 §0d).
-  type: z.enum(SUBMITTABLE_REQUEST_TYPES),
-  justification: z.string().trim().min(1).max(4000),
-})
+export const submitApprovalRequestSchema = z
+  .object({
+    // The submittable three and not all five: the two F3.4 added are raised from their own entity's
+    // route, because `POST /requests` carries no `entityId` on purpose (F3.2 §0d).
+    type: z.enum(SUBMITTABLE_REQUEST_TYPES),
+    justification: z.string().trim().min(1).max(4000),
+    tableName: z.string().trim().max(128),
+  })
+  .superRefine((values, context) => {
+    if (values.type === 'TableOpen' && values.tableName === '') {
+      context.addIssue({ code: 'custom', path: ['tableName'], params: { i18n: 'validation.required' } })
+    }
+  })
 
 /** The request form's values, inferred from the schema. */
 export type SubmitApprovalRequestForm = z.infer<typeof submitApprovalRequestSchema>

@@ -35,6 +35,8 @@ import org.jspecify.annotations.Nullable;
  * @param totalSessions how many sessions are planned (ADR-08 §3)
  * @param maxPlayers    the player cap (ADR-07 §5), or null for no cap
  * @param schedule      the weekly agenda the table ends up with, in UTC. Empty clears it
+ * @param sections      the four optional sections of rich text the table ends up with. Absent clears
+ *                      all four, like any other field of a full replacement
  */
 public record UpdateGameTableRequest(
         @NotBlank @Size(max = 128) String name,
@@ -48,5 +50,6 @@ public record UpdateGameTableRequest(
         @Nullable LocalDate startDate,
         @Positive @Nullable Integer totalSessions,
         @Positive @Nullable Integer maxPlayers,
-        @Valid @Nullable List<TableScheduleEntry> schedule) {
+        @Valid @Nullable List<TableScheduleEntry> schedule,
+        @Valid @Nullable TableSections sections) {
 }

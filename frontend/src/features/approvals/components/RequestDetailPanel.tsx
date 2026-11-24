@@ -47,6 +47,9 @@ export function RequestDetailPanel({ requestId }: { requestId: string }) {
         <p className="whitespace-pre-wrap">{data.justification}</p>
       </div>
 
+      {/* The name a request to open a table proposes: the draft approving it creates carries it. */}
+      {data.proposedTableName !== null && <p>{t('requests.proposedTableName', { name: data.proposedTableName })}</p>}
+
       {/* Whom a veto is about: the person an admin decides on, not whoever asked. A veto points at an
           application, which has no screen of its own, so it links the table's players tab instead. */}
       <SubjectLine

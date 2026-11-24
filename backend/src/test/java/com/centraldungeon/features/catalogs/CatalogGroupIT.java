@@ -229,6 +229,36 @@ class CatalogGroupIT {
         assertThat(tagService.find(disabled).status()).isEqualTo(CatalogStatus.Disabled.name());
     }
 
+    /** The definition belongs to the group: merging hands it to the surviving head, and every member reads it. */
+    @Test
+    void mergingKeepsTheDefinitionOnTheSurvivingGroup() {
+        tagService.define(dandd, TagCategory.Theme, "Dungeons and dragons, the fifth edition.");
+
+        tagService.merge(dandd, dnd);
+
+        Tag head = tagRepository.findById(dnd).orElseThrow();
+        Tag absorbed = tagRepository.findById(dandd).orElseThrow();
+        assertThat(head.getCategory()).isEqualTo(TagCategory.Theme);
+        assertThat(head.getDescription()).isEqualTo("Dungeons and dragons, the fifth edition.");
+        assertThat(absorbed.getCategory()).isNull();
+        assertThat(absorbed.getDescription()).isNull();
+        assertThat(tagService.search(null, FIRST_PAGE).content())
+                .extracting(CatalogValueResponse::category)
+                .containsOnly(TagCategory.Theme);
+    }
+
+    @Test
+    void promotingAnAliasMovesTheDefinitionToTheNewHead() {
+        String dndAlias = accepted("DND", dnd);
+        tagService.define(dnd, TagCategory.PlayStyle, "Roleplay first.");
+
+        tagService.promote(dndAlias);
+
+        assertThat(tagRepository.findById(dndAlias).orElseThrow().getCategory()).isEqualTo(TagCategory.PlayStyle);
+        assertThat(tagRepository.findById(dnd).orElseThrow().getCategory()).isNull();
+        assertThat(tagService.find(dnd).description()).isEqualTo("Roleplay first.");
+    }
+
     /**
      * {@code canonical_id} is a real self-referencing FK, so a plain deleteAll() removes rows in an
      * order MySQL rejects the moment a group survives from the previous test. Flattening the groups

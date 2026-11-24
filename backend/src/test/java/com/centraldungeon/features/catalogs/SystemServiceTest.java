@@ -28,9 +28,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The rules of {@link AbstractCatalogService}, exercised through the concrete service that was
- * written first. There is no TagServiceTest or PlatformServiceTest that repeats these: the three
- * subclasses differ only in which bridge table counts their uses, and that difference carries no
- * rule of its own - all three would be testing this same base, three times over.
+ * written first. No other test repeats these for tags or platforms: the three subclasses share
+ * them whole, and testing the same base three times over proves nothing new. What tags add on top
+ * - a group's category and definition - is in {@code TagServiceTest}.
  */
 @ExtendWith(MockitoExtension.class)
 class SystemServiceTest {

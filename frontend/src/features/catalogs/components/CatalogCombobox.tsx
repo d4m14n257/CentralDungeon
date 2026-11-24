@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 
 import { useCatalogValues } from '../api/useCatalogValues'
 import { useProposeCatalogValue } from '../api/useProposeCatalogValue'
+import { groupByCategory } from '../tagCategories'
 import type { CatalogKind, CatalogValue } from '../types'
 import { useConfirm } from '@/hooks/useConfirm'
 
@@ -37,6 +38,10 @@ export interface CatalogComboboxProps {
  * The search is debounced rather than sent on every keystroke: a catalog is a small table, but this
  * runs inside a form somebody is typing into.
  *
+ * Tags come grouped under their category, in a fixed order with the unclassified ones last, and each
+ * shows its group's definition under its name - what helps a master pick between two close tags.
+ * The grouping is of the results that came back, not of the whole catalog.
+ *
  * @param props.kind        which catalog to pick from
  * @param props.selected    the values already chosen
  * @param props.onSelect    called with the picked or newly proposed value
@@ -55,6 +60,7 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
 
   const selectedIds = new Set(selected.map((value) => value.id))
   const options = data?.content ?? []
+  const groups = kind === 'tags' ? groupByCategory(options) : [{ category: undefined, values: options }]
 
   const trimmed = search.trim()
   // Only offer to propose something that is not already an option: an exact match, however it is
@@ -104,16 +110,23 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
             {!isPending && !isLoadingError && options.length === 0 && !showPropose && (
               <CommandEmpty>{t('combobox.noResults')}</CommandEmpty>
             )}
-            {options.length > 0 && (
-              <CommandGroup>
-                {options.map((option) => (
-                  <CommandItem key={option.id} value={option.id} onSelect={() => handleSelect(option)}>
-                    <CheckIcon className={cn('mr-2 size-4', selectedIds.has(option.id) ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
-                    {option.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
+            {options.length > 0 &&
+              groups.map(({ category, values }) => (
+                <CommandGroup key={category ?? 'all'} heading={category === undefined ? undefined : t(`tagCategory.${category ?? 'none'}`)}>
+                  {values.map((option) => (
+                    <CommandItem key={option.id} value={option.id} onSelect={() => handleSelect(option)}>
+                      <CheckIcon
+                        className={cn('mr-2 size-4', selectedIds.has(option.id) ? 'opacity-100' : 'opacity-0')}
+                        aria-hidden="true"
+                      />
+                      <span className="flex min-w-0 flex-col">
+                        <span>{option.name}</span>
+                        {option.description && <span className="text-fg-muted truncate text-xs">{option.description}</span>}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))}
             {showPropose && (
               <CommandGroup>
                 <CommandItem value={`propose-${trimmed}`} onSelect={() => void handlePropose()} disabled={propose.isPending}>

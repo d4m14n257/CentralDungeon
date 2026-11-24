@@ -28,6 +28,7 @@ function table(): GameTableDetail {
     description: null,
     permitted: null,
     requirements: null,
+    sections: { characterCreation: null, whatToExpect: null, equipment: null, safety: null },
     tableTypeName: null,
     tableTypeCode: null,
     status: 'Draft',
@@ -92,5 +93,27 @@ describe('MasterTableEditPage catalog values', () => {
 
     await waitFor(() => expect(update).toHaveBeenCalled())
     expect(update.mock.calls[0]?.[1]).toMatchObject({ systemIds: ['s1'], tagIds: ['g1'], platformIds: ['p1'] })
+  })
+})
+
+describe('MasterTableEditPage optional sections', () => {
+  /** The sections the table has come back open, and saving sends all four: the written one, and null for the rest. */
+  it('opens the sections the table has and sends them when saving', async () => {
+    managedById.mockResolvedValue({
+      ...table(),
+      sections: { characterCreation: null, whatToExpect: null, equipment: '<p>Dados de seis caras</p>', safety: null },
+    })
+    renderPage()
+
+    expect(await screen.findByRole('textbox', { name: 'Equipo' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Creación de personaje' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Guardar cambios', hidden: false }))
+
+    await waitFor(() => expect(update).toHaveBeenCalled())
+    expect(update.mock.calls[0]?.[1]).toMatchObject({
+      sections: { characterCreation: null, whatToExpect: null, equipment: expect.stringContaining('Dados de seis caras'), safety: null },
+    })
   })
 })

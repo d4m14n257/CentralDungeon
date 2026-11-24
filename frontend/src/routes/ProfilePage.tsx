@@ -19,12 +19,14 @@ import { EditProfileDialog, ProfileCard, useMyProfile } from '@/features/users'
  * The lower half of the wireframe, "Comentarios recibidos", is F5 and this screen never draws it
  * (§ ProfileCard).
  *
- * **Asking for the master role happens here** and not on a screen for making requests
+ * **Asking to run tables happens here** and not on a screen for making requests
  * (roles-y-alcance.md §4, F3.2): this is where somebody sees which roles they have, so it is where the
- * absence of one is noticed. It is offered only to somebody who does not already hold it — the
- * backend refuses the rest with `MASTER_ROLE_ALREADY_HELD`, and a button whose only outcome is a
- * `409` is a button that should not be there (principle 2 of diseno §1). The same rule
- * hides it while a request of the reader's own is still pending, which the section resolves itself.
+ * absence of one is noticed. Two requests are offered side by side: the master role, to create tables
+ * of one's own, and a single table, whose approval creates a draft the reader runs without the role.
+ * Both are offered only to somebody who does not already hold the role — the backend refuses the
+ * rest with `MASTER_ROLE_ALREADY_HELD`, and a button whose only outcome is a `409` is a button that
+ * should not be there (principle 2 of diseno §1). The same rule hides each one while a request of
+ * that kind is still pending, which the section resolves itself.
  */
 export function ProfilePage() {
   const { t } = useTranslation('users')
@@ -46,6 +48,12 @@ export function ProfilePage() {
   }
 
   const isMaster = data.roles.includes('Master')
+  // The help arrives as a node, because a feature never imports another one (§3.1.5).
+  const requestHelp = (
+    <p className="text-fg-subtle text-xs">
+      {tAdmin('requests.submitHelpHint')} <HelpLink section="basics.requests">{tAdmin('requests.submitHelpLink')}</HelpLink>
+    </p>
+  )
 
   return (
     <div className="space-y-3">
@@ -71,15 +79,10 @@ export function ProfilePage() {
         <div className="border-border space-y-2 rounded-lg border border-dashed p-4">
           <p className="text-sm font-medium">{tAdmin('requests.masterGrantPitchTitle')}</p>
           <p className="text-fg-muted text-sm">{tAdmin('requests.masterGrantPitchDescription')}</p>
-          {/* The help arrives as a node, because a feature never imports another one (§3.1.5). */}
-          <SubmitRequestSection
-            type="MasterGrant"
-            help={
-              <p className="text-fg-subtle text-xs">
-                {tAdmin('requests.submitHelpHint')} <HelpLink section="basics.requests">{tAdmin('requests.submitHelpLink')}</HelpLink>
-              </p>
-            }
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <SubmitRequestSection type="MasterGrant" help={requestHelp} />
+            <SubmitRequestSection type="TableOpen" help={requestHelp} />
+          </div>
         </div>
       )}
     </div>

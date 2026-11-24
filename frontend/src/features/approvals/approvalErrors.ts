@@ -26,8 +26,12 @@ export const APPROVAL_ERROR_CODES = [
   'REQUEST_ALREADY_RESOLVED',
   /** What the request pointed at is gone (ADR-16 §2): the row outlived its reference, so it cannot be acted on. */
   'REQUEST_ENTITY_GONE',
-  /** Asking for the master role while already holding it. */
+  /** Asking for the master role, or for a single table, while already holding the role. */
   'MASTER_ROLE_ALREADY_HELD',
+  /** Asking to open a table without naming it: approving it creates a draft with that name. */
+  'TABLE_NAME_REQUIRED',
+  /** Approving a request to open a table for somebody whose account is no longer active. */
+  'REQUESTER_NOT_ACTIVE',
   /** Approving a veto the admin asked for themselves, as a master of the table: another admin decides it. */
   'OWN_REQUEST_NOT_APPROVABLE',
   /**

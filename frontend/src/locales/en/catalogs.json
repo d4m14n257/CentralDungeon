@@ -45,6 +45,7 @@
     "tableLabel": "Catalog {{kind}}",
     "columnStatus": "Status",
     "columnUses": "Tables",
+    "columnCategory": "Category",
     "emptyTitle": "There is nothing in this catalog yet",
     "emptyDescription": "Whatever masters propose from the table wizard shows up here for you to review.",
     "emptySearchDescription": "No value matches what you searched for.",
@@ -146,5 +147,34 @@
     "acceptIntoConfirmDescription": "It starts showing and filtering, and searching either one finds the tables of both.",
     "proposeConfirmTitle": "Propose “{{name}}”?",
     "proposeConfirmDescription": "An admin reviews it. Meanwhile your table can use it, but it does not show to players or filter."
+  },
+  "tagCategory": {
+    "Theme": "Themes",
+    "PlayStyle": "Play style",
+    "ContentWarning": "Content warnings",
+    "SafetyTool": "Safety tools",
+    "Experience": "Experience",
+    "Language": "Language",
+    "Age": "Age",
+    "Format": "Format and length",
+    "none": "No category"
+  },
+  "definition": {
+    "action": "Define the tag",
+    "title": "Define “{{name}}”",
+    "description": "The category and the definition belong to the group: every one of its equivalents shows them, in the search and on each table.",
+    "categoryLabel": "Category",
+    "descriptionLabel": "Definition",
+    "descriptionHint": "Plain text, no formatting. {{count}}/{{max}} characters.",
+    "descriptionTooLong": "The definition can be up to {{max}} characters long.",
+    "save": "Save",
+    "confirmTitle": "Save the definition of “{{name}}”?",
+    "confirmDescription": "It replaces the category and definition the group had. They show right away in the search and on the tables that use it.",
+    "success": "The definition of “{{name}}” was saved",
+    "failed": "We could not save the definition. Try again.",
+    "acceptedWithoutDefinition": "“{{name}}” was accepted, but without a category or definition: {{reason}} You can add them from its menu."
+  },
+  "errors": {
+    "CATALOG_VALUE_NOT_CANONICAL": "That value is an equivalent in another group. The category and the definition are stored on the group's main value."
   }
 }

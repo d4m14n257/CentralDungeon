@@ -28,6 +28,8 @@ import {
   createGameTableSchema,
   tableTypeDescription,
   tableTypeLabel,
+  sectionsToRequest,
+  TableSectionsFields,
   useCreateTable,
   useTableTypes,
   WIZARD_STEPS,
@@ -102,6 +104,10 @@ export function MasterTableCreatePage() {
       description: '',
       permitted: '',
       requirements: '',
+      characterCreation: '',
+      whatToExpect: '',
+      equipment: '',
+      safety: '',
       tableTypeId: '',
       startDate: '',
       maxPlayers: '',
@@ -293,6 +299,7 @@ export function MasterTableCreatePage() {
         maxPlayers: formValues.maxPlayers ? Number(formValues.maxPlayers) : null,
         totalSessions: formValues.totalSessions ? Number(formValues.totalSessions) : null,
         schedule,
+        sections: sectionsToRequest(formValues),
       },
       {
         onSuccess: async (table) => {
@@ -448,6 +455,7 @@ export function MasterTableCreatePage() {
                   </FormItem>
                 )}
               />
+              <TableSectionsFields />
             </>
           )}
 

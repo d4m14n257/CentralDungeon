@@ -14,13 +14,13 @@ const list = vi.hoisted(() => vi.fn())
 
 vi.mock('../api/catalogsApi', () => ({ catalogsApi: { list } }))
 
-function renderCombobox() {
+function renderCombobox(kind: 'systems' | 'tags' = 'systems') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <MemoryRouter>
       <QueryClientProvider client={queryClient}>
         <ConfirmDialogProvider>
-          <CatalogCombobox kind="systems" selected={[]} onSelect={vi.fn()} />
+          <CatalogCombobox kind={kind} selected={[]} onSelect={vi.fn()} />
         </ConfirmDialogProvider>
       </QueryClientProvider>
     </MemoryRouter>,
@@ -43,5 +43,29 @@ describe('CatalogCombobox', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
     expect(await screen.findByText('D&D 5e')).toBeInTheDocument()
+  })
+
+  it('groups tags under their category, in a fixed order, with the unclassified ones last', async () => {
+    list.mockResolvedValueOnce({
+      content: [
+        { id: 't1', name: 'Sin clasificar', status: 'Accepted', category: null, description: null },
+        { id: 't2', name: 'Homebrew', status: 'Accepted', category: 'Format', description: null },
+        { id: 't3', name: 'Horror', status: 'Accepted', category: 'Theme', description: 'Fear and dread.' },
+        { id: 't4', name: 'One-shot', status: 'Accepted', category: 'Format', description: null },
+      ],
+      page: 0,
+      size: 20,
+      totalElements: 4,
+      totalPages: 1,
+    })
+
+    renderCombobox('tags')
+    await userEvent.click(screen.getByRole('combobox'))
+    await screen.findByText('Horror')
+
+    const headings = Array.from(document.querySelectorAll('[cmdk-group-heading]')).map((heading) => heading.textContent)
+    expect(headings).toEqual(['Temas', 'Formato y duración', 'Sin categoría'])
+    const names = screen.getAllByRole('option').map((option) => option.textContent)
+    expect(names).toEqual(['HorrorFear and dread.', 'Homebrew', 'One-shot', 'Sin clasificar'])
   })
 })

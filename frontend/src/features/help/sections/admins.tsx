@@ -149,11 +149,11 @@ export function RolesHelp() {
  * The request tray and what approving each kind actually does (ADR-16 §1, F3.2).
  *
  * **`masterGrant` and `tableOpen` are the reason this section exists.** The two approvals look
- * identical on screen — same button, same note — and do completely different things: one hands out a
- * role through the very same road `/admin/users` uses, and the other grants nothing at all, because
- * a request carries no name, no system, no seats and no agenda to build a table from. An admin who
- * assumes the second creates the table will approve it, tell nobody, and leave whoever asked waiting
- * for a table that is never coming.
+ * identical on screen — same button, same note — and do different things: one hands out a role
+ * through the very same road `/admin/users` uses, and the other grants no role at all and creates a
+ * draft, with the proposed name, that whoever asked runs as its primary master. An admin who assumes
+ * the second grants the role would expect that person to be able to create more tables, and they
+ * cannot.
  */
 export function RequestsAdminHelp() {
   return (
