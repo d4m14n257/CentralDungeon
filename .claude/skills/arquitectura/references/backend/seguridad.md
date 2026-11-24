@@ -35,7 +35,7 @@ Es el agujero que tenía el Node: `UPDATE Tables SET … WHERE id = ?`, sin un s
 |---|---|
 | Mesa | pasa `TableVisibilityService.canSee` (`requireVisible` lanza el `404`) |
 | Sesión, petición, postulación | ve su mesa y, además, la dirige o es el destinatario o el dueño |
-| Archivo | pasa `FileService.requireReadable` |
+| Archivo | pasa `FileService.requireReadable`. Los bytes salen **solo** por `GET /files/{id}/content`, con `Content-Disposition: attachment` y `nosniff`: la preview de imágenes y PDF los pide por ahí como blob, y **no se agrega un endpoint ni un modo `inline`** (ADR-14 «Archivos: lectura y bibliotecas» §2 «Leer un archivo pasa por una sola puerta, y lo que alguien ve en pantalla lo puede abrir») |
 | Notificación | es su dueño |
 | Perfil | pasa `ProfileVisibilityService.requireVisible` |
 

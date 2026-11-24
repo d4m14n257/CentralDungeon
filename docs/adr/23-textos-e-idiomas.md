@@ -2,7 +2,7 @@
 adr: 23
 titulo: Textos e idiomas
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-11-23
 absorbe: [107, 117, 197, 198, 225]
 ---
 
@@ -18,11 +18,11 @@ absorbe: [107, 117, 197, 198, 225]
 
 *Antes: #107, #117.*
 
-## §2 Hay dos idiomas, se eligen como el tema, se detectan del navegador y caen en español
+## §2 Hay dos idiomas, se eligen como el tema, se detectan del navegador y caen en español, latinoamericano y tuteado
 
-**Decisión.** `es` y `en`, los dos en el bundle. `resolveInitialLanguage()` toma la elección guardada en `localStorage`, después `navigator.languages` por subtag primario, y si nada coincide, **español**. El selector vive en el `UserMenu`, junto al tema, y **también en la tarjeta de `/login`**, ahí con los dos idiomas a la vista y no plegados. Cada idioma se nombra a sí mismo («English», nunca «Inglés»). `<html lang>` lo sincroniza `providers/i18n.ts`. Los tests fijan el idioma: Vitest en el setup, Playwright en la config.
+**Decisión.** `es` y `en`, los dos en el bundle. `resolveInitialLanguage()` toma la elección guardada en `localStorage`, después `navigator.languages` por subtag primario, y si nada coincide, **español**. El selector vive en el `UserMenu`, junto al tema, y **también en la tarjeta de `/login`**, ahí con los dos idiomas a la vista y no plegados. Cada idioma se nombra a sí mismo («English», nunca «Inglés»). `<html lang>` lo sincroniza `providers/i18n.ts`. Los tests fijan el idioma: Vitest en el setup, Playwright en la config. **El español de la interfaz es latinoamericano neutro y tutea** («tienes», «agrega», «puedes»; nunca «tenés», «agregá», «podés»): así se escribe todo `frontend/src/locales/es/*.json`. La variante es de la interfaz; los `docs/` y `.claude/` no la siguen.
 
-**Por qué.** La comunidad escribe y juega en español: un navegador que no se reconoce probablemente es de alguien que lo habla. Se guarda en el dispositivo y no en el modelo, igual que el tema: i18n quedó fuera del modelo a propósito (`arquitectura` §4.7) y meterlo sería columna, migración y endpoint para una preferencia del dispositivo. Cada idioma se nombra en sí mismo porque quien busca el suyo no necesariamente lee el que está viendo. `/login` es la única pantalla sin `UserMenu`, y plegar el control se lo escondería justo a quien no puede leer la pantalla. `<html lang>` vive en el provider para valer también en `/login`. Sin fijar el idioma, una aserción sobre una etiqueta pasaba o fallaba según el locale de la máquina.
+**Por qué.** La comunidad escribe y juega en español: un navegador que no se reconoce probablemente es de alguien que lo habla. **La variante** la decidió el usuario el 2026-11-23, en F4.5 «La revisión mano a mano» (C7 y P5 «La variante del español»): el voseo rioplatense con que estaba escrita la interfaz el cliente lo leyó como español de España en la reunión, y pidió que las menciones fueran latinoamericanas; el tuteo es lo habitual en una comunidad de juego. Se guarda en el dispositivo y no en el modelo, igual que el tema: i18n quedó fuera del modelo a propósito (`arquitectura` §4.7) y meterlo sería columna, migración y endpoint para una preferencia del dispositivo. Cada idioma se nombra en sí mismo porque quien busca el suyo no necesariamente lee el que está viendo. `/login` es la única pantalla sin `UserMenu`, y plegar el control se lo escondería justo a quien no puede leer la pantalla. `<html lang>` vive en el provider para valer también en `/login`. Sin fijar el idioma, una aserción sobre una etiqueta pasaba o fallaba según el locale de la máquina.
 
 *Antes: #198.*
 

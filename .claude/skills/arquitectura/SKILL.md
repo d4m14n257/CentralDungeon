@@ -41,7 +41,7 @@ El stack y sus versiones fijadas son §1; el porqué de cada regla, en la `ADR-N
 17. **Tipos**: un espejo escrito a mano por cada `…Response` (ADR-02 §3); lo que arma el frontend se deriva del tipo que ya existe, nunca se re-declara. Los enums son uniones de literales. Nunca `any`. → §3.2
 18. **Datos de servidor, solo con TanStack Query**, con query keys de la fábrica; el `staleTime` es el default del `QueryClient` y una query declara el suyo, de `config/query.ts`, solo cuando es otro (ADR-18 §2). Nada de `useEffect` + `fetch`, y ninguna respuesta de la API en Context o Zustand. **HTTP**, solo por `api/client.ts`. → §3.3
 19. **Estado de UI**: local por defecto; Zustand solo si es global y plano (ADR-19 §5). **Formularios**: react-hook-form + zod; el `…Dialog` monta su formulario y es dueño de su mutación (ADR-19 §6). **Fechas**: `lib/date.ts` (ADR-19 §7). → §3.3
-20. **Textos**: ningún string visible en el JSX. Todo pasa por `t()`, con la clave en `es` **y** en `en` en el mismo commit (ADR-23 §1, §2). → §3.3
+20. **Textos**: ningún string visible en el JSX. Todo pasa por `t()`, con la clave en `es` **y** en `en` en el mismo commit (ADR-23 §1, §2); el español, latinoamericano y tuteado (ADR-23 «Textos e idiomas» §2). → §3.3
 21. **Estilos**: tokens del `@theme` y **patrones con nombre** (ADR-21 §5). Ningún valor suelto, y ninguna combinación de utilidades que cumpla un papel de diseño escrita a mano en una pantalla. El catálogo es de la skill `diseno`. → §3.3
 
 ## Reglas fijas — modelo de datos (§4)

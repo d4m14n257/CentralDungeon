@@ -14,7 +14,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 
 ### Detalle de mesa — `/player/tables/:id`
 
-- «Postularme» cambia según el caso y **siempre dice por qué** (principio 2): *«Ya tenés una postulación en curso»* · *«La mesa está llena»* · *«No está abierta a postulaciones»* · *«Necesitás el rol Jugador»* (ADR-06 §3). El choque de horario se explica justo debajo (ADR-21 §5).
+- «Postularme» cambia según el caso y **siempre dice por qué** (principio 2): *«Ya tienes una postulación en curso»* · *«La mesa está llena»* · *«No está abierta a postulaciones»* · *«Necesitas el rol Jugador»* (ADR-06 §3). El choque de horario se explica justo debajo (ADR-21 §5).
 - **Quien fue rechazado lo ve** (ADR-09 «Postulaciones y veto» §7 «El jugador ve a qué mesas se postuló y por qué lo rechazaron»): si su última postulación es `Rejected`, un aviso «Te rechazaron en esta mesa» con el motivo y la fecha, y debajo **«Postularme de nuevo»**, con las mismas condiciones que la primera vez. Un rechazo automático por cupo se dice desde su código (`TABLE_FULL`), nunca con el motivo vacío.
 - Las fechas se guardan en UTC y se muestran en la hora local del navegador (ADR-03 §6).
 
