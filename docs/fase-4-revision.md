@@ -711,8 +711,8 @@ Planeó Fable 5.1; ejecutó Opus 5.5 con agentes Opus y Sonnet por tarea; revisa
   - `forward-headers-strategy: native` confía en el `X-Forwarded-For` de toda la red privada, no solo del proxy propio; se fija `server.tomcat.remoteip.internal-proxies` cuando se decida la topología (ADR-02 §5);
   - los refresh emitidos antes de V16 dan `401`: cada persona vuelve a entrar una vez al desplegar.
 - **Para F4.5 «La revisión mano a mano»:**
-  - el barrido de las citas viejas de ADRs y fases en el código;
-  - el término «cajón» en comentarios y en `requireOwnCajon` de `FileService`;
+  - el barrido de las citas viejas de ADRs y fases en el código — **Hecho** el 2026-11-24, junto con el español que quedaba en comentarios y en nombres de test;
+  - el término «cajón» en comentarios y en `requireOwnCajon` de `FileService` — **Hecho** el 2026-11-24: en el código es «category», como el tipo `FileCategory`;
   - un `429` en el login se ve como JSON crudo, porque es una navegación — **Hecho** el 2026-11-23: la puerta del login redirige a `/auth/callback?error=RATE_LIMITED&retryAfterSeconds=N`;
   - una subida múltiple rechazada por el límite solo lista el archivo como fallido, sin el motivo — **Hecho** el 2026-11-23: cada archivo fallido lleva el motivo traducido de su código de error.
 - **Sin verificar:**
