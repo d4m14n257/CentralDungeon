@@ -2,10 +2,10 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 /**
- * Accepts the review that every create, change or delete opens before writing (ADR-21 §9).
+ * Accepts the review that every create, change or delete opens before writing.
  *
- * The review is the dialog whose title asks — «¿…?» — stacked over whatever form sent it; this finds
- * it by that title and presses the button that is not «Cancelar», so a test reads as what a person
+ * The review is the dialog whose title asks a question, stacked over whatever form sent it; this finds
+ * it by that title and presses the button that is not the cancel button, so a test reads as what a person
  * does: fill the form, send it, confirm.
  *
  * @returns once the confirmation has been pressed

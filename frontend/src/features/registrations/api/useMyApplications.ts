@@ -10,7 +10,7 @@ import { registrationsApi } from './registrationsApi'
  *
  * The page is in the key: it used to be left out, so every page shared one cache entry and the
  * screen only ever showed the first. "Did I already apply here?" is not asked of this list: it comes
- * with each table, computed by the server (ADR-09 §1).
+ * with each table, computed by the server.
  *
  * @param page zero-based page number
  * @returns the query for that page of their applications

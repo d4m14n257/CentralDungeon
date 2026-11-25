@@ -9,8 +9,8 @@ import type { ApprovalRequestType, ApprovalStatus, SubmittableRequestType } from
  * `PLATFORM_ROLES`: a union of literals has no runtime value to iterate, and `satisfies` is what
  * turns a typo here into a compile error.
  *
- * **`TablePause` and `PlayerBan` joined in F3.4, with their producer** — which is the condition F3.2
- * wrote into this very comment when it left them out. This is the list `/request_type` offers, so
+ * **`TablePause` and `PlayerBan` joined with their producer** — which is the condition this very
+ * comment used to set when it left them out. This is the list `/request_type` offers, so
  * leaving them out now would mean the two kinds an admin most wants to find are the two they cannot
  * filter by.
  */
@@ -26,13 +26,13 @@ export const APPROVAL_REQUEST_TYPES = [
  * The kinds somebody can raise from `POST /api/v1/requests`, which is not all of them.
  *
  * **A separate list because the endpoint takes no `entityId`**, deliberately, so that nobody can ask
- * in another person's name (F3.2 §0d). The three below are *about whoever is asking*, and who that
- * is comes from the token. The two F3.4 added are about something else — a table, an application —
+ * in another person's name. The three below are *about whoever is asking*, and who that
+ * is comes from the token. The other two are about something else — a table, an application —
  * so each got a route of its own hanging off the entity, where "being the master of **this** table"
- * can be checked against the thing in the path (ADR-05 §5).
+ * can be checked against the thing in the path.
  *
  * It is what the submit form validates against, so a screen cannot offer a kind whose only possible
- * outcome is a refusal (principle 2).
+ * outcome is a refusal (a button that cannot be used is not shown).
  */
 export const SUBMITTABLE_REQUEST_TYPES = ['MasterGrant', 'TableOpen', 'General'] as const satisfies readonly SubmittableRequestType[]
 
@@ -44,7 +44,7 @@ export const APPROVAL_STATUSES = ['Pending', 'Approved', 'Rejected'] as const sa
  *
  * **Built with `serializeSearchQuery` rather than written by hand**, because it is read by two
  * parsers and has to mean the same thing to both. It is what `/admin/requests` opens filtered by
- * (ADR-20 §4) and what the request sections ask `/requests/mine` for, so the string leaves the frontend
+ * and what the request sections ask `/requests/mine` for, so the string leaves the frontend
  * and is parsed by `SearchQueryParser.java` — one hand-typed space or a label where a value belongs
  * and the filter silently matches nothing. The serializer is the same one the search box writes its
  * `?q=` with, which is exactly what keeps the two in step.

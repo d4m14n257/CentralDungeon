@@ -16,17 +16,17 @@ export interface AdminTableStatusNoticeProps {
 
 /**
  * Where the table stands, said above its tabs, with every decision an admin can take about it right
- * there (ADR-21 §10): review it, cancel it, assign it masters or remove it, pause it or resume it.
+ * there: review it, cancel it, assign it masters or remove it, pause it or resume it.
  *
  * **One notice and not a "Status" tab with a button in it.** The decisions first lived on that tab,
  * one section per kind - often a heading over a single button - and the user found it ugly and
- * hard to find: opening a table lands on Details. The notice says the situation in words («Esta
- * mesa espera tu revisión», «En curso») and carries its buttons in one row, visible from every tab.
+ * hard to find: opening a table lands on Details. The notice says the situation in words ("this table is
+ * waiting for your review", "in progress") and carries its buttons in one row, visible from every tab.
  * The history, which is reading and not deciding, became a tab of its own.
  *
  * Every status has its sentence, including the ones with nothing to decide - a draft not sent yet,
  * a finished table - so the notice never disappears depending on the case and the reader learns
- * where to look. Every decision tells the table's masters (ADR-18 §3, ADR-06 §8).
+ * where to look. Every decision tells the table's masters.
  *
  * @param props.table the table
  */
@@ -61,8 +61,8 @@ export function AdminTableStatusNotice({ table }: AdminTableStatusNoticeProps) {
     </>
   )
 
-  // Cancelling and removing go apart at the right when there are other buttons to keep them away from
-  // (ADR-21 §10), so a miss aimed at «Aprobar» or «Pausar» never lands on them. Alone, they stay where a
+  // Cancelling and removing go apart at the right when there are other buttons to keep them away from,
+  // so a miss aimed at the approve or pause button never lands on them. Alone, they stay where a
   // button is read first: a single button stranded at the far end of the notice looks lost.
   return (
     <StatusNotice

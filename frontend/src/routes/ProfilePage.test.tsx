@@ -38,14 +38,14 @@ vi.mock('@/features/users', () => ({
 }))
 
 // The approvals API is mocked and its hooks are not: the rule about when the request is offered is
-// exactly what this screen has to get right, so it runs for real (F3.2).
+// exactly what this screen has to get right, so it runs for real.
 const mine = vi.hoisted(() => vi.fn())
 vi.mock('@/features/approvals/api/approvalsApi', () => ({ approvalsApi: { mine } }))
 
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   function wrap(children: ReactNode) {
-    // The request dialog composes `FormDialog`, which guards a dirty form on the way out (ADR-20 §5).
+    // The request dialog composes `FormDialog`, which guards a dirty form on the way out.
     return (
       <QueryClientProvider client={queryClient}>
         <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
@@ -73,8 +73,8 @@ describe('ProfilePage', () => {
   })
 
   /**
-   * F3.2: the master role is asked for from here, because this is where somebody sees which roles
-   * they have and therefore where the absence of one is noticed (roles-y-alcance.md §4, F3.2).
+   * The master role is asked for from here, because this is where somebody sees which roles
+   * they have and therefore where the absence of one is noticed.
    */
   it('offers the master role request to somebody who is not a master', async () => {
     queryResult = { data: { ...PROFILE, roles: ['Player'] }, isPending: false, isLoadingError: false, refetch: vi.fn() }
@@ -98,7 +98,7 @@ describe('ProfilePage', () => {
   /**
    * And never to somebody who already runs tables: the backend refuses it with
    * `MASTER_ROLE_ALREADY_HELD`, and a button whose only possible outcome is a `409` is a button that
-   * should not be there (principle 2 of diseno §1).
+   * should not be there.
    */
   it('offers nothing of the sort to somebody who already is one', async () => {
     queryResult = { data: PROFILE, isPending: false, isLoadingError: false, refetch: vi.fn() }
@@ -138,7 +138,7 @@ describe('ProfilePage', () => {
     expect(screen.queryByRole('button', { name: 'Pedir el rol de master' })).not.toBeInTheDocument()
   })
 
-  /** ADR-10 §4: after onboarding, name and country are edited from here. */
+  /** After onboarding, name and country are edited from here. */
   it('opens the profile edit from the header action', async () => {
     queryResult = { data: PROFILE, isPending: false, isLoadingError: false, refetch: vi.fn() }
     renderPage()

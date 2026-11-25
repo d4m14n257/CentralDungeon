@@ -17,8 +17,8 @@ import org.springframework.data.repository.query.Param;
  * Reads and writes the {@code game_tables} table.
  *
  * <p>{@code JpaSpecificationExecutor} is here for the explorer: it combines the visibility rules with
- * a search box whose shape - how many criteria, joined by which connectors - is only known at runtime
- * (arquitectura §2.2), the same reason the catalogs and the files needed it before.
+ * a search box whose shape - how many criteria, joined by which connectors - is only known at runtime - the
+ * same reason the catalogs and the files needed it before.
  */
 public interface GameTableRepository extends JpaRepository<GameTable, String>, JpaSpecificationExecutor<GameTable> {
 
@@ -39,14 +39,14 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
 
     /**
      * The tables somebody runs, in the statuses that count as a live commitment - half of what the
-     * clash rules of ADR-08 §2 compare against. Not paginated: it feeds a computation, not a screen.
+     * schedule clash rules compare against. Not paginated: it feeds a computation, not a screen.
      *
-     * <p>Only live master rows count. Somebody whose master row fell with a deleted table (ADR-07 §6) no
+     * <p>Only live master rows count. Somebody whose master row fell with a deleted table no
      * longer occupies that stretch of the week.
      *
-     * @param userId   the person whose commitments are being collected, always from the token (ADR-05 §5)
+     * @param userId   the person whose commitments are being collected, always from the token
      * @param statuses the statuses that count as committed. {@code Pause} is deliberately not among
-     *                 them: a paused table freezes its agenda and does not reserve the slot (ADR-07 §2, ADR-08 §2)
+     *                 them: a paused table freezes its agenda and does not reserve the slot
      * @return the tables they run in those statuses
      */
     @Query("select m.gameTable from Master m where m.user.id = :userId "
@@ -57,19 +57,19 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
 
     /**
      * This source's contribution to the shared admin tray: the tables sitting in review that are
-     * either free or already the reader's (ADR-16 §5).
+     * either free or already the reader's.
      *
      * <p>The twin of {@code ApprovalRequestRepository.findQueueItems}, and the reservation rule is
      * the same one: {@code claimed_by is null or claimed_by = :actorId}, so a table another admin
-     * took is not in this reader's tray at all (arquitectura §4.5).
+     * took is not in this reader's tray at all.
      *
      * <p><b>One status and only one.</b> The caller passes {@code Preparation} - a table that was
      * sent to review - and nothing else qualifies: {@code Draft} was never sent, {@code
      * ChangesRequested} is back with its master, and {@code Unassigned} is waiting for a master
-     * rather than for a review (ADR-07 §1).
+     * rather than for a review.
      *
      * @param status   the status that means "waiting on an admin", always {@code Preparation}
-     * @param actorId  the admin reading the tray, always from the token (ADR-05 §5)
+     * @param actorId  the admin reading the tray, always from the token
      * @param pageable the per-source ceiling; the tray pages after the merge
      * @return the tables waiting for this admin, oldest first
      */
@@ -83,7 +83,7 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
             @Param("status") GameTableStatus status, @Param("actorId") String actorId, Pageable pageable);
 
     /**
-     * The reservations that went stale - what the release job hands back (ADR-16 §5).
+     * The reservations that went stale - what the release job hands back.
      *
      * <p>Bounded to the tables still in review for the same reason its twin is: a table that was
      * approved or sent back is in nobody's tray, and clearing its {@code claimed_by} would be a write
@@ -110,13 +110,13 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
             @Param("cutoff") LocalDateTime cutoff,
             Pageable pageable);
 
-    // findByStatusIn used to back /admin/tables. It is gone since F3.3: that listing now accepts the
-    // ?q= of ADR-22 §1 as well as a status filter, so it goes through findAll(Specification, Pageable)
+    // findByStatusIn used to back /admin/tables. It is gone: that listing now accepts a ?q= search
+    // as well as a status filter, so it goes through findAll(Specification, Pageable)
     // like every other search in the application, and a derived query nobody calls is dead weight.
 
     /**
      * Locks the table aggregate root for the invariants MySQL cannot express as a constraint:
-     * one active registration per pair (ADR-09 §1) and the max_players cap / auto-reject on fill (ADR-09 §3).
+     * one active registration per pair and the max_players cap / auto-reject on fill.
      * There is no natural row to lock for "no active registration yet exists", so registrations
      * locks the table itself and serializes on it instead.
      *

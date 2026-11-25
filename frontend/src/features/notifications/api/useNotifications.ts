@@ -9,8 +9,8 @@ import { notificationsApi } from './notificationsApi'
 /**
  * The bell's latest five.
  *
- * staleTime Infinity: in the full design the WebSocket is the only source of change (ADR-18 §2). Until
- * it lands in F6, the bell polls (`live.notifications`) - otherwise a notification that arrives while
+ * staleTime Infinity: in the full design the WebSocket is the only source of change. Until
+ * it lands, the bell polls (`live.notifications`) - otherwise a notification that arrives while
  * the page is open never shows until a reload, because an infinitely fresh query is never refetched.
  *
  * **An approved request may have changed what the shell offers**: a granted role, or a draft the
@@ -45,7 +45,7 @@ export function useNotifications() {
 }
 
 /**
- * The /notifications inbox, one page at a time with "Ver más" (ADR-04 §6): a list to read back through,
+ * The /notifications inbox, one page at a time with a "show more" button: a list to read back through,
  * not one to walk by page number.
  *
  * @returns the infinite query for every notification, newest first

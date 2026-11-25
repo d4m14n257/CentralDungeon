@@ -39,14 +39,14 @@ export interface CatalogValueActionsProps {
 }
 
 /**
- * Everything that can be done to one value of the catalog canvas (ADR-12 §7), as a menu.
+ * Everything that can be done to one value of the catalog canvas, as a menu.
  *
  * **It is the keyboard's way to do what the canvas does by dragging**, and it is why the canvas is
  * usable without a mouse: accepting into a group, moving to another and merging are gestures on the
  * canvas and entries here, each opening the dialog that already did it from the table. The rest -
  * promote, split, disable, restore, reject - are not gestures at all and live only here.
  *
- * What a value's state would make the server refuse is not in the menu (principle 2):
+ * What a value's state would make the server refuse is not in the menu:
  *
  * - **pending** - accept as a group of its own, accept into a group, reject
  * - **accepted head** - merge into another group, disable
@@ -80,7 +80,7 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
   const canDefine = kind === 'tags' && isHead && (isAccepted || isDisabled)
 
   async function handleAcceptAsGroup() {
-    // A review before anything is written (ADR-21 §9), like the dialogs: one click on a menu item is
+    // A review before anything is written, like the dialogs: one click on a menu item is
     // exactly the kind that goes wrong by accident.
     const confirmed = await confirm({
       title: t('admin.acceptConfirmTitle', { name: value.name }),

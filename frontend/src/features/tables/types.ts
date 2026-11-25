@@ -7,10 +7,10 @@ import type { Weekday } from '@/lib/date'
 /**
  * A table's ten lifecycle states plus `Deleted`. A union of literals, not a TS `enum`: the backend
  * serializes them as strings, and the union is what makes `Record<GameTableStatus, …>` force every
- * case to be covered when mapping to labels or badge variants (arquitectura §3.2, rule 9).
+ * case to be covered when mapping to labels or badge variants.
  *
  * `Draft` is where a master's table is born and the only place, with `ChangesRequested`, where they
- * can still rewrite it (ADR-07 §1).
+ * can still rewrite it.
  */
 export type GameTableStatus =
   | 'Draft'
@@ -27,7 +27,7 @@ export type GameTableStatus =
 /**
  * One of a table's masters, as it arrives nested in a table response. `masterType` is `Primary` or
  * `Secondary` on the wire; on screen these read as "master" and "co-master" and never as these
- * words (ADR-06 §3).
+ * words.
  */
 export interface MasterSummary {
   userId: string
@@ -36,8 +36,8 @@ export interface MasterSummary {
 }
 
 /**
- * One slot of a table's weekly agenda, exactly as `TableScheduleEntry` sends it: **UTC on the wire**
- * (ADR-03 §6). What the screen shows is the reader's own time, converted with `lib/date.ts` at the edge —
+ * One slot of a table's weekly agenda, exactly as `TableScheduleEntry` sends it: **UTC on the wire**.
+ * What the screen shows is the reader's own time, converted with `lib/date.ts` at the edge —
  * a component that receives one of these has not converted it yet.
  */
 export interface TableScheduleEntry {
@@ -45,9 +45,9 @@ export interface TableScheduleEntry {
   /** `HH:mm:ss` as the API writes it; the seconds are always zero and always ignored. */
   hourtime: string
   /**
-   * `HH:mm:ss` — how long **this** session lasts (ADR-08 §1). A property of the slot and not of the
+   * `HH:mm:ss` — how long **this** session lasts. A property of the slot and not of the
    * table: three hours midweek and six on a Saturday is one table with two answers. Null claims no
-   * interval at all, and then ADR-08 §2 has nothing to compare.
+   * interval at all, and then the schedule-clash check has nothing to compare.
    */
   duration: string | null
 }
@@ -58,17 +58,17 @@ export interface GameTableSummary {
   name: string
   status: GameTableStatus
   tableTypeName: string | null
-  /** The code to translate the label by, or null when a person named the type (ADR-23 §4). */
+  /** The code to translate the label by, or null when a person named the type. */
   tableTypeCode: string | null
   maxPlayers: number | null
   playerCount: number
   schedule: TableScheduleEntry[]
   /**
-   * Whether this table overlaps something the reader is already committed to (ADR-08 §2). Computed by
-   * the server for the actor of the token and for nobody else (ADR-05 §5) - the card only shows it.
+   * Whether this table overlaps something the reader is already committed to. Computed by
+   * the server for the actor of the token and for nobody else - the card only shows it.
    */
   scheduleConflict: boolean
-  /** Whether the reader holds a live application on it - Candidate or Player (ADR-09 §1). The server's, for the whole page. */
+  /** Whether the reader holds a live application on it - Candidate or Player. The server's, for the whole page. */
   applied: boolean
   /** Whether the reader is already a Player of the table - a stronger state than `applied`, and the one the card names. */
   joined: boolean
@@ -78,10 +78,10 @@ export interface GameTableSummary {
 }
 
 /**
- * Mirror of GameTableHistoryResponse (ADR-19 §8) - one row of `/player/history`: a table that stopped
+ * Mirror of GameTableHistoryResponse - one row of `/player/history`: a table that stopped
  * being active, and how it ended for this reader.
  *
- * A type of its own rather than a slice of `GameTableSummary` (arquitectura §3.2, rule 2): the two answer
+ * A type of its own rather than a slice of `GameTableSummary`: the two answer
  * different questions. A live table's card is about whether to act on it - the master, the seats
  * left, the schedule - none of which means anything once a table is done. This one is about how it
  * ended and how the reader did there, which a live card has no room for and a live table has no
@@ -131,7 +131,7 @@ export type TableSectionKey = keyof TableSections
 export interface CreateGameTableRequest {
   name: string
   description?: string | null
-  /** The house rules - what is allowed at this table. Rich text (ADR-03 §8). */
+  /** The house rules - what is allowed at this table. Rich text. */
   permitted?: string | null
   requirements?: string | null
   tableTypeId?: string | null
@@ -141,7 +141,7 @@ export interface CreateGameTableRequest {
   startDate?: string | null
   totalSessions?: number | null
   maxPlayers?: number | null
-  /** The weekly agenda, already converted to UTC by `lib/date.ts` before it is sent (ADR-03 §6). */
+  /** The weekly agenda, already converted to UTC by `lib/date.ts` before it is sent. */
   schedule?: TableScheduleEntry[] | null
   /** The four optional sections. Absent or null means none was written. */
   sections?: TableSections | null
@@ -164,75 +164,75 @@ export interface GameTableDetail {
   /** The four optional sections, always present; each is sanitized rich text or null. */
   sections: TableSections
   tableTypeName: string | null
-  /** The code to translate the label by, or null when a person named the type (ADR-23 §4). */
+  /** The code to translate the label by, or null when a person named the type. */
   tableTypeCode: string | null
   status: GameTableStatus
   maxPlayers: number | null
   playerCount: number
   startDate: string | null
   totalSessions: number | null
-  /** The weekly agenda, in UTC (ADR-03 §6). Ordered as a week reads. */
+  /** The weekly agenda, in UTC. Ordered as a week reads. */
   schedule: TableScheduleEntry[]
   /**
-   * The materialized calendar (ADR-08 §3): dates, not the weekly shape. It travels inside the detail
+   * The materialized calendar: dates, not the weekly shape. It travels inside the detail
    * rather than on an endpoint of its own because this read already decides who may see the table.
-   * Empty until the table opens, and while it is paused it carries only what already happened (ADR-07 §2).
+   * Empty until the table opens, and while it is paused it carries only what already happened.
    */
   sessions: PublicSession[]
   /**
-   * What the table shares with its candidates and players (ADR-14 §1). Only the shared ones: an attachment
+   * What the table shares with its candidates and players. Only the shared ones: an attachment
    * the master kept private is absent, not listed and locked. It rides inside the detail for the same
-   * reason `sessions` does — this read already settles who may see the table (ADR-09 §4).
+   * reason `sessions` does — this read already settles who may see the table.
    */
   files: SharedFile[]
-  /** Each value under the alias its master chose, never rewritten to the group's canonical one (ADR-12 §4). */
+  /** Each value under the alias its master chose, never rewritten to the group's canonical one. */
   systems: CatalogValue[]
   tags: CatalogValue[]
   platforms: CatalogValue[]
   masters: MasterSummary[]
   createdAt: string
-  /** When it entered Finished or Canceled (ADR-07 §7), or null while it is still going. */
+  /** When it entered Finished or Canceled, or null while it is still going. */
   closedAt: string | null
   /**
-   * Whether this table clashes with something the reader is already committed to (ADR-08 §2). Computed
-   * by the server for the actor of the token (ADR-05 §5) - it is what lets the apply button say why.
+   * Whether this table clashes with something the reader is already committed to. Computed
+   * by the server for the actor of the token - it is what lets the apply button say why.
    */
   scheduleConflict: boolean
-  /** Whether the reader holds a live application on it - Candidate or Player (ADR-09 §1). */
+  /** Whether the reader holds a live application on it - Candidate or Player. */
   applied: boolean
   /** Whether the reader is already a Player of the table - the apply button says so instead of "application in progress". */
   joined: boolean
   /** Whether the table is running and looking for players: it lists in the explorer and takes applications while `InProgress`. */
   seekingPlayers: boolean
   /**
-   * Why the reader was turned down here, when their latest application to this table was rejected (ADR-09 §7).
+   * Why the reader was turned down here, when their latest application to this table was rejected.
    * The server's, for the actor of the token; null when they never applied or applied again.
    */
   myRejection: MyRejection | null
 }
 
 /**
- * Mirror of MyRejectionResponse (ADR-09 §7): the reader's own rejection at one table. Exactly one of
+ * Mirror of MyRejectionResponse: the reader's own rejection at one table. Exactly one of
  * `justification` and `reasonCode` is set, so the notice never has an empty reason.
  */
 export interface MyRejection {
   /** The master's own words, shown exactly as typed. Null when the system did the rejecting. */
   justification: string | null
-  /** The code of a rejection the application wrote itself, today only `TABLE_FULL` (ADR-09 §3). Null when a person rejected. */
+  /** The code of a rejection the application wrote itself, today only `TABLE_FULL`. Null when a person rejected. */
   reasonCode: string | null
   /** When it happened, as the API sends it (UTC). */
   rejectedAt: string
 }
 
 /**
- * What became of a materialized session (ADR-08 §3). A union of literals and not a TS `enum`, for the same
+ * What became of a materialized session. A union of literals and not a TS `enum`, for the same
  * reason as `GameTableStatus`: it is what forces a `Record<TableSessionStatus, …>` to cover all
  * three cases when mapping to labels or badge variants.
  */
 export type TableSessionStatus = 'Scheduled' | 'Held' | 'Cancelled'
 
 /**
- * Whether somebody was at a session (ADR-08 §4). **The four values do not collapse into two** (ADR-08 §5): a
+ * Whether somebody was at a session. **The four values do not collapse into two**: a
  * warned absence and a no-show are different facts, and `Unknown` means nobody recorded anything —
  * it stays out of the denominator of every count.
  */
@@ -247,13 +247,13 @@ export interface SessionAttendanceEntry {
 
 /**
  * Mirror of TableSessionResponse — a session as the people running the table see it, with its notes
- * and the whole roster. **It is the base type for sessions**: the player's view derives from it (arquitectura §3.2).
+ * and the whole roster. **It is the base type for sessions**: the player's view derives from it.
  */
 export interface TableSession {
   id: string
-  /** Which session of the run this is, from 1. A cancelled one keeps its number and the replacement takes the next (ADR-08 §3). */
+  /** Which session of the run this is, from 1. A cancelled one keeps its number and the replacement takes the next. */
   sequenceNumber: number
-  /** When it happens, **in UTC** (ADR-03 §6). The conversion to local time happens once, through `lib/date.ts`. */
+  /** When it happens, **in UTC**. The conversion to local time happens once, through `lib/date.ts`. */
   scheduledAt: string
   status: TableSessionStatus
   /** What the master wrote about the session. It never reaches a player. */
@@ -263,15 +263,15 @@ export interface TableSession {
 
 /**
  * Mirror of PublicSessionResponse — the session as anybody looking at the table sees it: when it is
- * and how it went. Derived from the base type with `Pick` (regla dura 6); neither the notes nor the
+ * and how it went. Derived from the base type with `Pick`; neither the notes nor the
  * roster travel here.
  */
 export type PublicSession = Pick<TableSession, 'id' | 'sequenceNumber' | 'scheduledAt' | 'status'>
 
 /**
  * Mirror of PlayerSessionResponse — the same session, seen by the person playing. Derived from the
- * base type with `Omit` (regla dura 6): what changes is that it carries neither notes nor anybody
- * else's roster, only *my* attendance (ADR-05 §5).
+ * base type with `Omit`: what changes is that it carries neither notes nor anybody
+ * else's roster, only *my* attendance.
  */
 export type PlayerSession = Omit<TableSession, 'notes' | 'attendance'> & { myAttendance: AttendanceStatus }
 
@@ -284,11 +284,11 @@ export interface MySessions {
 /**
  * Mirror of UpdateSessionRequest — the master correcting a session.
  *
- * It replaces both fields rather than patching them (ADR-04 §7): absent notes clear them. The date is the
+ * It replaces both fields rather than patching them: absent notes clear them. The date is the
  * one exception — absent means "do not move it", because a session always happens at some instant.
  */
 export interface UpdateSessionRequest {
-  /** The new instant, **in UTC** (ADR-03 §6), or null to leave the date where it is. */
+  /** The new instant, **in UTC**, or null to leave the date where it is. */
   scheduledAt?: string | null
   notes?: string | null
 }
@@ -312,7 +312,7 @@ export interface RecordAttendanceRequest {
 export interface TableType {
   id: string
   /**
-   * The identifier the label is translated by, for a type the application shipped (ADR-23 §4). Null for
+   * The identifier the label is translated by, for a type the application shipped. Null for
    * one an admin created, whose `name` is then read verbatim. Never shown.
    */
   code: string | null
@@ -323,9 +323,9 @@ export interface TableType {
 }
 
 /**
- * Mirror of WeeklyCommitmentResponse — one table the reader's week is committed to (ADR-08 §6).
+ * Mirror of WeeklyCommitmentResponse — one table the reader's week is committed to.
  *
- * It is the same data ADR-08 §2 compares to refuse a clash, read instead of enforced: what the grid draws
+ * It is the same data the server compares to refuse a schedule clash, read instead of enforced: what the grid draws
  * is what the rule measures, so a gap on screen is a gap the server will accept.
  */
 export interface WeeklyCommitment {
@@ -372,8 +372,8 @@ export interface AssignMastersRequest {
  * Mirror of AddMasterRequest — adding a co-master, or handing the table over.
  *
  * `masterType` is `Primary` or `Secondary` on the wire; asking for `Primary` promotes the target
- * and demotes whoever held it, because a table has exactly one (ADR-06 §3). On screen the two words are
- * "master" and "co-master" and never these (ADR-06 §3).
+ * and demotes whoever held it, because a table has exactly one. On screen the two words are
+ * "master" and "co-master" and never these.
  */
 export interface AddMasterRequest {
   userId: string
@@ -381,14 +381,14 @@ export interface AddMasterRequest {
 }
 
 /**
- * Mirror of MasterWorkItemKind — what a table is waiting on, as a code rather than a sentence
- * (ADR-23 §3). The union is what forces a `Record<MasterWorkItemKind, …>` to cover every case when the
+ * Mirror of MasterWorkItemKind — what a table is waiting on, as a code rather than a sentence.
+ * The union is what forces a `Record<MasterWorkItemKind, …>` to cover every case when the
  * screen turns it into a phrase.
  */
 export type MasterWorkItemKind = 'CandidatesWaiting' | 'OverdueTaskMissing' | 'SessionToRecord' | 'ChangesRequested' | 'ReadyToStart'
 
 /**
- * Mirror of MasterWorkItem — one thing waiting for an answer, on one table (ADR-20 §4).
+ * Mirror of MasterWorkItem — one thing waiting for an answer, on one table.
  *
  * The server sends the code and the numbers; the phrase is written here, in the reader's language.
  */
@@ -399,13 +399,13 @@ export interface MasterWorkItem {
   /** The task's title, the session's date — whatever makes the row concrete. Null when the kind has none. */
   subject: string | null
   count: number
-  /** When the wait started, **in UTC** (ADR-03 §6). It is what the tray is ordered by. */
+  /** When the wait started, **in UTC**. It is what the tray is ordered by. */
   since: string
 }
 
 /**
  * Mirror of MasterDashboardResponse. An empty `items` is a success, not a failure: every table is
- * up to date, and the screen has to say so in those words (skill `diseno` §5).
+ * up to date, and the screen has to say so in those words.
  */
 export interface MasterDashboard {
   items: MasterWorkItem[]
@@ -421,17 +421,17 @@ export interface AdminTableSummary {
   name: string
   status: GameTableStatus
   tableTypeName: string | null
-  /** The code to translate the label by, or null when a person named the type (ADR-23 §4). */
+  /** The code to translate the label by, or null when a person named the type. */
   tableTypeCode: string | null
   maxPlayers: number | null
   playerCount: number
   primaryMasterName: string | null
   /**
-   * Who has the table reserved in the shared admin tray, or null while nobody has (ADR-16 §5, F3.3).
+   * Who has the table reserved in the shared admin tray, or null while nobody has.
    *
    * **The listing carries it so that a reserved table reads the same here as it does in the tray.**
    * `/admin/tables` offers no action that needs the reservation any more — approving and requesting
-   * changes moved to `/admin/queue` (ADR-16 §7) — but an admin looking at the list still has to be able to
+   * changes moved to `/admin/queue` — but an admin looking at the list still has to be able to
    * tell that a colleague is in the middle of reviewing something, or they will go and open it.
    */
   claimedByName: string | null

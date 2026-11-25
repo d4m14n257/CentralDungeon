@@ -26,14 +26,14 @@ import { useDisclosure } from '@/hooks/useDisclosure'
 /**
  * Mirror of `GameTableService.CANCELABLE_STATUSES`.
  *
- * **`PauseRequested` is on it since F3.4**, and it had to be: giving the status a producer meant a
+ * **`PauseRequested` is on it**, and it had to be: giving the status a producer meant a
  * table could now sit in it, and without this entry a master who asked for a pause and then decided
  * to close the table instead would find the button gone — with no way back except waiting for an
  * admin to answer a request that no longer matters. A table waiting on an answer is still a table
  * its master may end.
  */
 const CANCELABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'PauseRequested', 'Pause']
-/** Only what was never public is deleted; everything else is cancelled and stays in the history (ADR-07 §6). */
+/** Only what was never public is deleted; everything else is cancelled and stays in the history. */
 const DELETABLE_STATUSES: GameTableStatus[] = ['Draft', 'Preparation', 'ChangesRequested']
 
 /** What {@link MasterTableStatusNotice} takes. */
@@ -54,7 +54,7 @@ export interface MasterTableStatusNoticeProps {
 
 /**
  * Where the table stands, said above its tabs, with every decision its masters can take about it right
- * there (ADR-21 §10): send it to review, resend it, start it, finish it, ask for a pause, cancel it or
+ * there: send it to review, resend it, start it, finish it, ask for a pause, cancel it or
  * delete it. The master's twin of `AdminTableStatusNotice`.
  *
  * **It replaced the "Status" tab**, which mixed deciding with reading and put the decisions at the end of
@@ -97,7 +97,7 @@ export function MasterTableStatusNotice({
   const cancelDialog = useDisclosure()
   const pauseDialog = useDisclosure()
 
-  /** Every one-way step is confirmed first, saying what follows (principle 3 of diseno §1). */
+  /** Every one-way step is confirmed first, saying what follows. */
   async function confirmThen(key: 'submit' | 'resubmit' | 'start' | 'finish', mutate: (onSuccess: () => void) => void) {
     const confirmed = await confirm({ title: t(`status.${key}ConfirmTitle`), description: t(`status.${key}ConfirmDescription`) })
     if (!confirmed) return
@@ -173,7 +173,7 @@ export function MasterTableStatusNotice({
     )
   }
   // Only from a table that is actually running: there is nothing to pause before it started, and
-  // `PauseRequested` is already on the other side of this act (principle 2).
+  // `PauseRequested` is already on the other side of this act.
   if (status === 'InProgress') {
     safe.push(
       <Button key="pause" size="sm" variant="outline" disabled={requestPause.isPending} onClick={() => pauseDialog.open()}>
@@ -201,7 +201,7 @@ export function MasterTableStatusNotice({
   }
 
   // What the call for players is doing, or why it cannot be turned on: said in the notice, where a
-  // disabled button's reason stays readable (principle 2 of diseno §1).
+  // disabled button's reason stays readable.
   const seekingHint =
     status !== 'InProgress' ? undefined : (
       <>
@@ -231,8 +231,8 @@ export function MasterTableStatusNotice({
   const hasSafe = safe.length > 0
   const hasDestructive = destructive.length > 0
 
-  // Cancelling and deleting go apart at the right when there are other buttons to keep them away from
-  // (ADR-21 §10); alone, they stay where a button is read first.
+  // Cancelling and deleting go apart at the right when there are other buttons to keep them away from;
+  // alone, they stay where a button is read first.
   return (
     <>
       <StatusNotice

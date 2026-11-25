@@ -12,18 +12,18 @@ import { tableTypeLabel } from '../lib/tableTypeLabel'
 import { TableStatusBadge } from './TableStatusBadge'
 
 /**
- * The explorer's card (diseno §4). The status goes under the title rather than beside
+ * The explorer's card. The status goes under the title rather than beside
  * it: it is the first thing read after the name, and this way it does not compete with it for
  * width. The footer separates what describes the table from what describes whoever runs it.
  *
- * "You already applied" is the table's own `applied`, computed by the server for the reader (ADR-09 §1):
+ * "You already applied" is the table's own `applied`, computed by the server for the reader:
  * true whether it is still pending or you were accepted. Once accepted, `joined` makes the mark say
  * so instead of claiming an application that is no longer one.
  *
- * The agenda is shown **in local time** (ADR-03 §6): what travels is UTC and the conversion belongs to
+ * The agenda is shown **in local time**: what travels is UTC and the conversion belongs to
  * `lib/date.ts`. And when the table clashes with something the reader is already committed to, the
- * card warns with the reason in view (ADR-08 §2) - a warning that does not explain itself is as useless
- * as a grey button with no stated reason (principle 2 of diseno §1).
+ * card warns with the reason in view - a warning that does not explain itself is as useless
+ * as a grey button with no stated reason.
  */
 export function GameTableCard({ table, linkTo }: { table: GameTableSummary; linkTo?: string }) {
   const { t, i18n } = useTranslation('tables')

@@ -4,12 +4,12 @@ package com.centraldungeon.features.files;
  * One place a file is being used, right now. Internal projection, not a DTO: it
  * never crosses HTTP - {@code FileUsageResponse} is what does.
  *
- * <p><b>Not the same question as {@link FileCategory}, though it carries one.</b> A cajón says the
+ * <p><b>Not the same question as {@link FileCategory}, though it carries one.</b> A category says the
  * file <em>has belonged</em> to a flow and is never revoked; a usage says it <em>is linked</em>
  * somewhere at this moment, and disappears when the link does. Detaching a file from a table removes
- * a usage and leaves the cajón standing - which is exactly the difference ADR-14 §4 turns on.
+ * a usage and leaves the category standing - which is exactly the difference that matters here.
  *
- * <p>It carries the cajón rather than a kind of its own because there would be nothing to tell them
+ * <p>It carries the category rather than a kind of its own because there would be nothing to tell them
  * apart: a link to a table is a {@code TableMaterial} use, and a second enum saying so would be the
  * same list under another name.
  *
@@ -17,7 +17,7 @@ package com.centraldungeon.features.files;
  * three round trips, not sixty.
  *
  * @param fileId      the file being used
- * @param category    the cajón this use puts it in
+ * @param category    the category this use puts it in
  * @param contextId   the table the use belongs to. For a submission or a request it is still a
  *                    table: the one whose task is involved
  * @param contextName how to name that context on screen - the table's name, so the owner recognises

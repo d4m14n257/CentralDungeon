@@ -6,13 +6,13 @@ import org.jspecify.annotations.Nullable;
 /**
  * One person on a table's roster, for the places that need it.
  *
- * <p>It exists because until F1.5 nothing could list them: {@code GET /game-tables/{id}/registrations}
- * answers with the <b>candidate</b> queue (ADR-09 §1), which is a different question. The first caller is
+ * <p>It exists because nothing else could list them: {@code GET /game-tables/{id}/registrations}
+ * answers with the <b>candidate</b> queue, which is a different question. The first caller is
  * the picker that a {@code Single} task needs - addressing one player means being able to choose
  * among them, and offering the platform's whole user directory there would be offering people who
  * cannot be chosen.
  *
- * <p><b>F3.4 added the veto to it</b> (ADR-09 §5). The roster now carries {@code registrationId} and
+ * <p><b>It also carries the veto</b>. The roster now carries {@code registrationId} and
  * {@code status}, and a vetoed row stays on the list rather than vanishing from it: a veto that
  * disappears from the screen is not reversible in practice, and the button that lifts it has to sit
  * somewhere. The three {@code blocked*} fields are what the master reads before deciding to lift it.
@@ -24,11 +24,6 @@ import org.jspecify.annotations.Nullable;
  * <p>Deliberately smaller than {@link RegistrationResponse}: this is a roster, not an application.
  * When they applied and what they wrote is the candidate queue's business.
  *
- * @param registrationId     the application this row is, which is what the veto endpoints address
- * @param userId             the person
- * @param userName           how to name them on screen - their Discord username, which everybody has
- * @param status             {@code Player} or {@code Blocked}, as a string. Nothing else reaches
- *                           this list
  * <p>A veto is asked for by a master and decided by an admin, so a vetoed row carries both sides: the
  * {@code blocked*} fields are the admin's decision, the {@code banRequest*} fields the master's request.
  *

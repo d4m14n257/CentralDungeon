@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class ApprovalSearchFieldTest {
 
     @Test
-    void aceptaLosTresComandosDelContratoYNadaMas() {
+    void acceptsTheThreeContractCommandsAndNothingElse() {
         assertThat(ApprovalSearchField.wireNames()).containsExactlyInAnyOrder("request_type", "status", "requested_by");
     }
 
@@ -65,7 +65,7 @@ class ApprovalSearchFieldTest {
         }
     }
 
-    /** Un valor desconocido no es un 400: no matchea nada (arquitectura §2.5). */
+    /** An unknown value is not a 400: it matches nothing. */
     @Test
     void anUnknownValueIsNotAnError() {
         assertThat(ApprovalRequestType.fromWireName("Quizas")).isEmpty();

@@ -8,7 +8,7 @@ import { BanningHelp, PauseRequestHelp, SeekingPlayersHelp } from './masters'
 import { HELP_SECTIONS } from './registry'
 
 /**
- * The help F3.4 owes (plan-desarrollo.md §6 point 8, ADR-20 §5).
+ * The help owed for pausing a table and vetoing a player.
  *
  * These assert on the **substance** of each section rather than on whole sentences: the wording is
  * free to improve, but a section that stopped saying that asking is not pausing, or that a veto is
@@ -27,7 +27,7 @@ describe('PauseRequestHelp', () => {
     expect(body).toMatch(/sigue «En curso»/i)
   })
 
-  /** ADR-07 §2: an admin decides it, and the reason is what they decide on. */
+  /** An admin decides it, and the reason is what they decide on. */
   it('says an admin decides it and that the reason is required', () => {
     render(<PauseRequestHelp />)
 
@@ -36,7 +36,7 @@ describe('PauseRequestHelp', () => {
     expect(body).toMatch(/motivo es obligatorio/i)
   })
 
-  /** What happens to the dates on both sides of the pause — the half nobody would guess (ADR-08 §3). */
+  /** What happens to the dates on both sides of the pause — the half nobody would guess. */
   it('says the sessions are hidden and rescheduled on the way back, losing none', () => {
     render(<PauseRequestHelp />)
 
@@ -45,7 +45,7 @@ describe('PauseRequestHelp', () => {
     expect(body).toMatch(/No se pierde ninguna/i)
   })
 
-  /** ADR-20 §6: it teaches how to do it, not only what exists. */
+  /** It teaches how to do it, not only what exists. */
   it('walks through asking for one, step by step', () => {
     const { container } = render(<PauseRequestHelp />)
 
@@ -55,7 +55,7 @@ describe('PauseRequestHelp', () => {
 
 describe('BanningHelp', () => {
   /**
-   * "Vetar" reads as a platform ban and it is not one (ADR-09 §4). Somebody who believes it is will either
+   * "Vetar" reads as a platform ban and it is not one. Somebody who believes it is will either
    * never use it or use it as a last resort on a person they would rather have warned.
    */
   it('says the veto is per table and costs the person nothing else', () => {
@@ -76,7 +76,7 @@ describe('BanningHelp', () => {
     expect(body).toMatch(/no cambia nada/i)
   })
 
-  /** The two halves of ADR-09 §5: it is reversible, and the row that makes it reversible stays on screen. */
+  /** The two halves of the veto: it is reversible, and the row that makes it reversible stays on screen. */
   it('says it can be lifted, and that the vetoed row stays visible to do it from', () => {
     render(<BanningHelp />)
 
@@ -94,7 +94,7 @@ describe('BanningHelp', () => {
     expect(body).toMatch(/rechazada por falta de lugar/i)
   })
 
-  /** The half that surprises the master rather than the player: nobody is notified (ADR-09 §4). */
+  /** The half that surprises the master rather than the player: nobody is notified. */
   it('warns that the vetoed person is never told', () => {
     render(<BanningHelp />)
 
@@ -129,7 +129,7 @@ describe('SeekingPlayersHelp', () => {
 })
 
 describe('PausingHelp', () => {
-  /** ADR-07 §1: two buttons that arrived with no screen around them and nothing explaining either. */
+  /** Two buttons that arrived with no screen around them and nothing explaining either. */
   it('says what pausing does and that it is not cancelling', () => {
     render(<PausingHelp />)
 
@@ -138,7 +138,7 @@ describe('PausingHelp', () => {
     expect(body).toMatch(/Pausar no es cancelar/i)
   })
 
-  /** ADR-07 §2: the master asks and approving the request is what actually pauses the table. */
+  /** The master asks and approving the request is what actually pauses the table. */
   it('says a master’s request is what the tray approves', () => {
     render(<PausingHelp />)
 
@@ -148,7 +148,7 @@ describe('PausingHelp', () => {
   })
 
   /**
-   * ADR-08 §2: the one act on that screen that can genuinely be refused, and the least likely to look it.
+   * The one act on that screen that can genuinely be refused, and the least likely to look it.
    * An admin who does not expect it reads the refusal as a broken button.
    */
   it('warns that resuming can clash with another table of the master’s', () => {
@@ -160,10 +160,10 @@ describe('PausingHelp', () => {
   })
 })
 
-describe('the F3.4 sections in the registry', () => {
+describe('the pause and veto sections in the registry', () => {
   /**
-   * The id is the contract (ADR-20 §5): a screen names the section it wants and knows nothing else. These
-   * three are the ones F3.4's screens link, and a rename here would silently orphan a `HelpLink`.
+   * The id is the contract: a screen names the section it wants and knows nothing else. These
+   * three are the ones the pause and veto screens link, and a rename here would silently orphan a `HelpLink`.
    */
   it('registers the three sections the slice’s screens link to', () => {
     expect(HELP_SECTIONS['masters.pause']).toBeDefined()

@@ -38,12 +38,12 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The one mechanism every request that needs an approval goes through (ADR-16 §1).
+ * The one mechanism every request that needs an approval goes through.
  *
  * <p>Four rules carry this class, and none of them is visible in the table:
  *
  * <ul>
- *   <li><b>The referenced entity is validated before anything is inserted</b> (ADR-16 §2). There is
+ *   <li><b>The referenced entity is validated before anything is inserted</b>. There is
  *       no foreign key behind {@code entity_type}/{@code entity_id} and there cannot be one, so the
  *       check the database would normally do lives here - and it is only two thirds of the price.
  *       The rest is that nothing maps the reference as a {@code @ManyToOne}, and
@@ -55,21 +55,21 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li><b>A resolution is never re-resolved.</b> The same shape the table's state machine has, and
  *       the reason two admins answering at once produce one answer and one 409 rather than two
  *       answers.</li>
- *   <li><b>A request another admin reserved is not yours to answer</b> ({@link QueueClaimRule},
- *       ADR-16 §5). Arrived with F3.3. Note what it is <em>not</em>: it does not require having reserved
+ *   <li><b>A request another admin reserved is not yours to answer</b> ({@link QueueClaimRule}).
+ *       Note what it is <em>not</em>: it does not require having reserved
  *       it, because this screen resolves without ever passing through the shared tray. Correctness
  *       does not rest on it either - the pessimistic lock above is what makes two answers impossible.
  *       This is about not taking work off a colleague's desk.</li>
- *   <li><b>Approving a {@code MasterGrant} grants the role through {@link UserRoleService}</b>
- *       (roles-y-alcance.md §4). Not a second path that writes the same row: who may move which
- *       rank, the exclusion of ADR-06 §1 and the owner invariant all live over there, and a copy here
+ *   <li><b>Approving a {@code MasterGrant} grants the role through {@link UserRoleService}</b>.
+ *       Not a second path that writes the same row: who may move which
+ *       rank, the Admin/Owner exclusion and the owner invariant all live over there, and a copy here
  *       would be a copy of the rules or - worse - a version without them.</li>
  *   <li><b>Approving a {@code TableOpen} creates a draft owned by the requester</b>, through
  *       {@link GameTableService#createDraftFor}: they become its Primary master and are granted no
  *       role, because running one table is a row in {@code masters} and not the Master role.</li>
  * </ul>
  *
- * <p><b>Submitting notifies nobody</b> (ADR-16 §5). Admin work items are not duplicated as notifications;
+ * <p><b>Submitting notifies nobody</b>. Admin work items are not duplicated as notifications;
  * the shared queue is a view over these rows. The <em>resolution</em> notifies, and only the person
  * who asked.
  */
@@ -79,7 +79,7 @@ public class ApprovalService {
     /** The {@code approval_requests} table, queried by specification for the admin search box. */
     private final ApprovalRequestRepository approvalRequestRepository;
 
-    /** The half of the polymorphic reference the database cannot do (ADR-16 §2). */
+    /** The half of the polymorphic reference the database cannot do. */
     private final ApprovalEntityResolver entityResolver;
 
     /** Loads people - the requester, and the admin answering. */
@@ -96,14 +96,14 @@ public class ApprovalService {
     /** Reads live grants, for the "you already are a master" check. */
     private final UserRoleRepository userRoleRepository;
 
-    /** The <b>only</b> way a role is ever granted (roles-y-alcance.md §4). */
+    /** The <b>only</b> way a role is ever granted. */
     private final UserRoleService userRoleService;
 
-    /** Tells the requester their request was answered. Nothing is sent when it is made (ADR-16 §5). */
+    /** Tells the requester their request was answered. Nothing is sent when it is made. */
     private final NotificationService notificationService;
 
     /**
-     * Where the two pause transitions live (ADR-07 §2). Approving a {@code TablePause} moves the table and
+     * Where the two pause transitions live. Approving a {@code TablePause} moves the table and
      * <b>rejecting one moves it back</b>; neither is written here, for the same reason
      * {@code MasterGrant} does not write a role: the lifecycle has one owner and a copy of it here
      * would be a copy without the locking and the trail.
@@ -127,7 +127,7 @@ public class ApprovalService {
 
     /**
      * @param approvalRequestRepository the {@code approval_requests} table
-     * @param entityResolver            resolves the polymorphic reference (ADR-16 §2)
+     * @param entityResolver            resolves the polymorphic reference
      * @param userService               loads people
      * @param userRepository            locks the requester's row
      * @param userRoleRepository        reads live grants
@@ -178,11 +178,11 @@ public class ApprovalService {
      * @param justification why, never blank - the request validates it
      * @param tableName     the name of the table a {@code TableOpen} asks to open, required for that
      *                      type and ignored for the others
-     * @param actor         the actor, from the token (ADR-05 §5). The request is always about them: the
-     *                      body carries no id and could not be trusted with one (arquitectura §2.6)
+     * @param actor         the actor, from the token. The request is always about them: the
+     *                      body carries no id and could not be trusted with one
      * @return the request as it was opened
-     * @throws NotFoundException        404 when the actor's account is gone - the ADR-16 §2 validation,
-     *                                  run before the insert
+     * @throws NotFoundException        404 when the actor's account is gone - the referenced-entity
+     *                                  validation, run before the insert
      * @throws ForbiddenActionException 403 when the account is not Allowed
      * @throws InvalidRequestException  400 when the type is one whose entity is not the requester -
      *                                  those are opened from the resource they are about - or
@@ -196,7 +196,7 @@ public class ApprovalService {
     public ApprovalRequestDetailResponse submit(
             ApprovalRequestType type, String justification, @Nullable String tableName, CurrentUser actor) {
         // The locking read is the FIRST thing this transaction does with the requester's row, and it
-        // has to be (ADR-06 §2). Two submits of the same type by one person each read "no pending request
+        // has to be. Two submits of the same type by one person each read "no pending request
         // of this type" from their own snapshot, both pass the guard below, and both insert - the
         // duplicate the rule exists to stop, with neither of them refused. A plain load here followed
         // by a lock would be wrong in the way that is hardest to see: under REPEATABLE READ the
@@ -215,7 +215,7 @@ public class ApprovalService {
         }
 
         // This endpoint only ever opens a request about the person asking, which is why it takes no
-        // entity id and could not be trusted with one (F3.2 §0d, arquitectura §2.6). The two types
+        // entity id and could not be trusted with one. The two types
         // whose entity is something else have doors of their own, on the aggregate they are about:
         // submitTablePause and submitPlayerBan.
         //
@@ -241,11 +241,11 @@ public class ApprovalService {
     }
 
     /**
-     * A master asking for their table to be paused (ADR-07 §2).
+     * A master asking for their table to be paused.
      *
      * <p><b>Two things in one transaction</b>: the table moves to {@code PauseRequested} and the
      * request is written. Not two endpoints and not two calls from a controller - a table sitting in
-     * {@code PauseRequested} with nobody asked is the orphan this slice came to close, and the
+     * {@code PauseRequested} with nobody asked is an orphan state, and the
      * reverse - a request about a table still reading {@code InProgress} - is an admin approving
      * something that never happened.
      *
@@ -375,7 +375,7 @@ public class ApprovalService {
      * One veto request as the table's roster reads it.
      *
      * <p>Null when the application it points at is not among the table's - which the polymorphic
-     * reference makes possible in principle (ADR-16 §2) and the caller filters out. The row outliving
+     * reference makes possible in principle and the caller filters out. The row outliving
      * what it points at is the accepted cost of that decision; showing a line that names nobody is
      * not.
      */
@@ -412,14 +412,14 @@ public class ApprovalService {
      * with twenty resolved {@code General} requests on top of it, falls off page one and the button
      * comes back - offering an action whose only possible answer is a 409. {@code /status Pending}
      * answers the question the screen is actually asking. It goes through {@code ?q=} rather than a
-     * parameter of its own because one search box per endpoint is the rule (arquitectura §2.5), and
+     * parameter of its own because one search box per endpoint is the rule, and
      * because {@code /request_type} then works here for free.
      *
      * <p>The actor's own filter is <b>not</b> part of that language: it is forced inside
-     * {@link ApprovalSearchSpecification#mine}, where no string from the request can reach it (ADR-05 §5).
+     * {@link ApprovalSearchSpecification#mine}, where no string from the request can reach it.
      *
      * @param actorId  the requester, always the actor from the token. There is no id parameter that
-     *                 could point at somebody else (ADR-05 §5)
+     *                 could point at somebody else
      * @param rawQuery the search box: {@code /status} and {@code /request_type} narrow it, bare text
      *                 matches the justification. Null or blank lists all of their requests
      * @param pageable page and size
@@ -444,8 +444,8 @@ public class ApprovalService {
      *
      * @param rawQuery the search box: bare text matches the justification or the requester's name,
      *                 and {@code /request_type}, {@code /status} and {@code /requested_by} narrow it.
-     *                 An unrecognized value matches nothing and is never a 400 (arquitectura §2.5)
-     * @param pageable page, size and sort, with a tie-break by id (ADR-07 §9, ADR-04 §6)
+     *                 An unrecognized value matches nothing and is never a 400
+     * @param pageable page, size and sort, with a tie-break by id
      * @return one page of requests
      */
     @Transactional(readOnly = true)
@@ -546,13 +546,13 @@ public class ApprovalService {
      * </ul>
      *
      * @param requestId      the request
-     * @param resolutionNote why, never blank - mandatory in both directions (ADR-16 §1)
-     * @param actor          the admin, from the token (ADR-05 §5)
+     * @param resolutionNote why, never blank - mandatory in both directions
+     * @param actor          the admin, from the token
      * @return the request afterwards, so the screen does not have to re-fetch
      * @throws NotFoundException 404 when no request has that id
      * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending,
      *                           {@code ITEM_ALREADY_CLAIMED} when <em>another</em> admin reserved it
-     *                           from the shared queue (ADR-16 §5), {@code OWN_REQUEST_NOT_APPROVABLE}
+     *                           from the shared queue, {@code OWN_REQUEST_NOT_APPROVABLE}
      *                           when it is a veto the actor asked for themselves,
      *                           {@code REQUEST_ENTITY_GONE} when what it points at no longer exists, or
      *                           {@code REQUESTER_NOT_ACTIVE} when it asks to open a table and the
@@ -567,7 +567,7 @@ public class ApprovalService {
         switch (request.getRequestType()) {
             case MasterGrant -> userRoleService.grantRole(
                     request.getRequestedBy().getId(), PlatformRole.MASTER, resolutionNote, actor);
-            // The resolution note IS the pause's justification (ADR-07 §2, arquitectura §4.5). Not a
+            // The resolution note IS the pause's justification. Not a
             // copy of it and not a second reason invented here: the admin already wrote why, and
             // asking them twice would produce two answers to one question.
             case TablePause -> gameTableService.applyApprovedPause(
@@ -590,17 +590,17 @@ public class ApprovalService {
      * Says no, with a reason.
      *
      * <p>A rejection has no effect of its own - that is what makes it a rejection - but the reason is
-     * as mandatory as it is on an approval (ADR-16 §1). Being told no and learning nothing is the half of
+     * as mandatory as it is on an approval. Being told no and learning nothing is the half of
      * the mechanism that would make the whole thing not worth having.
      *
      * @param requestId      the request
      * @param resolutionNote why, never blank
-     * @param actor          the admin, from the token (ADR-05 §5)
+     * @param actor          the admin, from the token
      * @return the request afterwards
      * @throws NotFoundException 404 when no request has that id
      * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending,
      *                           {@code ITEM_ALREADY_CLAIMED} when <em>another</em> admin reserved it
-     *                           from the shared queue (ADR-16 §5), or {@code REQUEST_ENTITY_GONE} when
+     *                           from the shared queue, or {@code REQUEST_ENTITY_GONE} when
      *                           what it points at no longer exists - except for a veto, which can be
      *                           refused after its application was withdrawn, since refusing it acts on
      *                           nothing and is the only way it leaves the tray. Refusing a veto one
@@ -611,8 +611,8 @@ public class ApprovalService {
         lockTableFirstIfVeto(requestId);
         ApprovalRequest request = resolve(requestId, ApprovalStatus.Rejected, resolutionNote, actor);
 
-        // This switch did not exist before F3.4, and its absence was not an omission: for the three
-        // types of F3.2 a rejection genuinely had no effect, which is what a rejection normally is.
+        // This switch used to be absent, and that was not an omission: for the three
+        // person-centred types a rejection genuinely had no effect, which is what a rejection normally is.
         // TablePause broke that. Asking for a pause already moved the table, so saying no has to
         // move it back - otherwise the refusal strands it in PauseRequested with no door out, and
         // the master's only recourse is to ask again in order to be refused again.
@@ -673,7 +673,7 @@ public class ApprovalService {
     }
 
     /**
-     * Everything the two resolutions share: the state check, the ADR-16 §2 check, and the four columns that
+     * Everything the two resolutions share: the state check, the referenced-entity check, and the four columns that
      * move together.
      *
      * <p>Written once rather than twice because the difference between approving and rejecting is the
@@ -682,7 +682,7 @@ public class ApprovalService {
      */
     private ApprovalRequest resolve(
             String requestId, ApprovalStatus status, String resolutionNote, CurrentUser actor) {
-        // Locked first, and the locking read IS the status read (ADR-06 §2). Without it the guard below is
+        // Locked first, and the locking read IS the status read. Without it the guard below is
         // a check-then-act over nothing: two admins answering at the same moment each read Pending
         // from their own snapshot, both pass, and the second UPDATE merely waits for the first one's
         // row lock and overwrites it. The benign version of that is one resolution note lost; the
@@ -700,7 +700,7 @@ public class ApprovalService {
                     ConflictException.REQUEST_ALREADY_RESOLVED);
         }
 
-        // «Si lo toma uno, baja para todos» (ADR-16 §5): what is refused is answering a request another
+        // If one admin takes an item it drops for everybody else: what is refused is answering a request another
         // admin reserved - a stale link, a second tab, a tray that has not refreshed. An unreserved
         // one is nobody's and answering it is an implicit claim, which is what keeps /admin/requests
         // working: that screen has Approve and Reject and no way to reserve anything.
@@ -733,7 +733,7 @@ public class ApprovalService {
         return request;
     }
 
-    /** The ADR-16 §2 check, in the one shape both callers use. */
+    /** The referenced-entity check, in the one shape both callers use. */
     private void requireEntityExists(String entityType, String entityId, @Nullable String requestId) {
         if (entityResolver.exists(entityType, entityId)) {
             return;
@@ -746,7 +746,7 @@ public class ApprovalService {
                 ConflictException.REQUEST_ENTITY_GONE);
     }
 
-    /** The resolution is the only thing that rings a bell, and only for the person who asked (ADR-16 §5). */
+    /** The resolution is the only thing that rings a bell, and only for the person who asked. */
     private void notifyRequester(ApprovalRequest request, NotificationType type, @Nullable String createdTableId) {
         // A veto points at an application and an approved TableOpen at the requester; in both the
         // requester's click has to land on the table, so it travels too.
@@ -766,8 +766,8 @@ public class ApprovalService {
     /**
      * The requester's row, locked, with their account checked - what every submit starts with.
      *
-     * <p>The locking read is the first thing the transaction does with that row, and it has to be
-     * (ADR-06 §2): two submits of the same type by one person each read "nothing pending" from their own
+     * <p>The locking read is the first thing the transaction does with that row, and it has to be:
+     * two submits of the same type by one person each read "nothing pending" from their own
      * snapshot and both insert. See {@link #submit} for the whole reasoning. A veto request is the one
      * submit that does not lock this row: it serializes on its table instead (see {@link #submitPlayerBan}).
      */
@@ -787,16 +787,16 @@ public class ApprovalService {
     }
 
     /**
-     * The row itself: the no-duplicates guard, the ADR-16 §2 check, then the insert.
+     * The row itself: the no-duplicates guard, the referenced-entity check, then the insert.
      *
-     * <p>Shared by the three submits so that the two F3.4 added cannot quietly skip the validation
+     * <p>Shared by the three submits so that the two table-centred types cannot quietly skip the validation
      * the first one does - which is the exact failure {@link ApprovalEntityResolver}'s Javadoc
      * describes, seen from the writing side.
      *
      * <p><b>The guard is scoped to whatever the request is about, and that is not a refinement -
-     * it is a correction.</b> F3.2 wrote «one pending request per type and per person», which was
+     * it is a correction.</b> The first reading was "one pending request per type and per person", which was
      * exactly right while all three types pointed at the requester: there, the person <em>is</em> the
-     * entity. The two types F3.4 added point somewhere else, and the per-person reading refuses two
+     * entity. The two table-centred types point somewhere else, and the per-person reading refuses two
      * perfectly legitimate second requests:
      *
      * <ul>
@@ -809,7 +809,7 @@ public class ApprovalService {
      * </ul>
      *
      * <p>What the duplicate guard is actually for survives intact, because it moves with the entity:
-     * «this table is already waiting on a pause» and «somebody already asked about this person».
+     * "this table is already waiting on a pause" and "somebody already asked about this person".
      *
      * @param entityId          what the request is about. For the first three types it is the
      *                          requester; for {@code TablePause} and {@code PlayerBan} it is the table or
@@ -823,15 +823,15 @@ public class ApprovalService {
             String justification,
             @Nullable String proposedTableName) {
         requireNoPendingDuplicate(type, entityId, requester);
-        // ADR-16 §2, the part the database cannot do: the reference is checked BEFORE the row exists.
+        // The part of the polymorphic reference the database cannot do: the reference is checked BEFORE the row exists.
         requireEntityExists(type.entityType(), entityId, null);
-        // No notification to the admins, on purpose (ADR-16 §5): the queue is a view over this row.
+        // No notification to the admins, on purpose: the queue is a view over this row.
         return approvalRequestRepository.save(
                 new ApprovalRequest(type, type.entityType(), entityId, requester, justification, proposedTableName));
     }
 
     /**
-     * «Is there already one of these open?», asked about the right thing.
+     * "Is there already one of these open?", asked about the right thing.
      *
      * <p>One branch per shape of request and not a clever unified query: for a type whose entity is
      * the requester the two questions are literally the same row, and writing it as one would hide
@@ -858,7 +858,7 @@ public class ApprovalService {
         }
     }
 
-    /** Holding the role right now, which is not the same as running a table (ADR-06 §4). */
+    /** Holding the role right now, which is not the same as running a table. */
     private boolean holdsMaster(String userId) {
         return userRoleRepository.findActiveRoleNames(userId).contains(PlatformRole.MASTER.roleName());
     }

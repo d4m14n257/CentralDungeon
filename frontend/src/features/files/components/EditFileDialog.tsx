@@ -19,20 +19,20 @@ interface EditFileDialogProps {
 }
 
 /**
- * Renaming a file and deciding whether to keep it (ADR-13 §2).
+ * Renaming a file and deciding whether to keep it.
  *
  * **The two belong together because they are the same errand.** Somebody opening this is tidying
  * their own library: the file the browser called "documento (3).pdf" gets the name it should have
  * had, and the one they only needed once stops being kept.
  *
- * **No cajón here** (ADR-14 §4). A membership is what the file's uses made true and is never revoked, so
+ * **No category here**. A membership is what the file's uses made true and is never revoked, so
  * there is nothing to correct: the only ways in are to be used in a flow, or to be put there on an
  * upload that had no flow to observe.
  *
  * **Renaming touches nothing but metadata.** The content lives under a generated key and never had
- * anything to do with what the file is called (ADR-13 §6), so this cannot break a link on any table.
+ * anything to do with what the file is called, so this cannot break a link on any table.
  *
- * The whole state travels on confirm rather than a delta, the same reasoning as ADR-04 §7: "null means
+ * The whole state travels on confirm rather than a delta, for the same reason as any whole-state update: "null means
  * leave it alone" makes clearing a value impossible to express and every caller guess.
  *
  * @param props.file         the file being edited, or null when closed

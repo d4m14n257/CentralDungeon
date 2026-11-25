@@ -10,13 +10,13 @@ package com.centraldungeon.features.registrations.dto;
  * {@code FileResponse} and {@code PublicFileResponse} carry {@code categories} and other
  * owner-or-admin fields nobody reading somebody else's application should get. {@code tasks}'
  * {@code SubmittedFileResponse} has the exact shape, but {@code registrations} may not depend on
- * {@code tasks} (arquitectura §2.1) - so this is that same shape, declared again in its own
+ * {@code tasks} - so this is that same shape, declared again in its own
  * feature rather than borrowed from one it cannot import.
  *
  * @param fileId    the file's identifier, which is what the download endpoint takes
- * @param name      the original filename, which is what the reader recognises it by (ADR-13 §6)
+ * @param name      the original filename, which is what the reader recognises it by
  * @param mimeType  the declared MIME type, so the screen can show the right icon
- * @param sizeBytes the size as it was uploaded, before compression (ADR-13 §3)
+ * @param sizeBytes the size as it was uploaded, before compression
  */
 public record RegistrationFileResponse(String fileId, String name, String mimeType, long sizeBytes) {
 }

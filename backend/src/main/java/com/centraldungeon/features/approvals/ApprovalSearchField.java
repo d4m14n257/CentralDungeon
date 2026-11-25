@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The fields the admin request search accepts behind a {@code /prefix} (ADR-22 §1). The
+ * The fields the admin request search accepts behind a {@code /prefix}. The
  * wire name is what the person types and what the chip shows.
  *
  * <p>Typing nothing in particular searches the <b>justification and the requester's name at once</b>.
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  *
  * <p>Two of the three take fixed options - {@code /request_type} and {@code /status} - which is what
  * lets the frontend offer them rather than making somebody remember the spelling. The third is free
- * text. None of them ever answers 400: an unrecognized value matches nothing (arquitectura §2.5).
+ * text. None of them ever answers 400: an unrecognized value matches nothing.
  */
 public enum ApprovalSearchField {
 

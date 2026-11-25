@@ -5,7 +5,7 @@ import { requestChangesFromQueue } from './helpers/queue'
 import { acceptReview } from './helpers/review'
 
 /**
- * F1.6 end to end: co-masters and the work tray.
+ * Co-masters and the work tray, end to end.
  *
  * Three things no unit test can see, because each of them crosses the backend and the frontend:
  * that a co-master added on one screen really gains the table on another; that removing them takes
@@ -64,14 +64,14 @@ async function createTableThroughWizard(page: Page, name: string) {
   await addScheduleSlot(page, '20:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
+  // The files step: nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
   await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
   const id = page.url().split('/master/tables/')[1] as string
-  // Born in Draft since ADR-07 §1: a draft reaches no tray and no admin, so it is sent right away.
+  // Born in Draft: a draft reaches no tray and no admin, so it is sent right away.
   await submitForReview(page, id)
   return id
 }
@@ -89,7 +89,7 @@ test('a master adds a co-master, who sees the table, and loses it when removed',
   const tableName = `Mesa Co-master E2E ${runId}`
 
   // The co-master has to exist before it can be searched for; the test login creates them. Note they
-  // are created *without* the Master role: running a table is membership, not the role (ADR-06 §4).
+  // are created *without* the Master role: running a table is membership, not the role.
   const coMasterContext = await browser.newContext()
   await testLogin(coMasterContext.request, coMasterDiscordId)
   await coMasterContext.close()
@@ -168,7 +168,7 @@ test('a removed co-master with the Master role no longer lists the table', async
  * corrects the table through the edit form, resubmits, and the row is gone.
  *
  * It is also the only end-to-end path through the `PUT` — which had had an endpoint, a hook and a
- * type since F1.2 and no screen at all, so a table in `ChangesRequested` could not be corrected.
+ * type but no screen at all, so a table in `ChangesRequested` could not be corrected.
  */
 test('a table sent back for changes shows on the tray until the master corrects it', async ({ browser }) => {
   const masterDiscordId = `e2e-tray-master-${runId}`

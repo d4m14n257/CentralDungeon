@@ -20,10 +20,10 @@ export interface RichTextEditorProps {
 }
 
 /**
- * The editor behind a table's description, its house rules and its requirements (ADR-03 §8).
+ * The editor behind a table's description, its house rules and its requirements.
  *
  * **TipTap and not TinyMCE**: the hosted TinyMCE the legacy used needs an API key, which is a
- * dependency on somebody else's account for a text box (diseno §6).
+ * dependency on somebody else's account for a text box.
  *
  * The toolbar offers exactly what the backend's allowlist keeps, and nothing more. An editor that
  * can produce something the server strips is an editor that silently loses people's work — so the

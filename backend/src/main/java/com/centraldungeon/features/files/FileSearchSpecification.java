@@ -22,11 +22,10 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns the parsed /admin/files search box into a predicate, the same shape
  * {@code CatalogSearchSpecification} has for the catalogs. Criteria API because what the query looks
- * like is only known at runtime: how many criteria and joined by which connectors (arquitectura skill
- * §2.2).
+ * like is only known at runtime: how many criteria and joined by which connectors.
  *
  * <p>One entry point and not two, unlike the catalogs: files have no "proposed" state that has to be
- * hidden from everybody but an admin (ADR-12 §3). What is hidden here is what was marked gone, and that is
+ * hidden from everybody but an admin. What is hidden here is what was marked gone, and that is
  * an explicit filter the screen chooses rather than an implicit rule.
  */
 final class FileSearchSpecification {
@@ -40,21 +39,21 @@ final class FileSearchSpecification {
 
     /**
      * /admin/files: the platform's library - published, unpublished and hidden - narrowed by the
-     * search box and the filters the screen sets explicitly (ADR-14 §7).
+     * search box and the filters the screen sets explicitly.
      *
      * <p><b>Being in the library is a predicate and not a filter</b>: there is no shape of this query
      * that returns somebody's private upload. A player's application sheet is theirs, and the library
      * is not where an admin reaches it.
      *
-     * <p><b>The cajón is a filter and not a search field</b> (ADR-14 §4), unlike name, owner and MIME
+     * <p><b>The category is a filter and not a search field</b>, unlike name, owner and MIME
      * type. Those are free text somebody half-remembers, so they are matched with a {@code LIKE};
-     * a cajón is one of a few known values, and offering "contains" over a closed enum would mean
+     * a category is one of a few known values, and offering "contains" over a closed enum would mean
      * {@code /category:e} quietly matching several of them. Same shape as {@code status}, which is
      * closed for the same reason.
      *
      * @param query     the parsed search box; an empty one matches everything
      * @param statuses  the statuses to keep, or empty for no status filter at all
-     * @param category  the cajón to keep (ADR-14 §4), or null for no cajón filter at all
+     * @param category  the category to keep, or null for no category filter at all
      * @return the predicate
      */
     static Specification<StoredFile> forAdmin(SearchQuery query, List<FileStatus> statuses, @Nullable FileCategory category) {
@@ -68,9 +67,9 @@ final class FileSearchSpecification {
             if (!statuses.isEmpty()) {
                 predicates.add(root.get("status").in(statuses));
             }
-            Predicate inCajon = inCategory(root, criteriaQuery, builder, category);
-            if (inCajon != null) {
-                predicates.add(inCajon);
+            Predicate inCategory = inCategory(root, criteriaQuery, builder, category);
+            if (inCategory != null) {
+                predicates.add(inCategory);
             }
             return builder.and(predicates.toArray(new Predicate[0]));
         };
@@ -79,7 +78,7 @@ final class FileSearchSpecification {
     /**
      * Somebody's own live files, narrowed by what they typed and by what kind of document they want.
      *
-     * <p><b>The owner is a predicate here and not a convention</b> (ADR-05 §5): it comes from the token
+     * <p><b>The owner is a predicate here and not a convention</b>: it comes from the token
      * and goes into the {@code WHERE}, so there is no shape of this query that could return anybody
      * else's file.
      *
@@ -89,7 +88,7 @@ final class FileSearchSpecification {
      *
      * @param ownerId    whose files, from the token
      * @param query      the parsed search box; an empty one matches everything they have
-     * @param category   the cajón to keep (ADR-14 §4), or null for all of them
+     * @param category   the category to keep, or null for all of them
      * @return the predicate
      */
     static Specification<StoredFile> forOwner(String ownerId, SearchQuery query, @Nullable FileCategory category) {
@@ -104,22 +103,22 @@ final class FileSearchSpecification {
             if (matched != null) {
                 predicates.add(matched);
             }
-            Predicate inCajon = inCategory(root, criteriaQuery, builder, category);
-            if (inCajon != null) {
-                predicates.add(inCajon);
+            Predicate inCategory = inCategory(root, criteriaQuery, builder, category);
+            if (inCategory != null) {
+                predicates.add(inCategory);
             }
             return builder.and(predicates.toArray(new Predicate[0]));
         };
     }
 
     /**
-     * What the platform published, narrowed to one cajón or to none (ADR-14 §4).
+     * What the platform published, narrowed to one category or to none.
      *
      * <p><b>The narrowing does not guard the file</b>, it only decides what is listed. That is the
-     * reading ADR-13 §2 asked for and the part of it worth keeping when the audience went away: treating it
+     * part of the old audience filter worth keeping now that the audience is gone: treating it
      * as authorization would 403 somebody out of a document that is, by name, published.
      *
-     * @param category the cajón to keep, or null for everything published
+     * @param category the category to keep, or null for everything published
      * @return the predicate
      */
     static Specification<StoredFile> forPublic(@Nullable FileCategory category) {
@@ -127,22 +126,22 @@ final class FileSearchSpecification {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(builder.equal(root.get("fileType"), FileType.Public));
             predicates.add(builder.equal(root.get("status"), FileStatus.Current));
-            Predicate inCajon = inCategory(root, criteriaQuery, builder, category);
-            if (inCajon != null) {
-                predicates.add(inCajon);
+            Predicate inCategory = inCategory(root, criteriaQuery, builder, category);
+            if (inCategory != null) {
+                predicates.add(inCategory);
             }
             return builder.and(predicates.toArray(new Predicate[0]));
         };
     }
 
     /**
-     * «this file is in that cajón», as a subquery over {@code file_categories} (ADR-14 §4).
+     * "this file is in that category", as a subquery over {@code file_categories}.
      *
      * <p>A subquery and not a join, because the membership is one-to-many: joining would return the
-     * same file once per cajón it belongs to, and a page of twenty would silently become a page of
+     * same file once per category it belongs to, and a page of twenty would silently become a page of
      * twenty rows covering twelve files. {@code exists} asks the question without multiplying rows.
      *
-     * @param category the cajón to require, or null to require nothing
+     * @param category the category to require, or null to require nothing
      * @return the predicate, or null when there is nothing to narrow by
      */
     private static @Nullable Predicate inCategory(
@@ -194,7 +193,7 @@ final class FileSearchSpecification {
     }
 
     /**
-     * The values of one criterion are alternatives: any of them satisfies it (ADR-22 §1).
+     * The values of one criterion are alternatives: any of them satisfies it.
      *
      * @param root    the entity being queried
      * @param builder the Criteria API builder
@@ -204,8 +203,8 @@ final class FileSearchSpecification {
     private static Predicate termPredicate(
             Root<StoredFile> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, SearchTerm term) {
         FileSearchField field = fieldOrDefault(term.field());
-        // The cajones are rows and not a column, so "contains" has nothing to match on: the criterion
-        // becomes "belongs to any of these" instead (ADR-14 §4, ADR-22 §2).
+        // The categories are rows and not a column, so "contains" has nothing to match on: the criterion
+        // becomes "belongs to any of these" instead.
         if (field == FileSearchField.CATEGORIES) {
             return belongsToAny(root, criteriaQuery, builder, term.values());
         }
@@ -218,13 +217,13 @@ final class FileSearchSpecification {
     }
 
     /**
-     * «this file is in any of those cajones» (ADR-14 §4).
+     * "this file is in any of those categories".
      *
      * <p>The alternatives of one criterion are an {@code in} inside a single {@code exists}, rather
      * than one {@code exists} per value joined with {@code or}: the question is the same and one
      * subquery is one subquery.
      *
-     * <p>A value that names no cajón matches nothing rather than failing. A typo in a search is a
+     * <p>A value that names no category matches nothing rather than failing. A typo in a search is a
      * search that finds nothing, which is what every other field here does too.
      */
     private static Predicate belongsToAny(
@@ -245,7 +244,7 @@ final class FileSearchSpecification {
         return builder.exists(membership);
     }
 
-    /** A cajón by name, case-insensitively, or null when the text names none. */
+    /** A category by name, case-insensitively, or null when the text names none. */
     private static @Nullable FileCategory toCategory(String value) {
         return Arrays.stream(FileCategory.values())
                 .filter(category -> category.name().equalsIgnoreCase(value.trim()))

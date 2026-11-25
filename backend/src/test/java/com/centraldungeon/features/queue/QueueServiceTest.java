@@ -43,18 +43,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * Every rule of the shared tray (ADR-16 §5, §7, §6), one test each.
+ * Every rule of the shared tray, one test each.
  *
- * <p>Three of them are what the slice is actually about and the rest exists so they cannot be broken
+ * <p>Three of them are what the tray is actually about and the rest exists so they cannot be broken
  * quietly:
  *
  * <ul>
- *   <li><b>What enters is taxative</b> (arquitectura §4.5): {@code Pending} requests and tables in
- *       {@code Preparation}, <em>and nothing else</em>. A loose reading of ADR-16 §7 would also list
+ *   <li><b>What enters is taxative</b>: {@code Pending} requests and tables in
+ *       {@code Preparation}, <em>and nothing else</em>. A loose reading of the tray's definition would also list
  *       {@code Draft}, {@code ChangesRequested} and {@code Unassigned}, and each of those is work that
  *       is not an admin's to do right now.</li>
  *   <li><b>A reserved item disappears for the rest and stays for whoever took it</b> - the filter the
- *       whole mechanism of ADR-16 §5 rests on, asserted as the actor reaching the query.</li>
+ *       whole claiming mechanism rests on, asserted as the actor reaching the query.</li>
  *   <li><b>Reserving is idempotent for the same admin and a 409 for anybody else.</b> Including the
  *       part that is easy to get wrong: the second click must not push {@code claimed_at} forward, or
  *       an admin clicking every fourteen minutes would hold an item for ever.</li>
@@ -91,8 +91,8 @@ class QueueServiceTest {
     // ------------------------------------------------------------------ what enters
 
     /**
-     * «La bandeja es un UNION sobre {@code approval_requests} (Pending) y {@code game_tables}
-     * (Preparation)» - and nothing else (arquitectura §4.5, ADR-07 §1).
+     * "The tray is a UNION over {@code approval_requests} (Pending) and {@code game_tables}
+     * (Preparation)" - and nothing else.
      *
      * <p>Asserted on the arguments each query receives rather than on what comes back, because what
      * has to be pinned is <em>what is being asked</em>. A test that built fake rows and counted the
@@ -114,7 +114,7 @@ class QueueServiceTest {
     }
 
     /**
-     * The actor enters the WHERE of both sources (ADR-05 §5, ADR-16 §5): an item another admin took is not in
+     * The actor enters the WHERE of both sources: an item another admin took is not in
      * this answer, and one this admin took is.
      */
     @Test
@@ -128,8 +128,8 @@ class QueueServiceTest {
     }
 
     /**
-     * The per-source ceiling of §1.a of the contract. A merge with no ceiling is a memory load nobody
-     * declared, and «it cannot grow» is the sentence every unbounded read was ever written under.
+     * The per-source ceiling. A merge with no ceiling is a memory load nobody
+     * declared, and "it cannot grow" is the sentence every unbounded read was ever written under.
      */
     @Test
     void everySourceBringsAtMostTwoHundredRows() {
@@ -164,7 +164,7 @@ class QueueServiceTest {
     // ------------------------------------------------------------------ the order and the page
 
     /**
-     * «El que espera hace más tiempo va primero», the same as the master's tray (ADR-20 §4): urgency here is
+     * "Whoever has waited longest goes first", the same as the master's tray: urgency here is
      * time and not volume. And the ordering is <b>across sources</b>, which is what makes this one tray
      * rather than two listings stuck together.
      */
@@ -182,7 +182,7 @@ class QueueServiceTest {
                 .containsExactly("req-viejo", "table-1", "req-nuevo");
     }
 
-    /** Tie-break by id, so page 2 is the remainder and not a fresh shuffle (ADR-07 §9). */
+    /** Tie-break by id, so page 2 is the remainder and not a fresh shuffle. */
     @Test
     void theTieIsBrokenByIdSoThatPageTwoIsStable() {
         ApprovalRequest primero = pendingRequest("req-aaa", "2026-09-01T09:00");
@@ -196,7 +196,7 @@ class QueueServiceTest {
 
     /**
      * The total is the whole tray's and not the slice's: the merge is already in memory, so counting it
-     * exactly is free (ADR-04 §6).
+     * exactly is free.
      */
     @Test
     void theTotalIsTheWholeTrayAndThePageIsTheSlice() {
@@ -215,7 +215,7 @@ class QueueServiceTest {
         assertThat(page.content()).extracting(QueueItemResponse::id).containsExactly("req-3");
     }
 
-    /** A page beyond the end is empty, not an exception: the frontend can ask for it from the URL (ADR-12 §7). */
+    /** A page beyond the end is empty, not an exception: the frontend can ask for it from the URL. */
     @Test
     void aPageBeyondTheEndIsEmpty() {
         queue(List.of(pendingRequest("req-1", "2026-09-01T09:00")), List.of());
@@ -226,7 +226,7 @@ class QueueServiceTest {
         assertThat(page.totalElements()).isEqualTo(1);
     }
 
-    /** An empty tray is good news and not a broken screen (ADR-20 §4). */
+    /** An empty tray is good news and not a broken screen. */
     @Test
     void anEmptyTrayIsAnOrdinaryAnswer() {
         noQueue();
@@ -280,7 +280,7 @@ class QueueServiceTest {
 
     /**
      * And if the table has no live Primary it falls back to whoever created the row: still true, and the
-     * tray never prints an id (ADR-20 §4).
+     * tray never prints an id.
      */
     @Test
     void aTableWithNoLivePrimaryNamesWhoeverCreatedIt() {
@@ -294,7 +294,7 @@ class QueueServiceTest {
         assertThat(item.requestedByName()).isEqualTo("quien-la-creo");
     }
 
-    /** The whole page's masters are resolved in one query, not one per row (ADR-20 §4, contract §3.4). */
+    /** The whole page's masters are resolved in one query, not one per row. */
     @Test
     void thePagesMastersAreResolvedInOneQuery() {
         queue(
@@ -343,7 +343,7 @@ class QueueServiceTest {
         assertThat(item.claimedByName()).isEqualTo("damian");
     }
 
-    /** If somebody else holds it, 409 with the code the screen needs to write the sentence (ADR-23 §3). */
+    /** If somebody else holds it, 409 with the code the screen needs to write the sentence. */
     @Test
     void claimingWhatAnotherAdminHoldsIs409() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
@@ -359,7 +359,7 @@ class QueueServiceTest {
         assertThat(request.getClaimedBy().getId()).isEqualTo("admin-2");
     }
 
-    /** The claim is taken under the row's lock, which is what gives the race between two admins one winner (ADR-06 §2, ADR-16 §4). */
+    /** The claim is taken under the row's lock, which is what gives the race between two admins one winner. */
     @Test
     void theClaimIsTakenUnderTheRowsLock() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
@@ -409,7 +409,7 @@ class QueueServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** A deleted table does not exist here either (ADR-03 §7, ADR-07 §6): 404 and not 403 - «fue borrada» is not told. */
+    /** A deleted table does not exist here either: 404 and not 403 - "it was deleted" is not told. */
     @Test
     void aDeletedTableDoesNotExistForTheTray() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");

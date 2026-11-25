@@ -115,7 +115,7 @@ describe('MasterTablePlayersTab', () => {
   })
 
   /**
-   * ADR-06 §8: an admin reads the same tab from /admin/tables/:id and changes nothing on it - neither the
+   * An admin reads the same tab from /admin/tables/:id and changes nothing on it - neither the
    * masters nor the roster, and asks for no veto: the admin is who decides one.
    */
   it('read by an admin, shows the masters and the roster with no master’s button', () => {
@@ -141,7 +141,7 @@ describe('MasterTablePlayersTab', () => {
     expect(openedDialog).toEqual({ action: 'unblock', playerName: 'Eva' })
   })
 
-  /** ADR-06 §8: the tab does not decide what a person's card is - the screen that mounts it does. */
+  /** The tab does not decide what a person's card is - the screen that mounts it does. */
   it('opens the card the screen handed down, for a master and for a player alike', async () => {
     const onOpenPerson = vi.fn()
     outletContext = { tableId: 'table-1', isPrimary: true, masters: MASTERS, onOpenPerson }
@@ -155,7 +155,7 @@ describe('MasterTablePlayersTab', () => {
     expect(onOpenPerson).toHaveBeenNthCalledWith(2, 'user-9')
   })
 
-  /** On screen these are "master" and "co-master" — the wire words never reach a reader (ADR-06 §3). */
+  /** On screen these are "master" and "co-master" — the wire words never reach a reader. */
   it('names the two roles in the words the interface uses, not the ones the API sends', () => {
     renderTab()
 
@@ -173,7 +173,7 @@ describe('MasterTablePlayersTab', () => {
     expect(screen.getByRole('button', { name: 'Quitar a Beto' })).toBeInTheDocument()
   })
 
-  /** Removing somebody takes their access away at once: it asks first (principle 3). */
+  /** Removing somebody takes their access away at once: it asks first. */
   it('confirms before removing a co-master', async () => {
     const user = userEvent.setup()
     renderTab()
@@ -254,7 +254,7 @@ describe('MasterTablePlayersTab', () => {
     expect(row.getByText(/Ana/)).toBeInTheDocument()
     expect(row.getByText(/Falta sin avisar/)).toBeInTheDocument()
     expect(row.getByRole('button', { name: 'Levantar el veto' })).toBeInTheDocument()
-    // And not the request again: it is already applied (principle 2).
+    // And not the request again: it is already applied.
     expect(row.queryByRole('button', { name: 'Pedir veto' })).not.toBeInTheDocument()
   })
 

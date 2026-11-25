@@ -88,7 +88,7 @@ describe('BanRequestsSection', () => {
 
   /**
    * A master reads the same list and answers none of it. Seeing it is what stops them asking twice;
-   * the buttons are absent rather than disabled, because they could not be used (principle 2).
+   * the buttons are absent rather than disabled, because they could not be used.
    */
   it('lets a master see the wait but not resolve it, and says an admin decides', async () => {
     list.mockResolvedValue([request()])

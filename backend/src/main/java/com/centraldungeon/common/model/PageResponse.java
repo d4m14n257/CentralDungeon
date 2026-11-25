@@ -4,17 +4,17 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 /**
- * The envelope every paginated endpoint answers with (arquitectura §2.5). It exists so Spring
+ * The envelope every paginated endpoint answers with. It exists so Spring
  * Data's {@code Page} never crosses HTTP: that type carries the {@code Pageable} and the {@code Sort}
  * with it, which is internal machinery the frontend has no reason to receive or to depend on.
  *
  * <p>It lives in {@code common/model} and not in any feature's {@code dto/} because more than one
- * feature uses it - today the only DTO that qualifies (arquitectura §2.3).
+ * feature uses it - today the only DTO that qualifies.
  *
  * @param <T>           the item type of this page
  * @param content       the page's items, in order. Never null; an empty page is an empty list
  * @param page          the zero-based page number that was served
- * @param size          the page size that was applied, capped at 100 (ADR-04 §6)
+ * @param size          the page size that was applied, capped at 100
  * @param totalElements how many items match the query across every page
  * @param totalPages    how many pages that adds up to at the current size
  */

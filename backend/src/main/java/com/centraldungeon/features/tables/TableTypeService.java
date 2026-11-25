@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Reads the table types. Trivial, and it exists anyway because a controller never calls a repository
- * (regla dura 1) - not even for a list of two rows.
+ * - not even for a list of two rows.
  */
 @Service
 public class TableTypeService {
@@ -26,7 +26,7 @@ public class TableTypeService {
     /**
      * Every table type, for the wizard's selector.
      *
-     * @param pageable page, size and sort; callers order by name with a tie-break by id (ADR-07 §9)
+     * @param pageable page, size and sort; callers order by name with a tie-break by id
      * @return one page of types
      */
     @Transactional(readOnly = true)

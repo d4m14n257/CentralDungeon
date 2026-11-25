@@ -126,7 +126,7 @@ test('the admin home loads and its tray access leads to the tray, with the count
     await admin.page.goto('/admin')
     await expect(admin.page.getByRole('heading', { name: 'Te damos la bienvenida a la administración' })).toBeVisible()
 
-    // The card, not the nav's own «Bandeja» link: it is the one that carries the count.
+    // The card, not the nav's own tray link: it is the one that carries the count.
     const trayLink = admin.page.getByRole('main').getByRole('link', { name: /ítems? esperan? una acción/ })
     await expect(trayLink).toContainText('Bandeja')
 

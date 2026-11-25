@@ -1,7 +1,7 @@
 spring:
   datasource:
     # Full JDBC URL, not just host/port: keeps this profile agnostic of where MySQL
-    # actually runs, which is not decided yet (arquitectura §8.2). No default -
+    # actually runs, which is not decided yet. No default -
     # fails fast at startup instead of silently reaching for a dev-shaped default
     # that would never be correct in production.
     url: ${DB_URL}
@@ -34,7 +34,7 @@ app:
     secure: true
   jwt:
     # The base default is a secret committed to the repository: anybody holding it could sign their
-    # own tokens. Production must fail to start without its own (ADR-02 §5, ADR-05 §2).
+    # own tokens. Production must fail to start without its own.
     secret: ${APP_JWT_SECRET}
   storage:
     root: ${APP_STORAGE_ROOT}

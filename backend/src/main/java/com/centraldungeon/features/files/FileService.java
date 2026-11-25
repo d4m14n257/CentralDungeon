@@ -58,16 +58,16 @@ import org.springframework.web.multipart.MultipartFile;
  * The file itself: uploading it, finding it again, handing it over, and letting go of it.
  *
  * <p><b>Attaching a file to a table is not here</b> - that is {@link TableFileService}, because a
- * link and a file have different owners, different rules and different lifetimes (ADR-14 §1). This class
+ * link and a file have different owners, different rules and different lifetimes. This class
  * knows nothing about tables except when it has to answer whether somebody may read a file.
  *
- * <p><b>Reading is authorized by pertenencia, never by role</b> (hard rule 17, ADR-05 §5, ADR-06 §4). A file is
+ * <p><b>Reading is authorized by membership, never by role</b>. A file is
  * reachable through the tables it is attached to, and whether the reader belongs to any of them is a
  * membership question no {@code @PreAuthorize} can answer. {@code hasRole('MASTER')} would say "runs
  * some table", which is not the question.
  *
- * <p><b>Three levers hold the storage bill down, and none of them is a quota</b> (ADR-13 §3, which repealed
- * the per-user quota of ADR-13 §3 for being a limit on the person rather than on the volume): the same
+ * <p><b>Three levers hold the storage bill down, and none of them is a quota</b>, which would limit the
+ * person rather than the volume: the same
  * upload is recognised and reused instead of stored twice, the bytes are compressed underneath
  * {@link StorageService}, and {@link FileRetentionService} lets go of what nobody has touched in
  * months.
@@ -84,89 +84,88 @@ public class FileService {
     /** The {@code files} rows. */
     private final StoredFileRepository fileRepository;
 
-    /** The attachments, which is what makes a file reachable to anybody but its owner (ADR-14 §1). */
+    /** The attachments, which is what makes a file reachable to anybody but its owner. */
     private final TableFileRepository tableFileRepository;
 
-    /** The categories a file belongs to (ADR-14 §4). Add-only: nothing here ever takes a membership away. */
+    /** The categories a file belongs to. Add-only: nothing here ever takes a membership away. */
     private final FileCategoryLinkRepository categoryRepository;
 
     /**
-     * The blanks a master attached to a request (ADR-15 §1) - the third source of uses, and the way a
+     * The blanks a master attached to a request - the third source of uses, and the way a
      * request's blank becomes readable. Another feature's repository, dragged in by the same read rule that
      * dragged in {@code SubmissionFileRepository}: whether somebody may open the form their master
-     * asked them to fill is a question about requests, and answering it anywhere else is how ADR-14 §2
-     * drifted the first time.
+     * asked them to fill is a question about requests, and answering it anywhere else is how this read
+     * rule drifted the first time.
      */
     private final TaskFileRepository taskFileRepository;
 
     /**
-     * The other way a file becomes reachable: it was handed in as an answer to a table's task (ADR-15 §1).
+     * The other way a file becomes reachable: it was handed in as an answer to a table's task.
      *
      * <p>A repository from another feature, which no other collaborator here is. It is the read rule
      * that drags it in: whether a master may open what their player submitted is a question about
      * submissions, and the alternative - a second download endpoint living in {@code tasks/} with its
-     * own copy of the rule - is exactly the drift ADR-14 §2 already cost us once.
+     * own copy of the rule - is exactly the drift that already cost us once.
      */
     private final SubmissionFileRepository submissionFileRepository;
 
     /** Resolves the uploader from the token. */
     private final UserRepository userRepository;
 
-    /** Where the bytes actually live (ADR-13 §6). */
+    /** Where the bytes actually live. */
     private final StorageService storageService;
 
     /** The whitelist and the retention window - deployment configuration, never constants. */
     private final StorageProperties storageProperties;
 
     /**
-     * Where the per-file cap comes from since F3.5: {@code files.max_file_size_mb} in
-     * {@code system_settings} (ADR-13 §3, ADR-17 §3).
+     * Where the per-file cap comes from: {@code files.max_file_size_mb} in
+     * {@code system_settings}.
      *
      * <p>It used to be {@code app.storage.max-file-size}, beside the whitelist. The two look alike
      * and are not: which MIME types the parser accepts is a decision of whoever deploys the
-     * application, and how big a file may be is a decision of whoever runs the community - ADR-17 §3 names
-     * «tope por archivo» among the values that must be adjustable without a deploy. Read per upload
+     * application, and how big a file may be is a decision of whoever runs the community - the per-file cap is one of
+     * the values that must be adjustable without a deploy. Read per upload
      * and not captured in a field, so raising the cap applies to the very next upload.
      */
     private final SettingsService settingsService;
 
-    /** Answers pertenencia: a row in {@code masters}, never the platform role (ADR-06 §4). */
+    /** Answers membership: a row in {@code masters}, never the platform role. */
     private final MasterService masterService;
 
     /**
-     * Answers the veto (ADR-09 §4, §5): whether the reader stopped being allowed to see the table an
+     * Answers the veto: whether the reader stopped being allowed to see the table an
      * attachment hangs off.
      *
-     * <p>The <b>same</b> service {@code GET /game-tables/{id}} goes through, deliberately. ADR-14 §2 had
+     * <p>The <b>same</b> service {@code GET /game-tables/{id}} goes through, deliberately. An earlier version had
      * to fix the mirror image of this once already - a row listed on a screen and a 404 when it was
-     * opened - and two copies of «is this person vetoed here» is how that happens again.
+     * opened - and two copies of "is this person vetoed here" is how that happens again.
      */
     private final TableVisibilityService tableVisibilityService;
 
     /**
-     * The actor's platform roles, for two questions about a <b>role</b> rather than about pertenencia:
-     * which categories are theirs to use (ADR-14 §5), and whether they are an admin or the owner, who
+     * The actor's platform roles, for two questions about a <b>role</b> rather than about membership:
+     * which categories are theirs to use, and whether they are an admin or the owner, who
      * read the platform's library as a team. The first decides what somebody's own library can hold;
      * the second is the only role that authorizes a read, and only for the library. Every other way
-     * of reaching a file is membership (hard rule 17, ADR-05 §5, ADR-06 §4).
+     * of reaching a file is membership.
      */
     private final UserRoleRepository userRoleRepository;
 
     /**
      * Who belongs to a table, for the request's-blank way a file is reachable: a request's blank has
-     * to open for the people the request reaches. Pertenencia again, and again a row rather than a role
-     * (hard rule 17, ADR-05 §5, ADR-06 §4).
+     * to open for the people the request reaches. Pertenencia again, and again a row rather than a role.
      */
     private final TableRegistrationRepository registrationRepository;
 
     /**
-     * The files a candidate attached to their own application - the fourth source of uses (ADR-14 §3) and
-     * the way an application's attachment becomes readable (ADR-13 §1 uso 2, ADR-09 §2).
+     * The files a candidate attached to their own application - the fourth source of uses and
+     * the way an application's attachment becomes readable.
      *
      * <p>Another feature's repository, dragged in by the same read rule that dragged in
      * {@code SubmissionFileRepository} and {@code TaskFileRepository}: whether a master may open the
      * sheet a candidate applied with is a question about applications, and answering it anywhere
-     * else is how ADR-14 §2 drifted the first time.
+     * else is how this read rule drifted the first time.
      */
     private final RegistrationFileRepository registrationFileRepository;
 
@@ -176,20 +175,20 @@ public class FileService {
     /**
      * @param fileRepository            the {@code files} rows
      * @param tableFileRepository       the attachments, for resolving who may read a file
-     * @param categoryRepository        the categories each file belongs to (ADR-14 §4)
+     * @param categoryRepository        the categories each file belongs to
      * @param taskFileRepository        the blanks attached to requests, for the same two questions
      * @param submissionFileRepository  the answers a file was handed in with, for the same question
      * @param userRepository            resolves the uploader from the token
-     * @param storageService            where the bytes live (ADR-13 §6)
+     * @param storageService            where the bytes live
      * @param storageProperties         the whitelist and the retention window
-     * @param settingsService           the per-file cap, editable without a deploy (ADR-17 §3)
-     * @param masterService             answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
+     * @param settingsService           the per-file cap, editable without a deploy
+     * @param masterService             answers membership
      * @param tableVisibilityService    answers the veto, so a shared attachment stops being readable
-     *                                  by somebody the table stopped existing for (ADR-09 §4, ADR-14 §2)
-     * @param userRoleRepository        the actor's roles, for their own categories (ADR-14 §5)
+     *                                  by somebody the table stopped existing for
+     * @param userRoleRepository        the actor's roles, for their own categories
      * @param registrationRepository    who belongs to a table, for reading a request's blank
      * @param registrationFileRepository the files a candidate attached to their application, for the
-     *                                   same two questions (ADR-13 §1 uso 2, ADR-09 §2)
+     *                                   same two questions
      * @param fileMapper                entity to DTO
      */
     public FileService(
@@ -230,32 +229,32 @@ public class FileService {
      *
      * <p>The order of the checks is deliberate: <b>the type and the size are settled before a single
      * byte is written</b>, which is the cheapest place to refuse and the one the legacy skipped
-     * entirely - {@code multer} ran with no {@code limits} at all (M21.3).
+     * entirely - {@code multer} ran with no {@code limits} at all.
      *
-     * <p>Then comes deduplication (ADR-13 §3): if this person already uploaded this exact content, they get
+     * <p>Then comes deduplication: if this person already uploaded this exact content, they get
      * the row they already have. Attaching the same character sheet to a second table costs nothing,
      * which is the point of the whole reuse story.
      *
-     * <p>Whether that recognition happened travels back in {@link UploadResult}, because until ADR-13 §4
+     * <p>Whether that recognition happened travels back in {@link UploadResult}, because until now
      * it did not travel at all: the response was a 201 with somebody's older row, indistinguishable
-     * from a fresh write, so the one lever of ADR-13 §3 a person can actually feel was invisible to them.
+     * from a fresh write, so the one cost lever a person can actually feel was invisible to them.
      *
      * @param upload      the multipart part: the bytes and the name the browser sent
-     * @param request     which lifecycle the uploader wants for it (ADR-13 §2) and what it is (ADR-14 §4)
-     * @param actorId     the uploader, from the token - never from the URL (ADR-05 §5)
-     * @return the file, plus whether it was recognised rather than written (ADR-13 §4)
+     * @param request     which lifecycle the uploader wants for it and what it is
+     * @param actorId     the uploader, from the token - never from the URL
+     * @return the file, plus whether it was recognised rather than written
      * @throws InvalidRequestException if the part is empty, its type is not on the whitelist, it is
      *                                 over the cap, or the uploader asked for {@code Public} - which
-     *                                 is an admin's to grant, not an uploader's to declare (ADR-12 §3, ADR-13 §2)
+     *                                 is an admin's to grant, not an uploader's to declare
      * @throws NotFoundException       if the token names somebody who is not there
      */
     @Transactional
     public UploadResult upload(MultipartFile upload, UploadFileRequest request, String actorId) {
         // Neither side of the platform's library is something an uploader declares: both are what an
-        // admin's own upload produces, through uploadToLibrary (ADR-13 §2, ADR-14 §7).
+        // admin's own upload produces, through uploadToLibrary.
         if (request.fileType().isInLibrary()) {
             throw new InvalidRequestException(
-                    "A file cannot be uploaded into the platform's library from here - that is an admin action (ADR-13 §2)",
+                    "A file cannot be uploaded into the platform's library from here - that is an admin action",
                     "FILE_CANNOT_SELF_PUBLISH");
         }
         if (upload.isEmpty()) {
@@ -263,7 +262,7 @@ public class FileService {
         }
         requireAllowedMimeType(upload.getContentType());
         requireWithinSizeLimit(upload.getSize());
-        requireOwnCajon(request.fileCategory(), actorId);
+        requireOwnCategory(request.fileCategory(), actorId);
 
         byte[] content = readContent(upload);
         requireWithinSizeLimit(content.length);
@@ -277,9 +276,9 @@ public class FileService {
         if (alreadyUploaded.isPresent()) {
             StoredFile existing = alreadyUploaded.get();
             existing.setLastUsedAt(LocalDateTime.now());
-            // A cajón asked for here is *added*, never swapped: memberships accumulate and are never
-            // revoked (ADR-14 §4). Re-uploading the sheet you already had, this time from your library and
-            // marked as application material, puts it in that cajón too without taking it out of the
+            // A category asked for here is *added*, never swapped: memberships accumulate and are never
+            // revoked. Re-uploading the sheet you already had, this time from your library and
+            // marked as application material, puts it in that category too without taking it out of the
             // ones its earlier uses put it in.
             classify(existing.getId(), request.fileCategory());
             return new UploadResult(fileMapper.toResponse(existing, List.of(), List.of()), true);
@@ -294,42 +293,42 @@ public class FileService {
                 content.length,
                 request.fileType(),
                 owner);
-        // Storage stages the bytes and only moves them into place when this transaction commits
-        // (M26.2), so a failure below cannot leave the orphan the legacy left on every failed upload.
+        // Storage stages the bytes and only moves them into place when this transaction commits,
+        // so a failure below cannot leave the orphan the legacy left on every failed upload.
         storageService.store(storageKey, content);
         StoredFile saved = fileRepository.save(file);
         // Null in every flow: a file uploaded to attach to a table or to answer a request is
         // classified by the link that follows, not by the upload. It only arrives set from the one
-        // screen with no flow to observe - somebody's own library (ADR-14 §4).
+        // screen with no flow to observe - somebody's own library.
         classify(saved.getId(), request.fileCategory());
         return new UploadResult(fileMapper.toResponse(saved, List.of(), List.of()), false);
     }
 
     /**
-     * The cajones this person may file something of their own under (ADR-14 §5).
+     * The categories this person may file something of their own under.
      *
      * <p><b>The personal library and the platform's are two different libraries</b>, and this answers
      * for the first one only. {@code /my/files} is where somebody keeps what is theirs, to have it
      * to hand; {@code /admin/files} is the platform's, where an admin uploads what the community
-     * offers and says which cajones it belongs to by publishing it. An admin does none of their
+     * offers and says which categories it belongs to by publishing it. An admin does none of their
      * admin work in their own library, which is why the {@code Admin} role adds nothing here.
      *
      * <p><b>Each side follows the role that fills it</b>, and neither is assumed:
      *
      * <ul>
-     *   <li><b>The two player-side cajones need the {@code Player} role.</b> Applying to a table and
+     *   <li><b>The two player-side categories need the {@code Player} role.</b> Applying to a table and
      *       answering a request are a player's, so somebody who is only a master has no business
      *       filing anything under them - and would never have got one by using the application
      *       either, because those flows are closed to them.
      *   <li><b>The two master-side ones need the {@code Master} role <em>or</em> a live row in
      *       {@code masters}.</b> Not the role alone: somebody an admin assigned to a table has no
-     *       {@code Master} role at all and runs that table all the same (ADR-06 §4).
+     *       {@code Master} role at all and runs that table all the same.
      *   <li><b>Never {@link FileCategory#Announcement}.</b> It is the community's by definition and
      *       lives only in the platform's library.
      * </ul>
      *
      * <p><b>In production nearly everybody gets all four</b>, because every account is created with
-     * {@code Player} (ADR-05 §1) and a master accumulates rather than replaces. That is not a reason to
+     * {@code Player} and a master accumulates rather than replaces. That is not a reason to
      * hardcode it: the rule is what the roles say, and an account that does not hold {@code Player} -
      * one the test profile makes, or one whose role was taken away - has to be told the truth.
      *
@@ -337,14 +336,14 @@ public class FileService {
      * and not a failure: their library holds what they were given, and there is no flow of their own
      * to file anything under.
      *
-     * @param actorId whose library, from the token (ADR-05 §5)
-     * @return the cajones they may use, in the order the enum declares them. Possibly empty
+     * @param actorId whose library, from the token
+     * @return the categories they may use, in the order the enum declares them. Possibly empty
      */
     @Transactional(readOnly = true)
     public List<FileCategory> personalCategoriesOf(String actorId) {
         // findActiveRoleNames and not findAllGrants: the latter returns every grant the person ever
         // had, revoked ones included, because it exists for the write that changes them. Reading it
-        // here counted a Player role that had been taken away, and handed a master the two cajones
+        // here counted a Player role that had been taken away, and handed a master the two categories
         // their flows can no longer fill.
         Set<String> roles = userRoleRepository.findActiveRoleNames(actorId);
         boolean plays = roles.contains(PlatformRole.PLAYER.roleName());
@@ -356,13 +355,13 @@ public class FileService {
                 .toList();
     }
 
-    /** Whether a cajón is one of the two a player fills by themselves, rather than a master. */
+    /** Whether a category is one of the two a player fills by themselves, rather than a master. */
     private static boolean isPlayerSide(FileCategory category) {
         return category == FileCategory.PlayerApplication || category == FileCategory.PlayerSubmission;
     }
 
     /**
-     * Puts a file in a cajón, if it is not in it already (ADR-14 §4).
+     * Puts a file in a category, if it is not in it already.
      *
      * <p><b>Idempotent and add-only</b>, which is what lets every caller invoke it without first
      * asking whether it needs to: the pair is the primary key, so a master attaching their sheet to a
@@ -370,11 +369,11 @@ public class FileService {
      * table says the file is no longer that table's, never that it was never that table's material.
      *
      * <p>Called by the services that make the links rather than by the links themselves, because a
-     * cajón is a consequence of the domain action and not of the row: {@code TableFileService} knows
+     * category is a consequence of the domain action and not of the row: {@code TableFileService} knows
      * it is attaching table material, {@code table_files} only knows it has two ids.
      *
      * @param fileId   the file
-     * @param category the cajón, or null to do nothing - which is the normal case on an upload made
+     * @param category the category, or null to do nothing - which is the normal case on an upload made
      *                 from inside a flow, where the link that follows classifies it
      */
     @Transactional
@@ -389,24 +388,24 @@ public class FileService {
     }
 
     /**
-     * Somebody's own uploads, newest first - the history the {@code FilePicker} offers (ADR-13 §2) and what
+     * Somebody's own uploads, newest first - the history the {@code FilePicker} offers and what
      * /my/files lists.
      *
-     * <p><b>This is the one read that resolves uses</b> (ADR-14 §3), and it is where the classification
-     * the owner wants actually lands: a row that says "the sheet on Hijos del Vacío" is recognisable
-     * in a way a filename is not, and a row that says nothing is the owner's warning that the purge
-     * of ADR-13 §3 has its eye on that file.
+     * <p><b>This is the one read that resolves uses</b>, and it is where the classification
+     * the owner wants actually lands: a row that says "the sheet on Children of the Void" is recognisable
+     * in a way a filename is not, and a row that says nothing is the owner's warning that the retention
+     * purge has its eye on that file.
      *
      * <p><b>The search box actually searches now.</b> The frontend has been sending {@code q} on
      * this call since the picker was built and this method had no parameter to receive it, so the
-     * "buscar entre mis archivos" input filtered nothing at all - which on a history long enough to
-     * need searching is the same as not having reuse (ADR-13 §2).
+     * "search my files" input filtered nothing at all - which on a history long enough to
+     * need searching is the same as not having reuse.
      *
-     * @param actorId    whose files, from the token. The owner is in the {@code WHERE} (ADR-05 §5)
+     * @param actorId    whose files, from the token. The owner is in the {@code WHERE}
      * @param query      the search box over their filenames, or null for everything they have
-     * @param category   the cajón to narrow to (ADR-14 §4), or null for everything they have
-     * @param pageable   the page and its order, defaulted by the controller (ADR-07 §9, ADR-04 §6)
-     * @return their live files with their cajones and their uses, page by page
+     * @param category   the category to narrow to, or null for everything they have
+     * @param pageable   the page and its order, defaulted by the controller
+     * @return their live files with their categories and their uses, page by page
      */
     @Transactional(readOnly = true)
     public PageResponse<FileResponse> listMine(
@@ -415,16 +414,16 @@ public class FileService {
         Page<StoredFile> page =
                 fileRepository.findAll(FileSearchSpecification.forOwner(actorId, parsed, category), pageable);
         Map<String, List<FileUsageResponse>> usages = usagesByFileId(page.getContent(), actorId);
-        Map<String, List<String>> cajones = categoriesByFileId(page.getContent());
+        Map<String, List<String>> categories = categoriesByFileId(page.getContent());
         return PageResponse.from(page.map(file -> fileMapper.toResponse(
-                file, cajones.getOrDefault(file.getId(), List.of()), usages.getOrDefault(file.getId(), List.of()))));
+                file, categories.getOrDefault(file.getId(), List.of()), usages.getOrDefault(file.getId(), List.of()))));
     }
 
     /**
-     * Which cajones each of the given files belongs to, in one query for the whole page (ADR-14 §4).
+     * Which categories each of the given files belongs to, in one query for the whole page.
      *
-     * @param files the files to resolve cajones for
-     * @return the cajones per file id, as strings; a file in none is absent
+     * @param files the files to resolve categories for
+     * @return the categories per file id, as strings; a file in none is absent
      */
     Map<String, List<String>> categoriesByFileId(List<StoredFile> files) {
         if (files.isEmpty()) {
@@ -438,38 +437,38 @@ public class FileService {
     }
 
     /**
-     * What the platform published, optionally narrowed to one audience (ADR-13 §2).
+     * What the platform published, optionally narrowed to one audience.
      *
-     * <p><b>The audience narrows the list; it does not guard the file.</b> That is the reading ADR-13 §2
-     * asks for - it exists so "a document written for masters showed up in front of a player" stops
-     * happening on screen (M24.1) - and treating it as authorization would mean a player handed a
+     * <p><b>The audience narrows the list; it does not guard the file.</b> That is the intent
+     * of the filter - it exists so "a document written for masters showed up in front of a player" stops
+     * happening on screen - and treating it as authorization would mean a player handed a
      * link to the community's own rules gets a 403 from a document that is, by name, published.
      *
-     * <p><b>The cajón is how this list is asked for now</b> (ADR-14 §4), and it replaced the audience of
-     * ADR-13 §2 outright. A flow already says who a document is for - {@code PlayerApplication} is a
+     * <p><b>The category is how this list is asked for now</b>, and it replaced the old
+     * audience filter outright. A flow already says who a document is for - {@code PlayerApplication} is a
      * player's by construction, {@code TableMaterial} a master's - so keeping an audience beside it
      * would be two axes deciding one thing, with the second one free to drift out of agreement.
      *
-     * <p>It is still a narrowing and not a guard, which is the reading ADR-13 §2 asked for and the part
+     * <p>It is still a narrowing and not a guard, which is the part of the old audience filter
      * worth keeping: somebody handed a link to a published document gets the document.
      *
-     * @param category the cajón to narrow to, or null for everything published
+     * @param category the category to narrow to, or null for everything published
      * @param pageable the page and its order
      * @return the published files, page by page
      */
     @Transactional(readOnly = true)
     public PageResponse<PublicFileResponse> listPublic(@Nullable FileCategory category, Pageable pageable) {
         Page<StoredFile> page = fileRepository.findAll(FileSearchSpecification.forPublic(category), pageable);
-        Map<String, List<String>> cajones = categoriesByFileId(page.getContent());
+        Map<String, List<String>> categories = categoriesByFileId(page.getContent());
         return PageResponse.from(page.map(
-                file -> fileMapper.toPublicResponse(file, cajones.getOrDefault(file.getId(), List.of()))));
+                file -> fileMapper.toPublicResponse(file, categories.getOrDefault(file.getId(), List.of()))));
     }
 
     /**
      * Hands the bytes over, and records that the file was used.
      *
      * <p>Not {@code readOnly}: every download stamps {@code lastUsedAt}, which is what keeps a file
-     * somebody actually opens from being reclaimed by the purge (ADR-13 §3). A read that writes is unusual
+     * somebody actually opens from being reclaimed by the purge. A read that writes is unusual
      * enough to say out loud.
      *
      * @param fileId  the file
@@ -488,9 +487,9 @@ public class FileService {
      * Renaming a file and deciding whether to keep it.
      *
      * <p>Both are metadata: the content never moves, because the key it lives under has nothing to do
-     * with what the file is called (ADR-13 §6). Keeping it is the "save this for later" of ADR-13 §2 - what
-     * {@code handlePrivateStatus} did in the legacy (M21.2) - and it is what puts the file in the
-     * reuse history of ADR-13 §2.
+     * with what the file is called. Keeping it is the "save this for later" action - what
+     * {@code handlePrivateStatus} did in the legacy - and it is what puts the file in the
+     * reuse history.
      *
      * @param fileId  the file
      * @param request the name it should end up with, and whether to keep it
@@ -499,17 +498,17 @@ public class FileService {
      * @throws NotFoundException        if the file is not there
      * @throws ForbiddenActionException if it is somebody else's, or it is in the platform's library -
      *                                  published or not, it is the platform's and only an admin
-     *                                  changes it (ADR-13 §2, ADR-14 §7)
+     *                                  changes it
      */
     @Transactional
     public FileResponse update(String fileId, UpdateFileRequest request, String actorId) {
         StoredFile file = requireOwned(fileId, actorId);
         if (file.getFileType().isInLibrary()) {
-            throw new ForbiddenActionException("File " + fileId + " is in the platform's library; only an admin can change it (ADR-13 §2)");
+            throw new ForbiddenActionException("File " + fileId + " is in the platform's library; only an admin can change it");
         }
         file.setName(request.name());
         file.setFileType(request.keepInLibrary() ? FileType.Private : FileType.SingleUse);
-        // No cajón here. Membership is what a file's uses made true and is never revoked (ADR-14 §4), so
+        // No category here. Membership is what a file's uses made true and is never revoked, so
         // there is nothing for an edit dialog to correct - the only way in is to be used, or to be
         // put there deliberately when there is no flow to observe.
         return fileMapper.toResponse(file, List.of(), List.of());
@@ -518,10 +517,10 @@ public class FileService {
     /**
      * The owner letting go of their own file.
      *
-     * <p><b>Marks, never erases</b> (ADR-03 §7). Freeing the bytes is a deliberate maintenance operation the
-     * platform owner runs from the administration menu, and that is F5 (ADR-13 §8). Tables that still hold
+     * <p><b>Marks, never erases</b>. Freeing the bytes is a deliberate maintenance operation the
+     * platform owner runs from the administration menu, and that is still to be built. Tables that still hold
      * a link keep it: what disappears is the file from its owner's history, not the map from
-     * somebody's table - which is the same asymmetry ADR-14 §1 describes from the other direction.
+     * somebody's table - which is the same asymmetry seen from the other direction.
      *
      * @param fileId  the file
      * @param actorId the owner, from the token
@@ -532,29 +531,29 @@ public class FileService {
     public void delete(String fileId, String actorId) {
         StoredFile file = requireOwned(fileId, actorId);
         if (file.getFileType().isInLibrary()) {
-            throw new ForbiddenActionException("File " + fileId + " is in the platform's library; only an admin can remove it (ADR-13 §2)");
+            throw new ForbiddenActionException("File " + fileId + " is in the platform's library; only an admin can remove it");
         }
         markDeleted(file);
     }
 
     /**
      * /admin/files: the platform's library - published, unpublished and hidden - searchable, with the
-     * tables that make ADR-14 §1 visible (ADR-14 §7).
+     * tables that show one file is shared, not copied.
      *
      * <p><b>Only the library</b>, and that is a predicate in the query rather than a filter the screen
      * may drop. Somebody's private upload - the sheet a player applied with, what they handed in - is
      * theirs and not the platform's, and seeing or removing it is not this screen's job: that belongs
-     * to acting as that person, not to administering the library (ADR-14 §7).
+     * to acting as that person, not to administering the library.
      *
      * <p>The tables of the whole page come from one query rather than one per row, the shape
      * /admin/catalogs uses for its counts.
      *
-     * @param query      the search box, in the language of ADR-22 §1. Null or blank matches everything
+     * @param query      the search box, in the admin search language. Null or blank matches everything
      * @param statuses   the statuses to keep, or empty for all of them
-     * @param category   the cajón to keep (ADR-14 §4), or null for all of them
+     * @param category   the category to keep, or null for all of them
      * @param pageable   the page and its order
      * @return the library's files, page by page
-     * @throws InvalidRequestException if the cajón is one nothing can be published into - asking the
+     * @throws InvalidRequestException if the category is one nothing can be published into - asking the
      *                                 platform's library for a player's answers is asking for a shelf
      *                                 it does not have
      */
@@ -571,38 +570,38 @@ public class FileService {
         Page<StoredFile> page = fileRepository.findAll(
                 FileSearchSpecification.forAdmin(parsed, statuses, category), pageable);
         Map<String, List<AdminFileTableResponse>> tables = tablesByFileId(page.getContent());
-        Map<String, List<String>> cajones = categoriesByFileId(page.getContent());
+        Map<String, List<String>> categories = categoriesByFileId(page.getContent());
         return PageResponse.from(page.map(file -> fileMapper.toAdminResponse(
                 file,
                 tables.getOrDefault(file.getId(), List.of()),
-                publishableOnly(cajones.getOrDefault(file.getId(), List.of())))));
+                publishableOnly(categories.getOrDefault(file.getId(), List.of())))));
     }
 
     /**
-     * An admin uploading a file into the platform's library, published now or left for later (ADR-14 §7).
+     * An admin uploading a file into the platform's library, published now or left for later.
      *
-     * <p><b>What it is, always; whether it goes out, a choice.</b> The cajón is required, so nothing
-     * sits in the library without saying which flow it is for - the state ADR-14 §7 removed stays removed.
+     * <p><b>What it is, always; whether it goes out, a choice.</b> The category is required, so nothing
+     * sits in the library without saying which flow it is for - the state of a file with no declared flow stays gone.
      * Publishing is not required any more: a published file is attached by tables straight away and
-     * hiding it later does not take it off them (ADR-14 §1), so going out on the same click as the upload
+     * hiding it later does not take it off them, so going out on the same click as the upload
      * has to be something the admin asked for.
      *
-     * <p>Deduplication (ADR-13 §3) applies as on any upload: content this admin already uploaded comes back
-     * as the row they had, moved into the library with the cajones <em>added</em>. <b>A re-upload
+     * <p>Deduplication applies as on any upload: content this admin already uploaded comes back
+     * as the row they had, moved into the library with the categories <em>added</em>. <b>A re-upload
      * never hides</b>: a file already published stays published even if this upload asked not to
      * publish, because taking it out of the pickers is hiding, which is its own action.
      *
      * @param upload  the multipart part: the bytes and the name the browser sent
-     * @param request the cajones it is offered in (ADR-14 §4), at least one, and whether to publish it now
-     * @param actorId the admin uploading, from the token (ADR-05 §5). They stay its uploader
-     * @return the file, plus whether it was recognised rather than written (ADR-13 §4)
-     * @throws InvalidRequestException if a cajón is one nobody may publish into, or the part is
+     * @param request the categories it is offered in, at least one, and whether to publish it now
+     * @param actorId the admin uploading, from the token. They stay its uploader
+     * @return the file, plus whether it was recognised rather than written
+     * @throws InvalidRequestException if a category is one nobody may publish into, or the part is
      *                                 empty, off the whitelist or over the cap
      * @throws NotFoundException       if the token names somebody who is not there
      */
     @Transactional
     public LibraryUpload uploadToLibrary(MultipartFile upload, LibraryUploadRequest request, String actorId) {
-        // Before the bytes: a refused cajón should cost nothing, not a stored file rolled back.
+        // Before the bytes: a refused category should cost nothing, not a stored file rolled back.
         requirePublishable(request.categories());
         UploadResult stored = upload(upload, new UploadFileRequest(FileType.Private, null), actorId);
         String fileId = stored.file().id();
@@ -621,15 +620,15 @@ public class FileService {
     /**
      * Publishing a file of the library that is not published: never published yet, or hidden.
      *
-     * <p>From here on masters see it in the picker and can attach it. It needs a cajón first -
-     * which the upload always asks for, so the refusal is for a file whose cajón was somehow lost.
+     * <p>From here on masters see it in the picker and can attach it. It needs a category first -
+     * which the upload always asks for, so the refusal is for a file whose category was somehow lost.
      *
      * @param fileId the file to publish
      * @return the file after publishing
      * @throws NotFoundException       if the file is not there, was marked gone, or is not in the library
      * @throws ConflictException       if it is already published - a state, not a refusal of the admin,
      *                                 with the code {@code FILE_ALREADY_PUBLISHED}
-     * @throws InvalidRequestException if it has no cajón to be offered in
+     * @throws InvalidRequestException if it has no category to be offered in
      */
     @Transactional
     public AdminFileResponse publish(String fileId) {
@@ -646,13 +645,13 @@ public class FileService {
     }
 
     /**
-     * Hiding a published file: it stays in the library, offered to nobody (ADR-14 §7).
+     * Hiding a published file: it stays in the library, offered to nobody.
      *
      * <p><b>It no longer leaves the library.</b> It used to go back to its uploader as a {@code
      * Private}, and when the uploader was an admin with no library of their own the file vanished for
-     * everybody. Now it is {@code Library} again, with its cajón and its {@code publishedAt}, and
+     * everybody. Now it is {@code Library} again, with its category and its {@code publishedAt}, and
      * publishing it again is one click. Tables that already attached it keep it - hiding is not a
-     * delete (ADR-14 §1).
+     * delete.
      *
      * @param fileId the file to hide
      * @return the file after hiding
@@ -666,25 +665,25 @@ public class FileService {
             throw new ConflictException("File " + fileId + " is not published", "FILE_NOT_PUBLISHED");
         }
         file.setFileType(FileType.Library);
-        // The cajones stay: hiding says the platform no longer offers the file, not what it is (ADR-14 §4).
+        // The categories stay: hiding says the platform no longer offers the file, not what it is.
         return toLibraryResponse(file);
     }
 
     /**
-     * Changing what a file of the library is, while it is not published (ADR-14 §7).
+     * Changing what a file of the library is, while it is not published.
      *
-     * <p><b>The one place a membership is removed</b>, and only a declared one: the library's cajones
+     * <p><b>The one place a membership is removed</b>, and only a declared one: the library's categories
      * are what an admin said the file is for, and correcting that before anybody is offered it is
      * correcting a declaration. A player-side membership the file carries from its history is not the
-     * library's and stays (ADR-14 §4). A published file is refused - masters are choosing it under the
-     * cajón it has now, so it is hidden first.
+     * library's and stays. A published file is refused - masters are choosing it under the
+     * category it has now, so it is hidden first.
      *
      * @param fileId  the file
      * @param request what it is now
      * @return the file after the change
      * @throws NotFoundException       if the file is not there, was marked gone, or is not in the library
      * @throws ConflictException       if it is published, with the code {@code FILE_ALREADY_PUBLISHED}
-     * @throws InvalidRequestException if the cajón is one nothing can be published into
+     * @throws InvalidRequestException if the category is one nothing can be published into
      */
     @Transactional
     public AdminFileResponse changeLibraryCategory(String fileId, UpdateLibraryCategoryRequest request) {
@@ -702,9 +701,9 @@ public class FileService {
     /**
      * An admin removing a file from the platform's library, published or not.
      *
-     * <p><b>Only a file of the library</b> (ADR-14 §7). Somebody's private file is theirs: an admin reaches
+     * <p><b>Only a file of the library</b>. Somebody's private file is theirs: an admin reaches
      * it by acting as that person, never from the library, so from here it is simply not there. Still
-     * a mark and not an erase (ADR-03 §7, ADR-13 §8).
+     * a mark and not an erase.
      *
      * @param fileId the file
      * @throws NotFoundException if the file is not there, was already marked gone, or is not in the library
@@ -714,11 +713,11 @@ public class FileService {
         markDeleted(requireInLibrary(fileId));
     }
 
-    /** The cajones a file of the library can be offered in, as a set for the one delete that uses it. */
+    /** The categories a file of the library can be offered in, as a set for the one delete that uses it. */
     private static final List<FileCategory> PUBLISHABLE_CATEGORIES =
             Arrays.stream(FileCategory.values()).filter(FileCategory::isPublishable).toList();
 
-    /** A live file of the platform's library, published or not - anything else is not there (ADR-14 §7). */
+    /** A live file of the platform's library, published or not - anything else is not there. */
     private StoredFile requireInLibrary(String fileId) {
         StoredFile file = requireLive(fileId);
         if (!file.getFileType().isInLibrary()) {
@@ -727,7 +726,7 @@ public class FileService {
         return file;
     }
 
-    /** Publishes a file, stamping the first publication once and never again (ADR-14 §7). */
+    /** Publishes a file, stamping the first publication once and never again. */
     private static void markPublished(StoredFile file) {
         LocalDateTime now = LocalDateTime.now();
         file.setFileType(FileType.Public);
@@ -744,10 +743,10 @@ public class FileService {
     }
 
     /**
-     * Refuses the cajones nothing can be published into (ADR-14 §4).
+     * Refuses the categories nothing can be published into.
      *
      * <p>The two player-side ones hold what individual people answered with; a blank offered to the
-     * whole community is not an answer, and it belongs in the master-side cajón the request came from.
+     * whole community is not an answer, and it belongs in the master-side category the request came from.
      */
     private static void requirePublishable(List<FileCategory> categories) {
         for (FileCategory category : categories) {
@@ -761,10 +760,10 @@ public class FileService {
     }
 
     /**
-     * The cajones the platform's library speaks of (ADR-14 §7).
+     * The categories the platform's library speaks of.
      *
      * <p>A file of the library can still carry a player-side membership from before it got there -
-     * memberships are never revoked (ADR-14 §4) - but that is its history as somebody's answer, not a
+     * memberships are never revoked - but that is its history as somebody's answer, not a
      * shelf the library offers it on, so the admin's screen does not show it.
      */
     private static List<String> publishableOnly(List<String> categories) {
@@ -773,7 +772,7 @@ public class FileService {
                 .toList();
     }
 
-    /** The cajones one file belongs to, as strings. */
+    /** The categories one file belongs to, as strings. */
     private List<String> categoriesOf(String fileId) {
         return categoryRepository.findByFileIds(List.of(fileId)).stream()
                 .map(link -> link.getId().category().name())
@@ -810,25 +809,25 @@ public class FileService {
     }
 
     /**
-     * Where each of the given files is being used, in four queries for the whole page (ADR-14 §3).
+     * Where each of the given files is being used, in four queries for the whole page.
      *
      * <p>Four and not one: the sources are different joins over different bridge tables, and a
      * {@code union} in JPQL buys nothing but a query neither Hibernate nor a reader can follow. Four
      * is still a constant - what matters is that it is not one per row, which is what a naive
      * "resolve the uses of this file" helper called from a loop would have been.
      *
-     * <p>The fourth source, {@code registration_files}, joins them in F2: a candidate's application
+     * <p>The fourth source, {@code registration_files}, joins them too: a candidate's application
      * counts as a use only while the application is still alive ({@code Candidate} or
      * {@code Player}) - a withdrawn or rejected one does not, which is
-     * {@code RegistrationFileRepository.findUsagesByFileIds}'s own filter and ADR-09 §2's whole point.
+     * {@code RegistrationFileRepository.findUsagesByFileIds}'s own filter, and the whole point of that query.
      *
-     * <p>Each use also says how the reader is joined to its table (ADR-14 §3), in two more queries for
+     * <p>Each use also says how the reader is joined to its table, in two more queries for
      * the whole page and not one per use: the tables they run (a live row in {@code masters}) and, among
      * the tables the page names, the ones they play at. Master wins when both hold; neither leaves it
      * null.
      *
      * @param files   the files to resolve uses for
-     * @param actorId the reader, from the token (ADR-05 §5)
+     * @param actorId the reader, from the token
      * @return the uses per file id; a file nothing points at is absent, which reads as unused
      */
     Map<String, List<FileUsageResponse>> usagesByFileId(List<StoredFile> files, String actorId) {
@@ -898,7 +897,7 @@ public class FileService {
                 .toList();
     }
 
-    /** Marks a file gone and stamps when. The bytes stay until F5 (ADR-03 §7, ADR-13 §8). */
+    /** Marks a file gone and stamps when. The bytes stay until the physical purge exists. */
     private void markDeleted(StoredFile file) {
         file.setStatus(FileStatus.Deleted);
         file.setDeletedAt(LocalDateTime.now());
@@ -1003,8 +1002,9 @@ public class FileService {
             }
         }
         // A request's blank: it has to be readable by everybody the request reaches, or "fill in this
-        // form" arrives with a form nobody can open. Wider than an answer on purpose - that one is the master reading an answer, this one is the table reading
-        // the question - but only as wide as the request: its audience decides, not the table.
+        // form" arrives with a form nobody can open. Wider than an answer on purpose - that one is the master
+        // reading an answer, this one is the table reading the question - but only as wide as the request:
+        // its audience decides, not the table.
         for (TableTask task : taskFileRepository.findTasksByRequestedFileId(fileId)) {
             if (masterService.canOversee(task.getGameTable().getId(), actorId) || reaches(task, actorId)) {
                 return file;
@@ -1056,18 +1056,18 @@ public class FileService {
     }
 
     /**
-     * Refuses a cajón this person has no business filing something of their own under (ADR-14 §5).
+     * Refuses a category this person has no business filing something of their own under.
      *
      * <p>It is a rule of the domain and not of the screen, which is why it is here: the frontend
-     * offers only what {@link #personalCategoriesOf} allows, but a request that names another cajón
-     * is a request, and the authority over it is the service (ADR-05 §5).
+     * offers only what {@link #personalCategoriesOf} allows, but a request that names another category
+     * is a request, and the authority over it is the service.
      *
      * <p>Null passes, and that is the normal case: a file uploaded from inside a flow declares
-     * nothing, because the link that follows is what classifies it (ADR-14 §4).
+     * nothing, because the link that follows is what classifies it.
      *
-     * @throws InvalidRequestException naming the cajón, so the frontend can say which one
+     * @throws InvalidRequestException naming the category, so the frontend can say which one
      */
-    private void requireOwnCajon(@Nullable FileCategory category, String actorId) {
+    private void requireOwnCategory(@Nullable FileCategory category, String actorId) {
         if (category != null && !personalCategoriesOf(actorId).contains(category)) {
             throw new InvalidRequestException(
                     "Cannot file a personal upload under " + category,
@@ -1077,7 +1077,7 @@ public class FileService {
     }
 
     /**
-     * The whitelist check (M21.4), before anything is written.
+     * The whitelist check, before anything is written.
      *
      * @throws InvalidRequestException with the type that was refused, so the frontend can name it
      */
@@ -1091,10 +1091,10 @@ public class FileService {
     }
 
     /**
-     * The per-file cap - the one piece of ADR-13 §3 that ADR-13 §3 kept.
+     * The per-file cap - the one piece of the old per-user quota that was kept.
      *
      * <p>The limit travels as a number of bytes and not as "2 MB": the sentence is the frontend's to
-     * write, in the reader's language and its own units (ADR-23 §3).
+     * write, in the reader's language and its own units.
      *
      * @throws InvalidRequestException carrying the limit, because "too large" without a number tells
      *                                 nobody what to do next
@@ -1113,7 +1113,7 @@ public class FileService {
      * The filename as the browser sent it, or a fallback when it sent none.
      *
      * <p>It is stored verbatim, traversal sequences and all, because it is <b>metadata</b> and nothing
-     * else: the download header echoes it and the filesystem never sees it (ADR-13 §6). Sanitizing it here
+     * else: the download header echoes it and the filesystem never sees it. Sanitizing it here
      * would only make the value shown on screen disagree with the file the person uploaded, while the
      * property that matters - that no user-supplied text becomes a path - is held by the storage key
      * being a generated id.

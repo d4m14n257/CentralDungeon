@@ -4,10 +4,10 @@ package com.centraldungeon.features.registrations;
  * How many people are accepted at one table.
  *
  * <p>An internal projection: the result of a grouped query that <b>never crosses HTTP</b>
- * (arquitectura §2.3) - the admin listing folds it into {@code AdminTableSummaryResponse}. Same
+ * - the admin listing folds it into {@code AdminTableSummaryResponse}. Same
  * shape and same reason as {@link PendingCandidateCount}, {@code TaskSubmissionCount} and
  * {@code CatalogUsageCount}: one query for the whole page instead of one {@code count} per row, which
- * is the N+1 that arquitectura §2.2 forbids.
+ * is the N+1 query problem.
  *
  * @param gameTableId the table the count belongs to
  * @param players     how many registrations are in {@code Player}. A table nobody plays at is absent

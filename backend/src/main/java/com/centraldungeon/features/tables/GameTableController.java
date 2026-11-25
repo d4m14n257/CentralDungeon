@@ -38,28 +38,28 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Covers the game table aggregate: the table itself, its masters and its status history (arquitectura §2.2). */
+/** Covers the game table aggregate: the table itself, its masters and its status history. */
 @RestController
 @RequestMapping("/api/v1/game-tables")
 public class GameTableController {
 
-    /** The service that owns the table's lifecycle - a controller never reaches a repository (regla dura 1). */
+    /** The service that owns the table's lifecycle - a controller never reaches a repository. */
     private final GameTableService gameTableService;
 
     /**
-     * The one mechanism every request that needs an approval goes through (ADR-16 §1).
+     * The one mechanism every request that needs an approval goes through.
      *
      * <p>A second collaborator, and the only endpoint that uses it is {@link #requestPause}. It is
      * here rather than folded into {@code GameTableService} because asking for a pause writes two
      * things - the table's status and an {@code approval_requests} row - and the row has one owner.
      * The alternative would be {@code GameTableService} creating approval requests, which is the
-     * second mechanism ADR-16 §1 exists to prevent.
+     * second mechanism, and approvals are meant to have exactly one.
      */
     private final ApprovalService approvalService;
 
     /**
      * @param gameTableService the service that owns the table's lifecycle and its rules
-     * @param approvalService  the one mechanism behind a requested pause (ADR-07 §2, ADR-16 §1)
+     * @param approvalService  the one mechanism behind a requested pause
      */
     public GameTableController(GameTableService gameTableService, ApprovalService approvalService) {
         this.gameTableService = gameTableService;
@@ -67,18 +67,18 @@ public class GameTableController {
     }
 
     /**
-     * The public explorer. Newest first by default, which closes the gap ADR-07 §1 left
-     * annotated: with no sort the rows came back in physical order - oldest first, since the ids are
-     * time-ordered UUIDv7 - so a table published today could fall off the first page as the table
-     * grew. The default lives here and not in the JPQL so an explicit ?sort= still wins.
+     * The public explorer. Newest first by default, which closes an old gap: with no sort the rows came back
+     * in physical order - oldest first, since the ids are time-ordered UUIDv7 - so a table published today
+     * could fall off the first page as the table grew. The default lives here and not in the JPQL so an
+     * explicit ?sort= still wins.
      *
-     * @param q           the search box, in the language of ADR-22 §1: a bare term searches the table's
+     * @param q           the search box, in the explorer's search language: a bare term searches the table's
      *                    name, and {@code /table_system}, {@code /table_tag} and
-     *                    {@code /table_platform} resolve through their synonym groups (ADR-12 §2, §4,
-     *                    ADR-12 §8). Null or blank means no criteria
-     * @param pageable    page, size and sort; newest first, with a tie-break by id (ADR-07 §9)
+     *                    {@code /table_platform} resolve through their synonym groups.
+     *                    Null or blank means no criteria
+     * @param pageable    page, size and sort; newest first, with a tie-break by id
      * @param currentUser the actor, from the token. It goes into the WHERE so a master never sees
-     *                    their own table in the list meant for applying (ADR-05 §5, ADR-18 §4)
+     *                    their own table in the list meant for applying
      * @return 200 with one page of tables the actor could apply to
      */
     @GetMapping
@@ -91,19 +91,19 @@ public class GameTableController {
     }
 
     /**
-     * /admin/tables - the management listing, unfiltered by pertenencia.
+     * /admin/tables - the management listing, unfiltered by membership.
      *
-     * <p><b>Every table by default since F3.3</b>, not only the ones waiting on a review: reviewing
-     * moved to the shared tray of {@code /admin/queue} (ADR-16 §7, §5), and what this screen is for is
-     * finding a table and acting on it. {@code Deleted} is never listed, whatever is asked for (ADR-03 §7).
+     * <p><b>Every table by default</b>, not only the ones waiting on a review: reviewing
+     * moved to the shared tray of {@code /admin/queue}, and what this screen is for is
+     * finding a table and acting on it. {@code Deleted} is never listed, whatever is asked for.
      *
-     * @param q        the search box, in the language of ADR-22 §1. On top of the explorer's four commands
+     * @param q        the search box, in the explorer's search language. On top of the explorer's four commands
      *                 it takes {@code /table_status} over the closed list of states and
      *                 {@code /table_master} over the masters' names. Null or blank means no criteria
      * @param status   which statuses to list, or null for all of them but {@code Deleted}. It stays
      *                 alongside {@code ?q=} because it is how the frontend keeps the state in the URL
-     *                 (ADR-12 §7) for the filter that is a control and not a typed command
-     * @param pageable page, size and sort, with a tie-break by id (ADR-07 §9, ADR-04 §6)
+     *                 for the filter that is a control and not a typed command
+     * @param pageable page, size and sort, with a tie-break by id
      * @return 200 with one page of tables for the admin listing
      */
     @GetMapping("/admin")
@@ -119,8 +119,8 @@ public class GameTableController {
      * The public detail of a table, /tables/:id.
      *
      * @param id          the table to read
-     * @param currentUser the actor, from the token. The clash flag of ADR-08 §2 is computed for them and
-     *                    for nobody else (ADR-05 §5)
+     * @param currentUser the actor, from the token. The schedule clash flag is computed for them and
+     *                    for nobody else
      * @return 200 with the table. 404 when it does not exist or the actor is vetoed from it - a 403
      *         there would confirm what the 404 denies
      */
@@ -131,8 +131,8 @@ public class GameTableController {
     }
 
     /**
-     * /master/tables/:id and /admin/tables/:id - pertenencia, or the admin rank, checked in the
-     * service before any data is read (ADR-06 §6, §8).
+     * /master/tables/:id and /admin/tables/:id - membership, or the admin rank, checked in the
+     * service before any data is read.
      *
      * @param id          the table to read
      * @param currentUser the actor, from the token
@@ -162,7 +162,7 @@ public class GameTableController {
      * /my/tables - only the tables where the actor holds an active Player registration.
      *
      * @param pageable    page, size and sort; newest first
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with one page of the tables they play at
      */
     @GetMapping("/mine")
@@ -175,15 +175,15 @@ public class GameTableController {
 
     /**
      * /my/tables/history - the tables the actor played at that are now over, with when each one
-     * closed and their own final attendance (ADR-19 §8). A table still live, {@code Pause} included
-     * (ADR-07 §2), stays on {@link #listMine} instead - the two never overlap on any one table.
+     * closed and their own final attendance. A table still live, {@code Pause} included
+     * stays on {@link #listMine} instead - the two never overlap on any one table.
      *
-     * <p>Not the same read as {@link #listMine} with a different filter: the card here has no cupo
-     * and no schedule-clash warning, and carries {@code closed_at} and the attendance aggregate of
-     * ADR-08 §5 that a live card has no use for. See {@link GameTableHistoryResponse}.
+     * <p>Not the same read as {@link #listMine} with a different filter: the card here has no seat count
+     * and no schedule-clash warning, and carries {@code closed_at} and the attendance aggregate
+     * that a live card has no use for. See {@link GameTableHistoryResponse}.
      *
      * @param pageable    page, size and sort; newest first
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with one page of the tables they played at that have ended
      */
     @GetMapping("/mine/history")
@@ -195,12 +195,12 @@ public class GameTableController {
     }
 
     /**
-     * /master/tables - every table where the actor is a master of any type, any status. Pertenencia,
-     * not the platform role (hard rule 17, ADR-06 §4): somebody made a co-master without holding {@code Master}
+     * /master/tables - every table where the actor is a master of any type, any status. Membership,
+     * not the platform role: somebody made a co-master without holding {@code Master}
      * still sees their table here.
      *
      * @param pageable    page, size and sort; newest first
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with one page of the tables they run
      */
     @GetMapping("/managed")
@@ -213,7 +213,7 @@ public class GameTableController {
 
     /**
      * Creating a table needs the platform role Master - "I can create tables", nothing about a
-     * specific one (ADR-06 §4). The creator becomes the table's Primary (ADR-06 §3).
+     * specific one. The creator becomes the table's Primary.
      *
      * @param request     the draft
      * @param currentUser the actor, from the token; they become the Primary
@@ -232,14 +232,14 @@ public class GameTableController {
      * {@code ChangesRequested} is corrected.
      *
      * <p>{@code isAuthenticated()} and no role, like every other endpoint about a concrete table:
-     * pertenencia decides, and only the service can see it (hard rule 17, ADR-05 §5, ADR-06 §4).
+     * membership decides, and only the service can see it.
      *
      * @param id          the table to edit
      * @param request     the whole table as it should end up. It is a replacement and not a patch:
      *                    an absent field empties it
      * @param currentUser the actor, from the token
      * @return 200 with the table after the edit. 403 when the actor does not run it, 409 when it is
-     *         past the point where its master may rewrite it or when the new agenda clashes (ADR-08 §2),
+     *         past the point where its master may rewrite it or when the new agenda clashes,
      *         400 when the agenda overlaps itself
      */
     @PutMapping("/{id}")
@@ -250,15 +250,15 @@ public class GameTableController {
     }
 
     /**
-     * An admin rewriting somebody else's table (ADR-06 §8) - its own path rather than {@link #update} with
-     * a second rule inside, because one path answering two ways depending on who asks is what ADR-06 §6
-     * removed.
+     * An admin rewriting somebody else's table - its own path rather than {@link #update} with
+     * a second rule inside, because one path answering two ways depending on who asks is the shape the project
+     * removed on purpose.
      *
      * <p>Every master of the table is told, and a closed table cannot be rewritten. The rules are in
      * {@code GameTableService.adminUpdate}.
      *
      * @param id          the table to edit
-     * @param request     the whole table as it should end up - a replacement and not a patch (ADR-04 §7)
+     * @param request     the whole table as it should end up - a replacement and not a patch
      * @param currentUser the admin, from the token
      * @return 200 with the table after the edit. 403 when the actor is not an admin, 409 when the
      *         table is closed, reserved by another admin, smaller than its roster
@@ -273,7 +273,7 @@ public class GameTableController {
     }
 
     /**
-     * A table an admin creates without running it (ADR-06 §7). It is born Unassigned, with no Primary, and
+     * A table an admin creates without running it. It is born Unassigned, with no Primary, and
      * only {@link #assignMasters} moves it on.
      *
      * @param request     the draft
@@ -290,7 +290,7 @@ public class GameTableController {
 
     /**
      * Hands an Unassigned table its first masters, which opens it directly - review is skipped,
-     * because an admin already vouched for it by creating it (ADR-06 §7).
+     * because an admin already vouched for it by creating it.
      *
      * @param id          the table
      * @param request     who runs it and who co-runs it
@@ -305,7 +305,7 @@ public class GameTableController {
     }
 
     /**
-     * An admin approving a master's draft (ADR-07 §1) - the only way Preparation reaches Opened.
+     * An admin approving a master's draft - the only way Preparation reaches Opened.
      *
      * @param id          the table to approve
      * @param currentUser the admin, from the token; recorded in the status history
@@ -334,10 +334,10 @@ public class GameTableController {
     }
 
     /**
-     * The master sending their draft to review for the first time (ADR-07 §1).
+     * The master sending their draft to review for the first time.
      *
-     * <p>{@code isAuthenticated()} and no role: pertenencia, not role, decides who may act on THIS
-     * table (hard rule 17, ADR-05 §5), and the service checks it before touching anything.
+     * <p>{@code isAuthenticated()} and no role: membership, not role, decides who may act on THIS
+     * table, and the service checks it before touching anything.
      *
      * @param id          the table
      * @param currentUser the actor, from the token
@@ -353,8 +353,8 @@ public class GameTableController {
     /**
      * The master sending a corrected draft back for review.
      *
-     * <p>{@code isAuthenticated()} and no role: pertenencia, not role, decides who may act on THIS
-     * table (hard rule 17, ADR-05 §5), and the service checks it before touching anything.
+     * <p>{@code isAuthenticated()} and no role: membership, not role, decides who may act on THIS
+     * table, and the service checks it before touching anything.
      *
      * @param id          the table
      * @param currentUser the actor, from the token
@@ -370,7 +370,7 @@ public class GameTableController {
      * The master declaring play has begun: Opened to InProgress.
      *
      * @param id          the table
-     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks membership
      * @return 200 with the table, now InProgress
      */
     @PostMapping("/{id}/start")
@@ -383,7 +383,7 @@ public class GameTableController {
      * The master closing a table that ran its course.
      *
      * @param id          the table
-     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks membership
      * @return 200 with the table, now Finished
      */
     @PostMapping("/{id}/finish")
@@ -397,8 +397,8 @@ public class GameTableController {
      * origin.
      *
      * <p>Either the Primary or an admin may cancel, and which of the two the actor is gets resolved
-     * inside the service rather than here (hard rule 17, ADR-05 §5) - a {@code @PreAuthorize} cannot see
-     * pertenencia.
+     * inside the service rather than here - a {@code @PreAuthorize} cannot see
+     * membership.
      *
      * @param id          the table
      * @param request     the justification, required
@@ -413,13 +413,13 @@ public class GameTableController {
     }
 
     /**
-     * The master <em>asking</em> for a pause (ADR-07 §2). InProgress to PauseRequested, plus the request
+     * The master <em>asking</em> for a pause. InProgress to PauseRequested, plus the request
      * an admin will answer - one transaction, in {@code ApprovalService}.
      *
      * <p><b>Why the route is here and not {@code POST /api/v1/requests}.</b> That endpoint takes no
-     * {@code entityId} on purpose, so nobody can file a request in somebody else's name (F3.2 §0d),
+     * {@code entityId} on purpose, so nobody can file a request in somebody else's name,
      * and here the entity is not the person asking. Putting the table in the path is what lets the
-     * authorization - running <em>this</em> table - be checked at all (§2.6, ADR-05 §5); the service does
+     * authorization - running <em>this</em> table - be checked at all; the service does
      * the checking, because no {@code @PreAuthorize} can see a row in {@code masters}.
      *
      * <p>{@code isAuthenticated()} and no role, like every other endpoint about a concrete table.
@@ -441,12 +441,12 @@ public class GameTableController {
 
     /**
      * An admin pausing a table directly. A master <em>asking</em> for a pause is
-     * {@link #requestPause}, which since F3.4 is the other road into {@code Pause}.
+     * {@link #requestPause}, which is the other road into {@code Pause}.
      *
      * @param id          the table
      * @param request     the justification, required
      * @param currentUser the admin, from the token
-     * @return 200 with the table, now Pause. Its agenda freezes there (ADR-07 §2, ADR-08 §3)
+     * @return 200 with the table, now Pause. Its agenda freezes there
      */
     @PostMapping("/{id}/pause")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
@@ -456,8 +456,8 @@ public class GameTableController {
     }
 
     /**
-     * Bringing a paused table back. Rescheduling from the resume date - and re-checking the schedule
-     * clash it may now have - is F1.3 (ADR-08 §3, §2).
+     * Bringing a paused table back. The service re-checks the schedule clash it may now have and re-lays
+     * the pending sessions from the resume date.
      *
      * @param id          the table
      * @param currentUser the admin, from the token
@@ -487,7 +487,7 @@ public class GameTableController {
     }
 
     /**
-     * Only a table that was never public (ADR-07 §6). Pertenencia and state are checked in
+     * Only a table that was never public. Membership and state are checked in
      * the service; 204 because there is nothing left to return.
      *
      * @param id          the table to delete
@@ -504,11 +504,11 @@ public class GameTableController {
 
     /**
      * Adds a co-master, or promotes one to Primary. Keeping exactly one live Primary is the
-     * service's job (ADR-06 §3).
+     * service's job.
      *
      * @param id          the table
      * @param request     who to add or promote, and as what
-     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks membership
      * @return 200 with the table's masters after the change
      */
     @PostMapping("/{id}/masters")
@@ -519,14 +519,14 @@ public class GameTableController {
     }
 
     /**
-     * Removes a co-master. The row is marked, not dropped: who ran a table is a record (ADR-07 §8).
+     * Removes a co-master. The row is marked, not dropped: who ran a table is a record.
      *
      * <p>200 and not 204, unlike the table's own delete: the caller needs the list it has to
      * re-render, and asking for it in a second request would show a stale section in between.
      *
      * @param id          the table
      * @param userId      who to remove
-     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks membership
      * @return 200 with the table's masters after the change. 403 when the actor is not its Primary,
      *         409 when the target is the Primary - handing the role over comes first
      */
@@ -541,18 +541,18 @@ public class GameTableController {
      * The people search behind adding a co-master, scoped to one table.
      *
      * <p>It is not {@code GET /api/v1/users/search}: that one is an admin directory and its own
-     * Javadoc said widening it would have to be a decision rather than a side effect (ADR-07 §8). This
+     * Javadoc said widening it would have to be a decision rather than a side effect. This
      * is that decision, taken the other way - instead of opening the directory to more roles, the
      * search hangs off the table and the service checks the actor is <b>this</b> table's Primary
      * before answering. It also covers the case a role check cannot: a Primary an admin assigned
-     * without giving them the {@code Master} role (ADR-06 §7, §4) would fail {@code hasRole('MASTER')}
+     * without giving them the {@code Master} role would fail {@code hasRole('MASTER')}
      * while legitimately running the table.
      *
      * @param id          the table the search is for
      * @param query       the search box. Shorter than two characters, or empty, it finds nobody
      * @param pageable    size only, as the order is the server's; ten at a time, which is a picker's worth, never more than
      *                    twenty and never beyond the first page
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with up to twenty people who could be made a master of this table. 403 when the
      *         actor is not its Primary
      */

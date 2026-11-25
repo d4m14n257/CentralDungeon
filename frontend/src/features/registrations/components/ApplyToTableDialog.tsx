@@ -29,15 +29,14 @@ export interface ApplyToTableDialogProps {
    * How to render the file picker, given the callback that records a pick.
    *
    * A render prop because the picker belongs to `features/files` and a feature never imports from
-   * another: the screen composing the two — `routes/player/TableDetailPage.tsx` — is where they meet
-   * (regla dura 16, §3.1.5).
+   * another: the screen composing the two — `routes/player/TableDetailPage.tsx` — is where they meet.
    */
   renderFilePicker: (onPick: (file: StagedFile) => void) => ReactNode
   /**
-   * Uploads what was staged and hands back the ids (ADR-13 §5).
+   * Uploads what was staged and hands back the ids.
    *
    * A prop and not an import, for the same reason `renderFilePicker` is one: `features/registrations`
-   * may never import `features/files` (regla dura 16), and the screen that composes both is the one
+   * may never import `features/files`, and the screen that composes both is the one
    * that wires them. Nothing reaches the server until the review step's confirm calls this.
    */
   commitStagedFiles: CommitStagedFiles
@@ -46,13 +45,12 @@ export interface ApplyToTableDialogProps {
 /**
  * The dialog that wraps an application. **Two steps, and the second is not decoration.**
  *
- * An application, once sent, cannot be edited and cannot have a file taken off it afterwards (ADR-13 §5,
- * ADR-09 §2): there is no `PUT` on a registration and no endpoint that detaches one of its files. Once the
+ * An application, once sent, cannot be edited and cannot have a file taken off it afterwards: there is no `PUT` on a registration and no endpoint that detaches one of its files. Once the
  * mutation below succeeds, the character sheet that went with it is attached forever. The review step
  * is the only barrier between somebody and that mistake — it shows exactly the message and the file
  * names about to be sent, with nothing left to edit once the button that sends them exists.
  *
- * **Attaching does not upload** (ADR-13 §5). Picking a file in the write step only stages it in the
+ * **Attaching does not upload**. Picking a file in the write step only stages it in the
  * browser; the confirm button on the review step is what uploads it, through
  * {@link ApplyToTableDialogProps.commitStagedFiles}. Closing the dialog after a pick leaves nothing
  * on the server.
@@ -120,7 +118,7 @@ export function ApplyToTableDialog({
     }
     setIsSending(true)
     // Nothing to upload is nothing to await: skipping the round trip when the applicant attached
-    // nothing is the common case, and it is what most applications will be (ADR-13 §5).
+    // nothing is the common case, and it is what most applications will be.
     const { fileIds, failed } = files.length > 0 ? await commitStagedFiles(files) : { fileIds: [], failed: [] }
     applyToTable.mutate(
       { description: values.description ? values.description : null, fileIds },

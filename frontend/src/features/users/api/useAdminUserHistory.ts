@@ -6,9 +6,9 @@ import { staleTime } from '@/config/query'
 import { adminUsersApi } from './adminUsersApi'
 
 /**
- * What administrators did to one account, and why (ADR-05 §7, ADR-06 §1).
+ * What administrators did to one account, and why.
  *
- * **It is the reason the two audit tables are worth writing.** Until F6 brings `audit_logs`, every
+ * **It is the reason the two audit tables are worth writing.** Until a general audit log exists, every
  * role change and every block leaves a row with a mandatory justification; without a screen that
  * reads them back, those rows would be write-only and would be born orphaned.
  *

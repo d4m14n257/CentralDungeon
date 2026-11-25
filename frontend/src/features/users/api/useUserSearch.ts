@@ -6,14 +6,14 @@ import { staleTime } from '@/config/query'
 import { usersApi } from './usersApi'
 
 /**
- * Searching for people (ADR-22 §1, ADR-07 §8). `keepPreviousData` keeps the list from flickering between
+ * Searching for people. `keepPreviousData` keeps the list from flickering between
  * keystrokes: the previous results stay on screen, dimmed, until the new ones arrive.
  *
  * @param query   what was typed, in the search language of `lib/searchQuery.ts`
  * @param enabled whether to ask at all — an empty box does not search
  * @param tableId when given, search only among the people who could be made a master of that
  *                table. It is a different endpoint because it is authorized differently: the plain
- *                directory answers to an admin, the scoped one to the table's own master (ADR-07 §8)
+ *                directory answers to an admin, the scoped one to the table's own master
  * @returns the query for the matching people
  */
 export function useUserSearch(query: string, enabled: boolean, tableId?: string) {

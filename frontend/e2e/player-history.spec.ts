@@ -6,7 +6,7 @@ import { approveTableFromQueue } from './helpers/queue'
 import { acceptReview } from './helpers/review'
 
 /**
- * F2.4 end to end: a table that ends stops being «mine» and becomes history (ADR-19 §8).
+ * A table that ends stops being «mine» and becomes history, end to end.
  *
  * **The claim is the move, not either screen.** `/player/my-tables` used to list a finished table
  * forever, because it filtered by the state of the *application* and never by the state of the
@@ -55,7 +55,7 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
  *
  * @param page     the tab, authenticated as a master
  * @param name     the table's name
- * @param hourtime the weekly slot, so two tables in one spec do not collide under R1 (ADR-08 §2)
+ * @param hourtime the weekly slot, so two tables in one spec do not collide on the overlapping-agenda rule
  */
 async function createTable(page: Page, name: string, hourtime: string): Promise<string> {
   await page.goto('/master/tables/new')
@@ -68,7 +68,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
   await addScheduleSlot(page, hourtime)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
+  // The files step: nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -87,9 +87,9 @@ async function open(masterPage: Page, adminPage: Page, tableId: string, name: st
 }
 
 /**
- * The scenario ADR-19 §8 describes: the table ends and changes lists, without the player doing anything.
+ * The table ends and changes lists, without the player doing anything.
  */
-test('a table that ends leaves «mis mesas» and lands in the history with its attendance', async ({ browser }) => {
+test('a table that ends leaves the "my tables" list and lands in the history with its attendance', async ({ browser }) => {
   const tableName = `Mesa Historial E2E ${runId}`
   const playerDiscordId = `e2e-hist-player-${runId}`
   const master = await newAuthenticatedPage(browser, `e2e-hist-master-${runId}`, true, false)
@@ -122,7 +122,7 @@ test('a table that ends leaves «mis mesas» and lands in the history with its a
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
     await expect(master.page.getByText('Finalizada', { exact: true })).toBeVisible()
 
-    // And now it has swapped sides, carrying what only the history shows: when it closed (ADR-07 §7).
+    // And now it has swapped sides, carrying what only the history shows: when it closed.
     await player.page.goto('/player/my-tables')
     await expect(player.page.getByText(new RegExp(tableName))).toBeHidden()
 
@@ -137,7 +137,7 @@ test('a table that ends leaves «mis mesas» and lands in the history with its a
   }
 })
 
-/** The history is reachable by navigating, which is the half F1's review found missing elsewhere. */
+/** The history is reachable by navigating, which is the half a review once found missing elsewhere. */
 test('the history is reachable from the player navigation, not only by URL', async ({ browser }) => {
   const player = await newAuthenticatedPage(browser, `e2e-hist-nav-${runId}`, false, false)
 
@@ -146,7 +146,7 @@ test('the history is reachable from the player navigation, not only by URL', asy
     await player.page.getByRole('link', { name: 'Historial' }).click()
 
     await expect(player.page).toHaveURL(/\/player\/history$/)
-    // Nothing played yet reads as neutral news, never as a broken screen (skill `diseno` §5).
+    // Nothing played yet reads as neutral news, never as a broken screen.
     await expect(player.page.getByText('Todavía no terminaste ninguna mesa')).toBeVisible()
   } finally {
     await player.context.close()

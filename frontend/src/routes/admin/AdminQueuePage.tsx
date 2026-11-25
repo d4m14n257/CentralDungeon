@@ -45,10 +45,10 @@ type QueueAction = 'requestChanges' | 'approveRequest' | 'rejectRequest'
  * **A table's `title` is its name and a request's is the wire name of its kind** — `MasterGrant`, not
  * "Rol de master". That is the price of normalizing four sources into one shape: the tray answers the
  * same five questions about every one of them and cannot translate for a vocabulary it does not own,
- * so the value travels canonical (ADR-04 §5) and is read here.
+ * so the value travels canonical and is read here.
  *
- * The labels are the ones `/admin/requests` already shows, **reused and not copied** (ADR-16 §7): one
- * place where a kind of request has a name. `defaultValue` is the fallback, so a kind F5 adds before
+ * The labels are the ones `/admin/requests` already shows, **reused and not copied**: one
+ * place where a kind of request has a name. `defaultValue` is the fallback, so a kind added later, before
  * its translation lands reads as its own name rather than as a bare key.
  *
  * @param item the row
@@ -66,7 +66,7 @@ function itemTitle(item: QueueItem, t: TFunction): string {
  * Two vocabularies meet on this screen and neither owns the other: the reservation's code is the
  * tray's (`features/queue`), and everything a request can be refused with is the approvals
  * feature's. A screen that composes two features has to compose their refusals too — mapping them all
- * through one of the two would answer `ITEM_ALREADY_CLAIMED` with "no pudimos completar la acción",
+ * through one of the two would answer `ITEM_ALREADY_CLAIMED` with the generic failure message,
  * and that is the one refusal here whose sentence actually tells the reader what happened: a
  * colleague got to it inside the fifteen seconds between two polls.
  *
@@ -81,19 +81,19 @@ function resolutionErrorKey(error: unknown): string | null {
 }
 
 /**
- * `/admin/queue` — the shared admin tray (ADR-16 §5, F3.3): everything waiting on an admin, whichever
+ * `/admin/queue` — the shared admin tray: everything waiting on an admin, whichever
  * table the work lives in, with the thing that has been waiting longest first.
  *
- * **The home of the admin context**, like `/master` is the master's (ADR-20 §4, §3): the screen a
+ * **The home of the admin context**, like `/master` is the master's: the screen a
  * context opens on is the one that says what to do next, not one of its listings. `/admin/tables`
  * answers "which tables exist", which is a question somebody asks on purpose.
  *
  * **Reserving is not permission, it is courtesy with teeth.** Taking an item drops it out of every
  * other admin's tray, so two people cannot spend the evening on the same request without knowing —
- * which is the whole of what ADR-16 §5 buys. It is **not** a precondition for resolving: every row this
+ * which is the whole of what the reservation buys. It is **not** a precondition for resolving: every row this
  * screen can show is either free or already the reader's, and resolving a free one takes it
- * implicitly. So the resolution buttons are offered on **every** row, and principle 2 is satisfied by
- * that rather than violated: there is no row here whose resolution could only answer a refusal. The
+ * implicitly. So the resolution buttons are offered on **every** row, and no button is ever shown that could only be refused:
+ * there is no row here whose resolution could only answer a refusal. The
  * rule the reservation does enforce — you cannot resolve what a colleague holds — is invisible on
  * this screen precisely because such a row is filtered out of it, and shows up on `/admin/requests`,
  * which lists every request there is.
@@ -104,33 +104,33 @@ function resolutionErrorKey(error: unknown): string | null {
  *
  * **It refreshes itself** (`live.queue` in `config/query.ts`). The acceptance of this slice is
  * that an item a colleague reserves disappears *without a manual reload*, and invalidation after a
- * mutation cannot see what somebody else did. The WebSocket of F6 replaces the polling (ADR-18 §2).
+ * mutation cannot see what somebody else did. Real-time push will replace the polling.
  *
- * **The empty tray is good news** (ADR-20 §4, the same reading as `/master` and `/admin/requests`):
+ * **The empty tray is good news** (the same reading as `/master` and `/admin/requests`):
  * nothing is waiting for an action. The tray has no search box, deliberately — a work list sorts
  * itself by age and empties, so there is only ever one empty state to tell, and no "your search found
  * nothing" to distinguish it from.
  *
- * **Which page is in the URL** (ADR-12 §7), like every other admin screen: a tray is something one admin
+ * **Which page is in the URL**, like every other admin screen: a tray is something one admin
  * points another at.
  *
- * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
+ * One of the wide tables: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **Behind the admin context's guard** (ADR-20 §2): an account without `Admin` or `Owner` is sent home by
+ * **Behind the admin context's guard**: an account without `Admin` or `Owner` is sent home by
  * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
- * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
+ * backend authorizes on its own and the page must not go blank if it refuses.
  */
 export function AdminQueuePage() {
   const { t, i18n } = useTranslation('admin')
-  // The reservation's timeout is a setting since F3.5 (ADR-17 §3): the hint says the number the
+  // The reservation's timeout is a setting: the hint says the number the
   // platform is actually using, not one written into the copy.
   const { claimTimeoutMinutes } = useClientLimits()
   const [searchParams, setSearchParams] = useSearchParams()
   const confirm = useConfirm()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page: in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   const { data, isPending, isLoadingError, error, refetch } = useQueue(page, size)
@@ -184,12 +184,12 @@ export function AdminQueuePage() {
   }
 
   /**
-   * Approving a table carries no note, so it is a confirmation and not a form (ADR-07 §6's shape).
+   * Approving a table carries no note, so it is a confirmation and not a form.
    *
    * **And therefore the refusal goes to a toast**: there is no dialog left open to put it over, the
-   * confirmation having closed on the press. It is written from the code like every other one (ADR-23 §3)
+   * confirmation having closed on the press. It is written from the code like every other one
    * — the failure worth a sentence here is a colleague having taken the table inside the fifteen
-   * seconds between two polls, and "no pudimos completar la acción" would leave the reader pressing
+   * seconds between two polls, and the generic failure message would leave the reader pressing
    * the button again on a row that is about to vanish from their tray.
    */
   async function approveTableRow(item: QueueItem) {
@@ -238,7 +238,7 @@ export function AdminQueuePage() {
       header: t('queue.columns.item'),
       role: 'title',
       // A table waiting for review is a table with its own admin screen. A request has none, but may
-      // be about a person (a veto: «Sobre: X») and point at a table, and both are said on the row.
+      // be about a person (a veto: the "About: X" line) and point at a table, and both are said on the row.
       cell: (item) => (
         <div className="flex flex-col items-start gap-0.5">
           {item.kind === 'TableWaitingReview' ? (
@@ -262,7 +262,7 @@ export function AdminQueuePage() {
     },
     { id: 'kind', header: t('queue.columns.kind'), role: 'badge', cell: (item) => <QueueItemKindBadge kind={item.kind} /> },
     // The reservation is the one thing on this row that changes under the reader's feet, so it is
-    // what gets the colour (skill `diseno` §3: a dot and a label, never colour alone).
+    // what gets the colour (a dot and a label, never colour alone).
     { id: 'claim', header: t('queue.columns.claim'), role: 'badge', cell: (item) => <ClaimBadge item={item} /> },
     {
       id: 'requestedBy',
@@ -283,8 +283,8 @@ export function AdminQueuePage() {
     {
       id: 'waitingSince',
       header: t('queue.columns.waitingSince'),
-      // "Hace tres días" and not a date: the tray's order *is* this number, and urgency here is time
-      // (ADR-20 §4). A formatted timestamp would make the reader do the subtraction themselves.
+      // "Three days ago" and not a date: the tray's order *is* this number, and urgency here is time.
+      // A formatted timestamp would make the reader do the subtraction themselves.
       cell: (item) => formatRelativeDate(item.waitingSince, i18n.language),
     },
   ]
@@ -305,7 +305,7 @@ export function AdminQueuePage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
-          already showing rows (ADR-19 §4) — and this table refetches every fifteen seconds. */}
+          already showing rows — and this table refetches every fifteen seconds. */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && data.totalElements > 0 && (
         <PageOutOfRangeState
@@ -382,7 +382,7 @@ export function AdminQueuePage() {
 
       {/* One dialog for the three acts that carry a note, because they are one shape: read what was
           asked, write why, send. The help arrives as a node rather than being raised inside the
-          dialog: `features/help` is another feature and a feature never imports one (§3.1.5). */}
+          dialog: `features/help` is another feature and a feature never imports one. */}
       <JustifiedTableActionDialog
         open={actionDialog.isOpen}
         onOpenChange={(open) => !open && actionDialog.close()}

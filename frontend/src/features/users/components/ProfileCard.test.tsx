@@ -24,7 +24,7 @@ vi.mock('./FinishedTablesDialog', () => ({
 }))
 
 describe('ProfileCard', () => {
-  /** ADR-08 §5: the three counts, never collapsed into a ratio. */
+  /** The three counts, never collapsed into a ratio. */
   it('shows the three attendance counts separately', () => {
     render(<ProfileCard profile={BASE_PROFILE} />)
 
@@ -34,7 +34,7 @@ describe('ProfileCard', () => {
   })
 
   /**
-   * ADR-10 §5: "Comentarios recibidos" is F5. Drawing the heading with nothing under it would read as a
+   * "Comentarios recibidos" belongs to a later feature. Drawing the heading with nothing under it would read as a
    * broken page rather than as an honest empty state, so this component never draws it at all.
    */
   it('never renders a comments section', () => {
@@ -52,7 +52,7 @@ describe('ProfileCard', () => {
     expect(screen.getByText('Master')).toBeInTheDocument()
   })
 
-  /** A profile with nothing set beyond the name still has to look finished, not broken (ADR-10 §5). */
+  /** A profile with nothing set beyond the name still has to look finished, not broken. */
   it('looks right when there is no country and no attendance recorded', () => {
     const sparse: Profile = {
       id: 'user-2',

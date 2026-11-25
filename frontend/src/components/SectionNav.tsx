@@ -22,10 +22,10 @@ export interface SectionNavProps {
 
 /**
  * The row of sections under the header of a context - Player, Master, Admin - with the current one
- * underlined (skill `diseno` §5.c, ADR-21 §5). The three contexts each had their own copy of these
+ * underlined. The three contexts each had their own copy of these
  * classes; one component means the next fix lands in all three.
  *
- * **It never overflows the screen** (skill `diseno` §5.b): when the sections do not fit - admin's
+ * **It never overflows the screen**: when the sections do not fit - admin's
  * eight on a phone - they wrap to a second line instead of pushing the page sideways. Wrapping and
  * not scrolling inside the bar, because a section scrolled out of sight is a section nobody finds.
  * On any wider screen it stays inside the layout's `max-w-5xl` like everything else, however wide the

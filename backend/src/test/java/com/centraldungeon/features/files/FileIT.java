@@ -52,10 +52,10 @@ import org.testcontainers.mysql.MySQLContainer;
 /**
  * The half of the file story only a real database and a real disk can answer.
  *
- * <p><b>The headline case is the one ADR-14 §1 exists for</b>: one upload, two tables, <em>one</em> row in
+ * <p><b>The headline case is the one file sharing exists for</b>: one upload, two tables, <em>one</em> row in
  * {@code files}. A unit test can only assert that {@code save} was not called twice; this counts the
  * rows. It also exercises the composite key of {@code table_files}, which is what makes detaching and
- * re-attaching a revive rather than a duplicate-key failure, and the purge query of ADR-13 §3, whose
+ * re-attaching a revive rather than a duplicate-key failure, and the purge query, whose
  * {@code not exists} and {@code coalesce} are exactly the parts a mock cannot check.
  *
  * <p>Storage points at a temporary directory rather than the dev root, so a run never leaves blobs in
@@ -130,7 +130,7 @@ class FileIT {
     }
 
     /**
-     * F1.4's acceptance criterion, end to end: a master uploads a character sheet, attaches
+     * The acceptance criterion, end to end: a master uploads a character sheet, attaches
      * it to two tables, and there is one file.
      */
     @Test
@@ -145,7 +145,7 @@ class FileIT {
     }
 
     /**
-     * The uses an owner sees, resolved against a real database (ADR-14 §3).
+     * The uses an owner sees, resolved against a real database.
      *
      * <p>This is the case a mock cannot check. Both queries are constructor expressions carrying an
      * <b>enum literal</b> - {@code FileCategory.TableMaterial} written into the JPQL itself - joined across
@@ -170,7 +170,7 @@ class FileIT {
                         tuple("TableMaterial", "Mesa de los jueves", "Master"));
     }
 
-    /** A file nothing points at reports no uses, which is what the purge of ADR-13 §3 is about to notice. */
+    /** A file nothing points at reports no uses, which is what the purge is about to notice. */
     @Test
     void aFileNoTableHoldsReportsNoUses() {
         FileResponse loose = upload("suelto.pdf", "nada lo usa");
@@ -188,8 +188,8 @@ class FileIT {
      * The picker's search box actually narrows the history now.
      *
      * <p>The frontend had been sending {@code q} on this call all along and the endpoint had no
-     * parameter to receive it, so "buscar entre mis archivos" returned everything regardless of what
-     * was typed - and a reuse history you cannot search is one nobody reuses from (ADR-13 §2).
+     * parameter to receive it, so the "search my files" input returned everything regardless of what
+     * was typed - and a reuse history you cannot search is one nobody reuses from.
      */
     @Test
     void theOwnersListIsNarrowedByWhatTheyTyped() {
@@ -202,24 +202,24 @@ class FileIT {
     }
 
     /**
-     * <b>The link classifies the file, and the membership is never revoked</b> (ADR-14 §4).
+     * <b>The link classifies the file, and the membership is never revoked</b>.
      *
-     * <p>The whole design in one case: nobody declared a cajón on the upload, attaching the file to a
-     * table put it in one, and detaching it left the cajón standing while the <em>use</em> went away.
-     * That difference is the reason a cajón is stored and a use is derived - a mock cannot tell them
+     * <p>The whole design in one case: nobody declared a category on the upload, attaching the file to a
+     * table put it in one, and detaching it left the category standing while the <em>use</em> went away.
+     * That difference is the reason a category is stored and a use is derived - a mock cannot tell them
      * apart because both are just rows to it.
      */
     @Test
     void attachingClassifiesTheFileAndDetachingNeverUnclassifiesIt() {
         FileResponse map = upload("pantano.pdf", "el mapa");
-        // Nothing declared anything: an upload from inside a flow carries no cajón at all.
-        assertThat(cajonesOf(map.id())).isEmpty();
+        // Nothing declared anything: an upload from inside a flow carries no category at all.
+        assertThat(categoriesOf(map.id())).isEmpty();
 
         attach(firstTable, map.id(), false);
-        assertThat(cajonesOf(map.id())).containsExactly("TableMaterial");
+        assertThat(categoriesOf(map.id())).containsExactly("TableMaterial");
 
         tableFileService.detach(firstTable.getId(), map.id(), master.getId());
-        assertThat(cajonesOf(map.id())).containsExactly("TableMaterial");
+        assertThat(categoriesOf(map.id())).containsExactly("TableMaterial");
         assertThat(fileService.listMine(master.getId(), null, null, PageRequest.of(0, 20)).content())
                 .filteredOn(file -> file.id().equals(map.id()))
                 .singleElement()
@@ -228,29 +228,29 @@ class FileIT {
     }
 
     /**
-     * The same file in two cajones, which is what the column could never express (ADR-14 §4).
+     * The same file in two categories, which is what the column could never express.
      *
      * <p>A sheet attached to a table and later handed in to that table's request belongs to both
-     * flows, and deduplication (ADR-13 §3) guarantees it is one row - so one row has to hold two answers.
+     * flows, and deduplication guarantees it is one row - so one row has to hold two answers.
      */
     @Test
-    void aFileUsedInTwoFlowsBelongsToTwoCajones() {
+    void aFileUsedInTwoFlowsBelongsToTwoCategories() {
         FileResponse sheet = upload("ficha.pdf", "la elfa");
         attach(firstTable, sheet.id(), false);
         fileService.classify(sheet.id(), FileCategory.PlayerSubmission);
 
-        assertThat(cajonesOf(sheet.id())).containsExactlyInAnyOrder("TableMaterial", "PlayerSubmission");
+        assertThat(categoriesOf(sheet.id())).containsExactlyInAnyOrder("TableMaterial", "PlayerSubmission");
     }
 
     /**
-     * The cajón as a search command, not only as a filter (ADR-22 §2).
+     * The category as a search command, not only as a filter.
      *
      * <p>It is the one field of the search language that is not a column: membership is a row per
-     * cajón, so the criterion resolves to an {@code exists} rather than a {@code LIKE}. Whether
+     * category, so the criterion resolves to an {@code exists} rather than a {@code LIKE}. Whether
      * Hibernate builds that subquery from inside the term folding is not something a mock can say.
      */
     @Test
-    void theSearchBoxNarrowsByCajonWithItsOwnCommand() {
+    void theSearchBoxNarrowsByCategoryWithItsOwnCommand() {
         FileResponse attached = upload("ficha.pdf", "la elfa");
         upload("suelto.pdf", "nada lo usa");
         attach(firstTable, attached.id(), false);
@@ -261,24 +261,24 @@ class FileIT {
                 fileService.listMine(master.getId(), "/file_categories PlayerSubmission", null, PageRequest.of(0, 20));
 
         assertThat(material.content()).extracting(FileResponse::name).containsExactly("ficha.pdf");
-        // A cajón nothing of theirs is in finds nothing, rather than everything.
+        // A category nothing of theirs is in finds nothing, rather than everything.
         assertThat(asSubmission.content()).isEmpty();
     }
 
-    /** A value that names no cajón finds nothing, the same way a typo does in any other field. */
+    /** A value that names no category finds nothing, the same way a typo does in any other field. */
     @Test
-    void aCajonThatDoesNotExistFindsNothing() {
+    void aCategoryThatDoesNotExistFindsNothing() {
         upload("ficha.pdf", "la elfa");
 
         PageResponse<FileResponse> none =
-                fileService.listMine(master.getId(), "/file_categories NoSuchCajon", null, PageRequest.of(0, 20));
+                fileService.listMine(master.getId(), "/file_categories NoSuchCategory", null, PageRequest.of(0, 20));
 
         assertThat(none.content()).isEmpty();
     }
 
-    /** Somebody's own library, narrowed to one cajón, through the {@code exists} subquery (ADR-14 §4). */
+    /** Somebody's own library, narrowed to one category, through the {@code exists} subquery. */
     @Test
-    void theOwnersListIsNarrowedByCajon() {
+    void theOwnersListIsNarrowedByCategory() {
         FileResponse attached = upload("ficha.pdf", "la elfa");
         upload("suelto.pdf", "nada lo usa");
         attach(firstTable, attached.id(), false);
@@ -290,8 +290,7 @@ class FileIT {
     }
 
     /**
-     * Uploading the same content twice answers 200's worth of "already there", not a second row
-     * (ADR-13 §4, §3).
+     * Uploading the same content twice answers 200's worth of "already there", not a second row.
      */
     @Test
     void theSecondUploadOfTheSameContentIsRecognisedRatherThanStored() {
@@ -307,11 +306,11 @@ class FileIT {
         assertThat(second.file().name()).isEqualTo("ficha.pdf");
     }
 
-    /** The published set narrows by category, which is what makes it browsable (ADR-14 §4, §1). */
+    /** The published set narrows by category, which is what makes it browsable. */
     @Test
     void thePublishedSetCanBeNarrowedToOneKindOfDocument() {
         User admin = userRepository.save(new User(randomDiscordId(), "Library Admin"));
-        // The sheet goes into both master-side cajones at once: it is asked for while the table
+        // The sheet goes into both master-side categories at once: it is asked for while the table
         // recruits *and* once it is running. That is the case a single column could not express.
         AdminFileResponse sheet = fileService
                 .uploadToLibrary(
@@ -327,20 +326,20 @@ class FileIT {
         PageResponse<PublicFileResponse> forTables =
                 fileService.listPublic(FileCategory.TableMaterial, PageRequest.of(0, 20));
 
-        // One file, two cajones, and it shows up in both without being stored twice.
+        // One file, two categories, and it shows up in both without being stored twice.
         assertThat(forRequests.content()).extracting(PublicFileResponse::id).containsExactly(sheet.id());
         assertThat(forTables.content()).extracting(PublicFileResponse::id).containsExactly(sheet.id());
         assertThat(fileRepository.findById(sheet.id())).isPresent();
     }
 
     /**
-     * The two player-side cajones refuse to be published into (ADR-14 §4).
+     * The two player-side categories refuse to be published into.
      *
      * <p>They hold what individual people answered with. A blank offered to the whole community is
-     * not an answer - it belongs in the master-side cajón the request was written from.
+     * not an answer - it belongs in the master-side category the request was written from.
      */
     @Test
-    void refusesToPublishIntoACajonThatHoldsPeoplesAnswers() {
+    void refusesToPublishIntoACategoryThatHoldsPeoplesAnswers() {
         assertThatThrownBy(() -> fileService.uploadToLibrary(
                         pdf("ficha.pdf", "la de todos"),
                         new LibraryUploadRequest(List.of(FileCategory.PlayerApplication), true),
@@ -348,7 +347,7 @@ class FileIT {
                 .isInstanceOf(InvalidRequestException.class);
     }
 
-    /** Taking a file off one table leaves the file, and leaves the other table's copy of it (ADR-14 §1). */
+    /** Taking a file off one table leaves the file, and leaves the other table's copy of it. */
     @Test
     void detachingFromOneTableLeavesTheFileAndTheOtherTable() {
         FileResponse sheet = upload("ficha.pdf", "hoja de personaje");
@@ -384,7 +383,7 @@ class FileIT {
                 .isEqualTo(true);
     }
 
-    /** ADR-13 §3 on real rows: the same bytes from the same person are recognised, not stored again. */
+    /** Deduplication on real rows: the same bytes from the same person are recognised, not stored again. */
     @Test
     void uploadingTheSameContentTwiceWritesOneRow() {
         FileResponse first = upload("ficha.pdf", "exactamente lo mismo");
@@ -395,7 +394,7 @@ class FileIT {
                 .hasSize(1);
     }
 
-    /** The bytes survive a round trip through gzip and the staging move (ADR-13 §3, M26.2). */
+    /** The bytes survive a round trip through gzip and the staging move. */
     @Test
     void theContentComesBackExactlyAsItWentIn() {
         FileResponse sheet = upload("ficha.pdf", "contenido con acentos: ñáé");
@@ -406,7 +405,7 @@ class FileIT {
         assertThat(download.name()).isEqualTo("ficha.pdf");
     }
 
-    /** A published file is attachable by a master who did not upload it, and is not copied (ADR-14 §1). */
+    /** A published file is attachable by a master who did not upload it, and is not copied. */
     @Test
     void aPublishedFileIsAttachedRatherThanCopied() {
         User admin = userRepository.save(new User(randomDiscordId(), "File Admin"));
@@ -441,7 +440,7 @@ class FileIT {
     }
 
     /**
-     * The purge query of ADR-13 §3 against real SQL: its {@code not exists} over {@code table_files} and its
+     * The purge query against real SQL: its {@code not exists} over {@code table_files} and its
      * {@code coalesce} of the two dates are the parts no mock can check.
      */
     @Test
@@ -482,7 +481,7 @@ class FileIT {
         assertThat(fileRepository.findById(stale.id()).orElseThrow().getDeletedAt()).isNotNull();
     }
 
-    /** /admin/files names the tables using each file, which is what makes ADR-14 §1 visible and linkable. */
+    /** /admin/files names the tables using each file, which is what makes file sharing visible and linkable. */
     @Test
     void theAdminListingNamesTheTablesThatUseEachFile() {
         AdminFileResponse sheet = fileService
@@ -507,7 +506,7 @@ class FileIT {
     }
 
     /**
-     * /admin/files is the platform's library and nothing else (ADR-14 §7): somebody's private upload never
+     * /admin/files is the platform's library and nothing else: somebody's private upload never
      * shows up in it, however well it matches the search - against real SQL, because "published" is
      * a predicate of the query and not a filter the screen could forget.
      */
@@ -529,7 +528,7 @@ class FileIT {
     }
 
     /**
-     * ADR-14 §7 against real SQL: a file uploaded without publishing is in the admin's library and in no
+     * The library against real SQL: a file uploaded without publishing is in the admin's library and in no
      * picker; hidden after being published, it is still in the library and still in no picker; and the
      * purge leaves both alone, because the platform's library is never the purge's to take.
      */
@@ -628,8 +627,8 @@ class FileIT {
         return fileService.upload(pdf(filename, content), new UploadFileRequest(FileType.Private, null), master.getId()).file();
     }
 
-    /** The cajones one file belongs to, straight out of the bridge table. */
-    private List<String> cajonesOf(String fileId) {
+    /** The categories one file belongs to, straight out of the bridge table. */
+    private List<String> categoriesOf(String fileId) {
         return categoryRepository.findByFileIds(List.of(fileId)).stream()
                 .map(link -> link.getId().category().name())
                 .toList();

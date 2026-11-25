@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 /** What {@link StatusNotice} takes. */
 export interface StatusNoticeProps {
-  /** Where the entity stands, said as a situation the reader recognizes: «Esta mesa espera tu revisión». */
+  /** Where the entity stands, said as a situation the reader recognizes: "This table is waiting for your review". */
   title: string
   /** One sentence on what each of the actions below does, or what follows. */
   description: ReactNode
@@ -17,8 +17,8 @@ export interface StatusNoticeProps {
   /** The decisions that change where the entity stands, as buttons with their text. Absent when there is none. */
   actions?: ReactNode
   /**
-   * The destructive ones - cancel, remove - kept apart at the right end of the row (ADR-21 §10), so a press
-   * aimed at «Aprobar» never lands on «Cancelar». The confirmation still catches it; this is the help
+   * The destructive ones - cancel, remove - kept apart at the right end of the row, so a press
+   * aimed at "Approve" never lands on "Cancel". The confirmation still catches it; this is the help
    * before it. On a narrow screen they wrap below, still on the right. Only when there are other
    * buttons to keep them away from: a destructive action that is the only one goes in `actions`.
    */
@@ -27,15 +27,15 @@ export interface StatusNoticeProps {
 
 /**
  * The notice that says where an entity stands and carries the decisions that move it, above the
- * screen's tabs (ADR-21 §10).
+ * screen's tabs.
  *
- * **A named pattern because the alternative looked broken** (ADR-21 §5, §10): the admin's decisions about
+ * **A named pattern because the alternative looked broken**: the admin's decisions about
  * a table were first a section of their own on a "Status" tab - a heading and one button, or none -
  * which the user found ugly, and which put the decision at the end of the last tab, where it was not
  * found. A decision belongs where the situation is said, and the situation belongs above everything
  * else: this block says both at once, and is visible from every tab.
  *
- * Text buttons and not icons: they are the screen's decisions, not a row's actions (ADR-21 §11). Built on
+ * Text buttons and not icons: they are the screen's decisions, not a row's actions. Built on
  * the inventory's `Alert`, default variant, so it follows both themes with no colour of its own.
  *
  * @param props.title              where the entity stands

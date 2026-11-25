@@ -10,7 +10,7 @@ import { ApiError } from '@/types/api'
  * All are refusals the screen already prevents, and they exist for the race it cannot: two
  * masters acting on the same row at once, or a tab left open while the other one acted. That is
  * precisely why the sentence matters — the reader did nothing wrong and needs to be told what
- * changed underneath them, not "no pudimos completar la acción".
+ * changed underneath them, not the generic failure message.
  */
 export const VETO_ERROR_CODES = [
   /** A co-master lifting a veto, which is the `Primary`'s or an admin's. It is who you are, not what you sent — hence 403. */

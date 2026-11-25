@@ -28,7 +28,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The two commands F3.3 added to the table's search box, and the one structural rule they must not
+ * The commands of the table's search box that filter by catalog, and the one structural rule they must not
  * break.
  *
  * <p><b>{@code /table_master} is an {@code exists} subquery and never a join.</b> That is not a taste
@@ -51,11 +51,11 @@ class GameTableSearchSpecificationTest {
             List.of(GameTableStatus.Preparation, GameTableStatus.Opened);
 
     /**
-     * The rule of ADR-16 §7 that a join would have quietly broken. {@code exists} is called; {@code join}
+     * The rule that a join would have quietly broken. {@code exists} is called; {@code join}
      * on the root is not.
      */
     @Test
-    void tableMasterPreguntaConUnExistsYNuncaConUnJoin() {
+    void tableMasterAsksWithAnExistsAndNeverWithAJoin() {
         Criteria criteria = new Criteria();
         SearchQuery query = SearchQueryParser.parse("/table_master ana", GameTableSearchField.wireNames());
 
@@ -72,7 +72,7 @@ class GameTableSearchSpecificationTest {
      * knows one of the two and not which one the system keeps where.
      */
     @Test
-    void tableMasterBuscaPorLosDosNombresDeLaPersona() {
+    void tableMasterSearchesByBothNamesOfThePerson() {
         Criteria criteria = new Criteria();
         SearchQuery query = SearchQueryParser.parse("/table_master ana", GameTableSearchField.wireNames());
 
@@ -98,9 +98,9 @@ class GameTableSearchSpecificationTest {
         verify(criteria.builder).equal(criteria.masterStatus, MasterRowStatus.Created);
     }
 
-    /** {@code /table_status} es lista cerrada: matchea el enum, no un LIKE sobre el texto. */
+    /** {@code /table_status} is a closed list: it matches the enum, not a LIKE over the text. */
     @Test
-    void tableStatusEsUnaIgualdadSobreElEnum() {
+    void tableStatusIsAnEqualityOnTheEnum() {
         Criteria criteria = new Criteria();
         SearchQuery query = SearchQueryParser.parse("/table_status Preparation", GameTableSearchField.wireNames());
 
@@ -112,8 +112,8 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * A status that does not exist matches <b>nothing</b>, and never answers 400 (arquitectura §2.5).
-     * The distinction that cannot be lost: «there is no status called Abierta» is not «no filter» - read
+     * A status that does not exist matches <b>nothing</b>, and never answers 400.
+     * The distinction that cannot be lost: «no status matches a translated label» is not «no filter» - read
      * the second way, a typo would list the whole platform.
      */
     @Test
@@ -128,7 +128,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * {@code notMasteredBy} belongs to the explorer and not to the admin listing (ADR-06 §5): an
+     * {@code notMasteredBy} belongs to the explorer and not to the admin listing: an
      * admin is not applying to anything, and hiding the tables they run would be a filter nobody asked
      * for and nobody could explain.
      */
@@ -145,7 +145,7 @@ class GameTableSearchSpecificationTest {
 
     /**
      * And the status filter is always there: whatever is typed in the box narrows what the listing
-     * already showed and never widens it - no {@code ?q=} reaches a deleted table (ADR-03 §7).
+     * already showed and never widens it - no {@code ?q=} reaches a deleted table.
      */
     @Test
     void theBoxNarrowsWhatTheListingAlreadyShowed() {
@@ -160,16 +160,16 @@ class GameTableSearchSpecificationTest {
         verify(criteria.builder).and(any(Predicate.class), any(Predicate.class));
     }
 
-    // -------------------------------------------------- the veto in the WHERE (read path 1 of F3.4)
+    // -------------------------------------------------- the veto in the WHERE
 
     /**
-     * <b>Read path 1.</b> The explorer excludes the tables the actor holds a {@code Blocked}
+     * The explorer excludes the tables the actor holds a {@code Blocked}
      * registration on, and it does so with a {@code NOT EXISTS} <b>in the {@code WHERE}</b>.
      *
      * <p>That it is in the {@code WHERE} and not a filter in memory over the page that came back is
      * the whole point: dropping rows after the query returns a page of seventeen where twenty were
      * asked for, with a {@code totalElements} counting the tables the reader has no right to know
-     * exist. That is a broken pager (ADR-07 §9, ADR-04 §6) and, on top of it, a leak of the very number the veto
+     * exist. That is a broken pager and, on top of it, a leak of the very number the veto
      * exists to hide.
      */
     @Test
@@ -179,7 +179,7 @@ class GameTableSearchSpecificationTest {
         GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-1")
                 .toPredicate(criteria.root, criteria.query, criteria.builder);
 
-        // Two negated subqueries: «no dirijo esta mesa» (ADR-18 §4) and «no estoy vetado en ella» (ADR-09 §4).
+        // Two negated subqueries: "I do not run this table" and "I am not vetoed on it".
         verify(criteria.query, times(2)).subquery(String.class);
         verify(criteria.builder, times(2)).not(any(Predicate.class));
         verify(criteria.builder, times(2)).exists(any(Subquery.class));
@@ -202,7 +202,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * And it looks at {@code Blocked} <b>only</b>. A rejection is not a veto: ADR-09 §1 allows applying
+     * And it looks at {@code Blocked} <b>only</b>. A rejection is not a veto: a person may apply
      * again, and a {@code Rejected} or {@code Deleted} registration leaves the table perfectly
      * visible.
      */
@@ -219,7 +219,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * The actor enters the subquery from the token and never from the URL (ADR-05 §5): what is hidden are
+     * The actor enters the subquery from the token and never from the URL: what is hidden are
      * the tables <b>this</b> reader is vetoed on, not anybody else's.
      */
     @Test
@@ -254,10 +254,10 @@ class GameTableSearchSpecificationTest {
         /** {@code masters.user} inside the subquery - where the two names are read from. */
         private final Path<Object> masterUser = mock(Path.class);
 
-        /** {@code table_registrations.status} inside the veto subquery (ADR-09 §4). */
+        /** {@code table_registrations.status} inside the veto subquery. */
         private final Path<Object> registrationStatus = mock(Path.class);
 
-        /** {@code table_registrations.user.id} inside the veto subquery - the actor of the token (ADR-05 §5). */
+        /** {@code table_registrations.user.id} inside the veto subquery - the actor of the token. */
         private final Path<Object> registrationUserId = mock(Path.class);
 
         private Criteria() {
@@ -272,7 +272,7 @@ class GameTableSearchSpecificationTest {
             Root<Master> master = mock(Root.class);
             when(subquery.from(Master.class)).thenReturn(master);
 
-            // The veto subquery of F3.4 (ADR-09 §4): the same Subquery mock, rooted at TableRegistration.
+            // The veto subquery: the same Subquery mock, rooted at TableRegistration.
             Root<TableRegistration> registration = mock(Root.class);
             when(subquery.from(TableRegistration.class)).thenReturn(registration);
             Path<Object> registrationTable = mock(Path.class);

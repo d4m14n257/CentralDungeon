@@ -25,18 +25,18 @@ export function isPersonSearchLongEnough(query: string, fields: readonly SearchF
 }
 
 /**
- * The commands the people search accepts (ADR-22 §1, §3).
+ * The commands the people search accepts.
  *
  * **Written here and not in the component that renders the box**, the same way files declare theirs
  * in `features/files/searchFields.ts`: the list is what the box offers, what the help documents and
- * what a `?q=` is read against, and three copies of it free to disagree is exactly the drift ADR-22 §3
- * went to remove.
+ * what a `?q=` is read against, and three copies of it free to disagree is exactly the drift this arrangement
+ * exists to remove.
  *
  * Both are free text: a person's name is not something anybody could offer a list of. The examples
  * are what the help shows — plausible values, and enough of them to demonstrate the commas.
  *
  * The basic criterion, with no command in front of it, is **the two at once**: whoever is searching
- * knows one of the two names, not which of them the system keeps where (ADR-22 §1).
+ * knows one of the two names, not which of them the system keeps where.
  *
  * @param t the translator of the `users` namespace
  * @returns the commands, in the order they are offered
@@ -49,7 +49,7 @@ export function userSearchFields(t: TFunction): SearchField[] {
 }
 
 /**
- * What `/role` offers: the four platform roles, in the order of ADR-07 §8.
+ * What `/role` offers: the four platform roles, in the fixed rank order.
  *
  * **A command with fixed choices and not free text**, the same distinction `/file_type` makes: there
  * are four of them, they are a closed set, and a box that offers them is a box nobody has to guess
@@ -74,7 +74,7 @@ function accountStatusChoices(t: TFunction): SearchChoice[] {
 }
 
 /**
- * The commands `/admin/users` accepts (ADR-22 §1, §3, F3.1).
+ * The commands `/admin/users` accepts.
  *
  * **A separate list from {@link userSearchFields}, which belongs to the picker.** The two search the
  * same two names, and there the resemblance ends: the picker answers "who did you mean" over allowed
@@ -83,7 +83,7 @@ function accountStatusChoices(t: TFunction): SearchChoice[] {
  * `/status` in a dialog where every result is `Allowed` by construction.
  *
  * An unknown value in `/role` or `/status` is **not** an error on either side: it simply matches
- * nothing, the same way a mistyped `/command` stays literal text (§2.5).
+ * nothing, the same way a mistyped `/command` stays literal text.
  *
  * @param t the translator of the `admin` namespace
  * @returns the commands, in the order they are offered

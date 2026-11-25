@@ -19,11 +19,11 @@ import { SectionNav, type SectionNavItem } from '@/components/SectionNav'
  * screen, so landing on it was enough. With a second one there has to be a way across, or
  * /admin/catalogs is a route only a typed URL can reach.
  *
- * It grows with the context: /admin/users joined it with F3.1, /admin/requests with F3.2,
- * /admin/queue with F3.3, /admin/settings with F3.5, and the rest of the sitemap joins this list as
+ * It grows with the context: /admin/users, /admin/requests, /admin/queue and /admin/settings
+ * joined it as they were built, and the rest of the sitemap joins this list as
  * its screens land, not a different one somewhere else.
  *
- * **The home goes first, and it is where the context starts** (`homePathFor`, ADR-20 §3). It matches only
+ * **The home goes first, and it is where the context starts** (`homePathFor`). It matches only
  * `/admin` itself (`end`), or it would stay underlined on every admin screen. **The tray comes right
  * after it**: of the working screens it is the one that says what to do next, so a listing sitting
  * there would say the context is about browsing. It is about resolving.

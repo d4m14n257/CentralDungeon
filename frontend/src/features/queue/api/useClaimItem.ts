@@ -6,7 +6,7 @@ import { queueApi } from './queueApi'
 import type { QueueItemType } from '../types'
 
 /**
- * Takes an item of the tray for the reader (ADR-16 §5).
+ * Takes an item of the tray for the reader.
  *
  * **Reserving is not a formality**: resolving anything requires holding it, so this is the first half
  * of every action on the tray. What it buys is that the same request is not approved twice by two

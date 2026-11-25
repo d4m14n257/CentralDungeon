@@ -7,10 +7,10 @@ import { gameTablesApi } from './gameTablesApi'
 
 /**
  * The tables the signed-in person's run at is over - `Finished` or `Canceled` - with their final
- * attendance. Backs `/player/history` (ADR-19 §8).
+ * attendance. Backs `/player/history`.
  *
- * A reading list, like the explorer, so it accumulates with "See more" instead of numbered pages
- * (ADR-04 §6): a career's worth of closed tables has no working-list reason to jump around
+ * A reading list, like the explorer, so it accumulates with "See more" instead of numbered pages:
+ * a career's worth of closed tables has no working-list reason to jump around
  * by page number, and `useInfiniteQuery` keeps the pages already fetched when the reader navigates
  * away and back.
  *

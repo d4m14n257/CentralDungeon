@@ -6,7 +6,7 @@ import { tasksApi } from './tasksApi'
 import type { CreateTaskInput } from '../types'
 
 /**
- * Publishing a task, which is also what notifies its recipients (ADR-15 §5).
+ * Publishing a task, which is also what notifies its recipients.
  *
  * Two branches are invalidated: the master's board, and the reader's applicable list — a master who
  * also plays somewhere is one person with two screens, and the second would otherwise keep showing

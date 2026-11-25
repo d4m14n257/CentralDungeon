@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * {@code /settings}: the part of the configuration the interface has to know in order to state a
- * limit before somebody breaks it (principle 2 of diseno §1).
+ * limit before somebody breaks it.
  *
  * <p><b>A second controller and not a method on {@link AdminSettingsController}</b>, for the same
  * reason {@code UserController} and {@code AdminUserController} are two: the audience is different.
- * Everything under {@code /admin/settings} is «configuración», answers only to Admin and Owner, and
+ * Everything under {@code /admin/settings} is "configuration", answers only to Admin and Owner, and
  * shows who set what; this answers to anybody with a session and carries nothing that is a decision
  * about another person.
  *
@@ -38,7 +38,7 @@ public class SettingsController {
      * The limits the interface mirrors.
      *
      * @return 200 with the caps a client checks against before sending anything. Never the authority:
-     *         the server applies the same limit again and answers with the real number (ADR-23 §3)
+     *         the server applies the same limit again and answers with the real number
      */
     @GetMapping("/limits")
     @PreAuthorize("isAuthenticated()")

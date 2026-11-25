@@ -39,20 +39,19 @@ export interface TaskFormDialogProps {
    * The table's players, for addressing a task to one of them.
    *
    * A prop and not a query of this feature's own: the roster belongs to `registrations`, and a
-   * feature never imports from another — the screen composing them is where they meet (regla dura
-   * 16, §3.1.5).
+   * feature never imports from another — the screen composing them is where they meet.
    */
   players: TaskFormRecipient[]
-  /** The table's sessions, for tying the ask to one evening (ADR-15 §1). Same reason it is a prop. */
+  /** The table's sessions, for tying the ask to one evening. Same reason it is a prop. */
   sessions: TaskFormSession[]
   /** Whether the request is in flight, so the submit button can say so. */
   isBusy: boolean
   onSubmit: (input: TaskDraft) => void
   /**
-   * How to render the file picker for the blanks the master attaches (ADR-15 §1).
+   * How to render the file picker for the blanks the master attaches.
    *
    * A render prop and not a direct import, because `features/tasks` may never import
-   * `features/files` (regla dura 16). The screen composing both is the one that wires them.
+   * `features/files`. The screen composing both is the one that wires them.
    */
   renderFilePicker: (onPick: (file: StagedFile) => void) => ReactNode
 }
@@ -61,14 +60,14 @@ const AUDIENCES: TaskAudience[] = ['Candidates', 'Players', 'Single']
 
 /**
  * Publishing a task, and correcting one. One dialog for both, because they take exactly the same
- * fields: a correction is a full replacement, not a patch (ADR-04 §7).
+ * fields: a correction is a full replacement, not a patch.
  *
- * **The form says what publishing will do.** Sending it notifies every recipient (ADR-15 §5), and
+ * **The form says what publishing will do.** Sending it notifies every recipient, and
  * correcting deliberately does not — a request fixed three times ringing three times is how people
  * learn to ignore the bell. Both are said on screen rather than left to be discovered.
  *
- * The due date is typed and shown **in the reader's own zone** and travels as UTC (ADR-03 §6, ADR-19 §7); the
- * conversion is `lib/date.ts`'s, with the zone as a parameter and never a constant (ADR-19 §7).
+ * The due date is typed and shown **in the reader's own zone** and travels as UTC; the
+ * conversion is `lib/date.ts`'s, with the zone as a parameter and never a constant.
  *
  * @param props.task     the task being corrected, or null when publishing
  * @param props.players  the table's players, for a task addressed to one person
@@ -78,9 +77,9 @@ const AUDIENCES: TaskAudience[] = ['Candidates', 'Players', 'Single']
  */
 export function TaskFormDialog({ open, onOpenChange, task, players, sessions, isBusy, onSubmit, renderFilePicker }: TaskFormDialogProps) {
   // The blanks being attached, accumulated as they are picked - mixing fresh uploads, the master's
-  // own history and what the community published, which is the mixing case ADR-14 §1 is about.
+  // own history and what the community published, which is the mixing case that matters.
   // The blanks being attached. Already-attached ones arrive as `existing` because they are on the
-  // server; anything picked now is bytes in the browser until the request is published (ADR-13 §5).
+  // server; anything picked now is bytes in the browser until the request is published.
   const [blanks, setBlanks] = useState<StagedFile[]>(
     task?.files.map((file) => ({ kind: 'existing' as const, fileId: file.fileId, name: file.name })) ?? [],
   )
@@ -194,7 +193,7 @@ export function TaskFormDialog({ open, onOpenChange, task, players, sessions, is
           </div>
         )}
 
-        {/* The master's half of the ask (ADR-15 §1): the blank the request is about. Separate from the
+        {/* The master's half of the ask: the blank the request is about. Separate from the
             answer channels above, because those say what may come *back*. */}
         <div className="space-y-2">
           <p className="text-sm font-medium">{t('form.blanksLabel')}</p>
@@ -271,7 +270,7 @@ export function TaskFormDialog({ open, onOpenChange, task, players, sessions, is
           <Checkbox id="task-mandatory" checked={isMandatory} onCheckedChange={(checked) => setValue('isMandatory', checked === true)} />
           <div className="space-y-1">
             <Label htmlFor="task-mandatory">{t('form.mandatoryLabel')}</Label>
-            {/* ADR-15 §2 said in the interface, where it matters: labelling it does not make the system act. */}
+            {/* Said in the interface, where it matters: labelling it does not make the system act. */}
             <p className="text-fg-muted text-xs">{t('form.mandatoryHint')}</p>
           </div>
         </div>
@@ -304,7 +303,7 @@ function emptyForm(): TaskForm {
   }
 }
 
-/** An existing task as form values, with its due date brought back into the reader's zone (ADR-03 §6). */
+/** An existing task as form values, with its due date brought back into the reader's zone. */
 function formOf(task: TableTask, timeZone: string): TaskForm {
   return {
     title: task.title,

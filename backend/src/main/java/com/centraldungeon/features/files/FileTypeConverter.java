@@ -8,11 +8,11 @@ import jakarta.persistence.Converter;
  *
  * <p>{@code @Enumerated(EnumType.STRING)} would write the constant's name, and one of the three
  * values is {@code Single-use} - a hyphen no Java identifier can carry. The baseline inherited that
- * spelling from the legacy's own column (M21.1) and rows in the wild already use it, so the mapping
+ * spelling from the legacy's own column and rows in the wild already use it, so the mapping
  * is declared here rather than bending either side to match the other.
  *
  * <p>Only the database sees the hyphen. What crosses HTTP is the constant's name
- * ({@code SingleUse}), which is what arquitectura §2.3 asks for and what the frontend models as a
+ * ({@code SingleUse}), which is what the API contract asks for and what the frontend models as a
  * union of literals.
  */
 @Converter(autoApply = true)

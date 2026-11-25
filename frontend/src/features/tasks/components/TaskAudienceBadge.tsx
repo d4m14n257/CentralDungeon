@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils'
 import type { TaskAudience } from '../types'
 
 /**
- * Which of the three groups a task is addressed to (ADR-15 §1), as one dot and one label.
+ * Which of the three groups a task is addressed to, as one dot and one label.
  *
- * **The colour is never the only carrier of the information** (skill `diseno` §3): dot plus
+ * **The colour is never the only carrier of the information**: dot plus
  * label, always. The classes are written out in full and statically, because Tailwind 4 scans the
  * source and never sees a class it had to concatenate to exist — the same reason `TableStatusBadge`
  * spells its own out.
@@ -28,7 +28,7 @@ export interface TaskAudienceBadgeProps {
 /**
  * Names the audience of a task, and the person when there is only one.
  *
- * A `Single` task reads as "para Ana" rather than as "Individual": the label exists so a master
+ * A `Single` task reads as "for Ana" rather than as "Individual": the label exists so a master
  * scanning their board can tell at a glance which request is whose, and a category name would make
  * them open it to find out.
  *

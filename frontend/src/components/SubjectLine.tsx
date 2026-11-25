@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 
 /** What {@link SubjectLine} takes. */
 export interface SubjectLineProps {
-  /** Whom or what the item is about, already translated («Sobre: Diego»). Absent when it is about no one. */
+  /** Whom or what the item is about, already translated ("About: Diego"). Absent when it is about no one. */
   subject?: string | null
   /** The link to the thing the item points at, with its translated text. Absent when it points at nothing with a screen. */
   link?: { to: string; label: string } | null

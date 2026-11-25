@@ -46,16 +46,16 @@ function toKind(value: string | null): CatalogKind {
 }
 
 /**
- * The actions one group row offers. The table is a list of groups (ADR-12 §7); everything that moves a
+ * The actions one group row offers. The table is a list of groups; everything that moves a
  * value between groups - merge, split, move, promote - happens on the group's canvas, where both
  * ends of the move are in sight.
  *
  * - **pending** - approve it as a group of its own, straight from the row, or reject it
- * - **rejected** - approve it after all, because turning one down is not meant to be final (ADR-12 §3)
+ * - **rejected** - approve it after all, because turning one down is not meant to be final
  * - **disabled** - restore
  * - **every group** - open its canvas
  *
- * Absent rather than greyed out when the status would make the server refuse it (principle 2).
+ * Absent rather than greyed out when the status would make the server refuse it.
  *
  * @param props.kind  which catalog
  * @param props.value the group's head
@@ -78,7 +78,7 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
   }
 
   async function handleRestore() {
-    // A review before anything is written (ADR-21 §9).
+    // A review before anything is written.
     const confirmed = await confirm({
       title: t('admin.restoreConfirmTitle', { name: value.name }),
       description: t('admin.restoreConfirmDescription'),
@@ -134,23 +134,23 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
 }
 
 /**
- * /admin/catalogs - systems, tags and platforms, **one row per synonym group** (ADR-12 §7).
+ * /admin/catalogs - systems, tags and platforms, **one row per synonym group**.
  *
  * It is the screen that makes the rest of the catalog design work. A master can propose a value
  * from the wizard, but a proposal shows to nobody and filters nothing until somebody accepts it
- * (ADR-12 §3) - so without this screen, proposing would be half a capability and every table tagged with
- * something new would carry an invisible tag (ADR-12 §3).
+ * - so without this screen, proposing would be half a capability and every table tagged with
+ * something new would carry an invisible tag.
  *
  * A row is a group's head - its canonical entry - or a proposal nobody has classified yet, which is a
  * group of one until somebody does: that is where an admin approves something new straight away.
- * Searching finds a group by the name of any of its members (ADR-12 §2). What the group holds, and every
+ * Searching finds a group by the name of any of its members. What the group holds, and every
  * move between groups, is on its canvas, one click away.
  *
  * **Which catalog, what was searched and which page are all in the URL.** A row of a catalog is
  * something an admin sends to another admin, and state that only lives in `useState` cannot be
  * linked to.
  *
- * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
+ * One of the wide tables: below `md` it stops being a table and each row
  * becomes a card. `DataTable` handles that, from the same column definitions - never horizontal
  * scroll.
  */
@@ -161,12 +161,12 @@ export function AdminCatalogsPage() {
   const kind = toKind(searchParams.get('kind'))
   const query = searchParams.get('q') ?? ''
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page: in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
   const debouncedQuery = useDebounce(query, 300)
   const createDialog = useDisclosure()
 
-  // isLoadingError, not isError: see ADR-19 §4.
+  // isLoadingError, not isError: a failed refetch keeps the rows already on screen.
   const { data, isPending, isLoadingError, error, refetch } = useAdminCatalog(kind, debouncedQuery, undefined, page, size, {
     groupsOnly: true,
   })

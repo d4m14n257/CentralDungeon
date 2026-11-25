@@ -2,11 +2,11 @@ import type { AppContext } from '@/stores/contextStore'
 
 /**
  * Builders for every link, navigate and Navigate, plus the four absolute paths of the entry screens.
- * Links are the only place a path is built (ADR-19 §10, arquitectura §3.1.6 regla 2): router.tsx
+ * Links are the only place a path is built: router.tsx
  * declares its own literal segments, nested under each context, and these builders mirror it rather
  * than feed it - when the two differ, router.tsx is right.
  *
- * Every context owns a prefix and nothing sits outside one (ADR-20 §2): `/player`, `/master`, `/admin`,
+ * Every context owns a prefix and nothing sits outside one: `/player`, `/master`, `/admin`,
  * plus the entry screens and the two transversal ones. `/` is not a screen - it dispatches to the
  * reader's own home.
  */
@@ -45,13 +45,13 @@ export function playerMyTablesPath(): string {
   return '/player/my-tables'
 }
 
-/** @returns the absolute path to the tables the reader played at, once they finished or were cancelled (ADR-19 §8) */
+/** @returns the absolute path to the tables the reader played at, once they finished or were cancelled */
 export function playerHistoryPath(): string {
   return '/player/history'
 }
 
 /**
- * @returns the absolute path to the reader's own profile (ADR-10 §5). It belongs to the account and not
+ * @returns the absolute path to the reader's own profile. It belongs to the account and not
  *          to a context, so any account with a session reaches it
  */
 export function profilePath(): string {
@@ -60,14 +60,14 @@ export function profilePath(): string {
 
 /**
  * @param id the profile to open
- * @returns the absolute path to somebody else's profile, subject to ADR-10 §1, §2 and ADR-10 §1
+ * @returns the absolute path to somebody else's profile, which the backend may refuse to show (the answer can be a deliberate 404)
  */
 export function userProfilePath(id: string): string {
   return `/users/${id}`
 }
 
 /**
- * @returns the absolute path to the master's work tray — the home of the Master context (ADR-20 §4).
+ * @returns the absolute path to the master's work tray — the home of the Master context.
  *          It is where the context switcher and the logo land, because it is the screen that says
  *          what to do next
  */
@@ -95,7 +95,7 @@ export function masterTableDetailPath(id: string): string {
 
 /**
  * @param id the table
- * @returns the absolute path to the form that rewrites it (ADR-04 §7). A sibling of the detail and not
+ * @returns the absolute path to the form that rewrites it. A sibling of the detail and not
  *          one of its tabs, the same way the wizard is a sibling of the list: correcting a whole
  *          table is its own screen, not a panel inside another
  */
@@ -121,7 +121,7 @@ export function masterTableSessionsPath(id: string): string {
 
 /**
  * @param id the table
- * @returns the absolute path to its tasks tab — what the table asks of its people (ADR-15 §1)
+ * @returns the absolute path to its tasks tab — what the table asks of its people
  */
 export function masterTableTasksPath(id: string): string {
   return `/master/tables/${id}/tasks`
@@ -137,7 +137,7 @@ export function masterTableFilesPath(id: string): string {
 
 /**
  * @param id the table
- * @returns the absolute path to its history tab: every status change, who made it and why (ADR-21 §10)
+ * @returns the absolute path to its history tab: every status change, who made it and why
  */
 export function masterTableHistoryPath(id: string): string {
   return `/master/tables/${id}/history`
@@ -152,7 +152,7 @@ export function myTableDetailPath(id: string): string {
 }
 
 /**
- * @returns the absolute path to the home of the Admin context (ADR-20 §3): a welcome, with nothing to
+ * @returns the absolute path to the home of the Admin context: a welcome, with nothing to
  *          work on yet - it exists so that `/admin` is a screen and not an empty shell
  */
 export function adminHomePath(): string {
@@ -160,7 +160,7 @@ export function adminHomePath(): string {
 }
 
 /**
- * @returns the absolute path to the shared admin tray (F3.3, ADR-16 §5). Everything waiting on an admin, whatever table it lives in, oldest first, and reserved
+ * @returns the absolute path to the shared admin tray. Everything waiting on an admin, whatever table it lives in, oldest first, and reserved
  *          one at a time so two admins never resolve the same thing
  */
 export function queuePath(): string {
@@ -168,7 +168,7 @@ export function queuePath(): string {
 }
 
 /**
- * @returns the absolute path to the admin's table list. **Every table there is** since F3.3 (ADR-16 §7),
+ * @returns the absolute path to the admin's table list. **Every table there is**,
  *          not the ones waiting on a review: what waits on a review is the tray's, and a listing
  *          that showed only a slice was a second tray with rules of its own
  */
@@ -179,8 +179,8 @@ export function adminTablesPath(): string {
 /**
  * @param id  the table
  * @param tab the tab to open, such as `players`; the table's details when omitted
- * @returns the absolute path to the admin's view of one table (ADR-06 §8): the same tabs its master sees,
- *          read-only, plus the admin's own actions. The admin has no visibility limits (ADR-06 §8)
+ * @returns the absolute path to the admin's view of one table: the same tabs its master sees,
+ *          read-only, plus the admin's own actions. The admin has no visibility limits
  */
 export function adminTableDetailPath(id: string, tab?: string): string {
   return tab === undefined ? `/admin/tables/${id}` : `/admin/tables/${id}/${tab}`
@@ -188,7 +188,7 @@ export function adminTableDetailPath(id: string, tab?: string): string {
 
 /**
  * @param id the table
- * @returns the absolute path to the form an admin rewrites somebody else's table with (ADR-06 §8). Its
+ * @returns the absolute path to the form an admin rewrites somebody else's table with. Its
  *          masters are told when it is saved
  */
 export function adminTableEditPath(id: string): string {
@@ -203,25 +203,25 @@ export function adminCatalogsPath(): string {
 /**
  * @param kind which catalog: `systems`, `tags` or `platforms`
  * @param id   any member of the group to open
- * @returns the absolute path to that group's canvas (ADR-12 §7): the group drawn as a star, with the
+ * @returns the absolute path to that group's canvas: the group drawn as a star, with the
  *          proposals nobody classified yet floating next to it
  */
 export function adminCatalogGroupPath(kind: string, id: string): string {
   return `/admin/catalogs/${kind}/${id}`
 }
 
-/** @returns the absolute path to the platform's library of published files (ADR-13 §2, ADR-14 §1, §7) */
+/** @returns the absolute path to the platform's library of published files */
 export function adminFilesPath(): string {
   return '/admin/files'
 }
 
-/** @returns the absolute path to the page that uploads files into the platform's library (ADR-14 §7) */
+/** @returns the absolute path to the page that uploads files into the platform's library */
 export function adminFileUploadPath(): string {
   return '/admin/files/upload'
 }
 
 /**
- * @returns the absolute path to the account administration screen (F3.1) — roles, blocks, and the
+ * @returns the absolute path to the account administration screen — roles, blocks, and the
  *          only listing in the application that sees an account that is not `Allowed`
  */
 export function adminUsersPath(): string {
@@ -230,7 +230,7 @@ export function adminUsersPath(): string {
 
 /**
  * @param id the person
- * @returns the absolute path to an admin's view of one account (ADR-06 §8): everything about the person -
+ * @returns the absolute path to an admin's view of one account: everything about the person -
  *          profile, standing, roles, every table, what admins did to it - and the actions on it
  */
 export function adminUserDetailPath(id: string): string {
@@ -238,8 +238,8 @@ export function adminUserDetailPath(id: string): string {
 }
 
 /**
- * @returns the absolute path to the request tray (F3.2) — every request somebody made of an admin
- *          (ADR-16 §1), whatever its kind. It opens filtered by what is still waiting, because a tray that
+ * @returns the absolute path to the request tray — every request somebody made of an admin,
+ *          whatever its kind. It opens filtered by what is still waiting, because a tray that
  *          opens showing what is already resolved is not a tray anybody can work from
  */
 export function adminRequestsPath(): string {
@@ -248,8 +248,8 @@ export function adminRequestsPath(): string {
 
 /**
  * @returns the absolute path to the support screen — where somebody who read the help and did not
- *          find their answer asks an admin directly (F3.2)
- * @remarks The path ADR-20 §5 left unclaimed when it turned the help into dialogs, reserved in so many
+ *          find their answer asks an admin directly
+ * @remarks The path left unclaimed when the help became dialogs, reserved in so many
  *          words for "asking for assistance, reporting a bug — which has no backend yet". The
  *          `General` request is that backend, and this is the screen it was waiting for. It is not
  *          the old `/help` route coming back: the explanations still live in the dialogs, raised
@@ -260,8 +260,8 @@ export function helpPath(): string {
 }
 
 /**
- * @returns the absolute path to the configuration screen (F3.5) — the values the community changes
- *          without a deploy (ADR-17 §3): business parameters and limits, each with the value in force,
+ * @returns the absolute path to the configuration screen — the values the community changes
+ *          without a deploy: business parameters and limits, each with the value in force,
  *          what it ships as, and who last moved it
  */
 export function adminSettingsPath(): string {
@@ -273,7 +273,7 @@ export function adminSettingsPath(): string {
  *
  * The three contexts each own a prefix - `/player`, `/master`, `/admin` - so the URL alone says
  * which navigation the reader is looking at. That is what lets the header report the context
- * instead of guessing it from a value chosen who knows when (ADR-20 §2).
+ * instead of guessing it from a value chosen who knows when.
  *
  * `/notifications`, `/help`, `/my/schedule` and the entry screens deliberately return `null`: they
  * are transversal
@@ -293,14 +293,14 @@ export function contextOfPath(pathname: string): AppContext | null {
 
 /**
  * Where a context starts - the screen its logo, its switcher entry and the post-login redirect all
- * land on (ADR-20 §2).
+ * land on.
  *
  * @param context the context to enter
  * @returns the absolute path to its home
  */
 export function homePathFor(context: AppContext): string {
   if (context === 'master') return masterDashboardPath()
-  // `/admin` itself (ADR-20 §3), not the tray F3.3 put here: the prefix was an empty shell anybody could
+  // `/admin` itself, not the shared tray that used to sit here: the prefix was an empty shell anybody could
   // open, and the context's home should be the context's own address. It is a welcome for now; the
   // tray is one click away, first in the section nav after it.
   if (context === 'admin') return adminHomePath()
@@ -313,7 +313,7 @@ export function notificationsPath(): string {
 }
 
 /**
- * @returns the absolute path to the reader's own week (ADR-08 §6). Under `/my` and not under a context:
+ * @returns the absolute path to the reader's own week. Under `/my` and not under a context:
  *          the evenings somebody runs and the evenings they play are the same evenings, so the
  *          screen belongs to the person and not to one of their roles
  */
@@ -323,7 +323,7 @@ export function mySchedulePath(): string {
 
 /**
  * @returns the absolute path to the reader's own files
- * @remarks Under `/my` and not under a role, for the same reason as `/my/schedule` (ADR-20 §2): what
+ * @remarks Under `/my` and not under a role, for the same reason as `/my/schedule`: what
  *          somebody uploaded as a player and what they uploaded as a master is one library, and
  *          splitting it would ask them to remember which hat they were wearing
  */

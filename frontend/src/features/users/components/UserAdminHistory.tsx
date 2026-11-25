@@ -15,15 +15,15 @@ import type { UserAdminChange } from '../types'
  * One account's administration record: every step that got it where it stands, and why.
  *
  * **It is what keeps the two audit tables from being write-only.** `user_role_changes` and
- * `user_status_changes` exist because `audit_logs` is F6 and a role change with no record is a
+ * `user_status_changes` exist because there is no general audit log yet and a role change with no record is a
  * change nobody can review; a record nothing reads back would have been the same gap one layer down.
  *
- * It takes an **id** and asks for its own data (arquitectura §3.1.5). It used to open in a dialog from
- * the list with the account's current status and roles as its header; since ADR-06 §8 it is a section of
+ * It takes an **id** and asks for its own data. It used to open in a dialog from
+ * the list with the account's current status and roles as its header; it is now a section of
  * the account's record on /admin/users/:id, which shows both right above it, so the header went with
  * the dialog.
  *
- * The four states are its own (ADR-19 §4): the listing around it has loaded by definition, and this is a
+ * The four states are its own: the listing around it has loaded by definition, and this is a
  * second question to the server that can fail, come back empty, or be refused on its own.
  *
  * @param props.userId the account whose record to show
@@ -38,7 +38,7 @@ export function UserAdminHistory({ userId }: { userId: string }) {
   }
 
   // isLoadingError, not isError: a background refetch that fails must not blank a panel that is
-  // already showing something (ADR-19 §4).
+  // already showing something.
   if (history.isLoadingError) {
     return <ErrorState onRetry={() => void history.refetch()} />
   }

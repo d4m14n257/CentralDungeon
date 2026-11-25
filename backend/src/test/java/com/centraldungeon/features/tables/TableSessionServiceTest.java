@@ -41,9 +41,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 /**
  * The calendar: how it is laid out, what a pause does to it, and the three ways a master moves it.
  *
- * <p>The weekly wrap of ADR-03 §6 has its own tests. The community plays at night in America, which is the
+ * <p>The weekly wrap has its own tests. The community plays at night in America, which is the
  * small hours of the next day in UTC, and getting that backwards is the most likely bug of the whole
- * phase, which is how F1 named it when it was planned.
+ * calendar.
  */
 @ExtendWith(MockitoExtension.class)
 class TableSessionServiceTest {
@@ -76,8 +76,8 @@ class TableSessionServiceTest {
     private TableSessionService service() {
         if (service == null) {
             // The real TableVisibilityService over the same mocked repositories, not a mock of it:
-            // the single lookup of F3.4 is what these tests reach the table through, and mocking it
-            // would test a stub instead of the gate (ADR-03 §7, ADR-09 §4).
+            // the single visibility lookup is what these tests reach the table through, and mocking it
+            // would test a stub instead of the gate.
             service = new TableSessionService(
                     sessionRepository, attendanceRepository, tableScheduleService,
                     new TableVisibilityService(gameTableRepository, registrationRepository, masterService), registrationRepository,
@@ -86,7 +86,7 @@ class TableSessionServiceTest {
         return service;
     }
 
-    // ---------------------------------------------------------------- materialization (ADR-08 §3)
+    // ---------------------------------------------------------------- materialization
 
     @Test
     void materializesOneSessionPerWeekFromTheStartDate() {
@@ -105,7 +105,7 @@ class TableSessionServiceTest {
     }
 
     /**
-     * The wrap of ADR-03 §6: a table its players call "Tuesday night" is Wednesday in UTC, and the calendar
+     * The weekly wrap: a table its players call "Tuesday night" is Wednesday in UTC, and the calendar
      * has to land on Wednesday - showing them Tuesday is the frontend's job, once, at the edge.
      */
     @Test
@@ -149,7 +149,7 @@ class TableSessionServiceTest {
     }
 
     /**
-     * ADR-07 §4: the whole of the start day counts, however early in it the agenda's slot falls.
+     * The whole of the start day counts, however early in it the agenda's slot falls.
      *
      * <p>This is what the date replaced an instant for. While it was a DATETIME a master typing the
      * hour they actually play - the only hour they would think to type - pushed the first session a
@@ -167,21 +167,21 @@ class TableSessionServiceTest {
                 .containsExactly(LocalDateTime.parse("2026-09-08T02:00"), LocalDateTime.parse("2026-09-15T02:00"));
     }
 
-    /** ADR-07 §3, first case: no start date, no calendar - and no refusal. */
+    /** First case: no start date, no calendar - and no refusal. */
     @Test
     void materializesNothingWhenTheTableHasNoStartDate() {
         service().materialize(table("t5", null, 12));
         verify(sessionRepository, never()).save(any());
     }
 
-    /** ADR-07 §3, second case: no session count. */
+    /** Second case: no session count. */
     @Test
     void materializesNothingWhenTheTableHasNoSessionCount() {
         service().materialize(table("t6", LocalDate.parse("2026-09-08"), null));
         verify(sessionRepository, never()).save(any());
     }
 
-    /** ADR-07 §3, third case: an approved table whose master never wrote an agenda. */
+    /** Third case: an approved table whose master never wrote an agenda. */
     @Test
     void materializesNothingWhenTheTableHasNoAgenda() {
         GameTable table = table("t7", LocalDate.parse("2026-09-08"), 12);
@@ -204,7 +204,7 @@ class TableSessionServiceTest {
         verify(tableScheduleService, never()).findByTable(anyString());
     }
 
-    // ---------------------------------------------------------------- the pause (ADR-07 §2, ADR-08 §3)
+    // ---------------------------------------------------------------- the pause
 
     /** A paused table promises no dates, so the pending sessions are not shown - to its master either. */
     @Test
@@ -223,7 +223,7 @@ class TableSessionServiceTest {
         assertThat(service().listForTable("t9", "master-1")).extracting("id").containsExactly("s1");
     }
 
-    /** Resuming re-lays what was still pending, keeping the run's numbering (ADR-08 §3). */
+    /** Resuming re-lays what was still pending, keeping the run's numbering. */
     @Test
     void relaysThePendingSessionsFromTheResumeDate() {
         GameTable table = table("t10", LocalDate.parse("2026-09-08"), 3);
@@ -327,7 +327,7 @@ class TableSessionServiceTest {
 
     /**
      * Pertenencia and not role: a player of the table sees its sessions and still cannot touch its
-     * calendar (hard rule 17, ADR-06 §4), so they are told no.
+     * calendar, so they are told no.
      */
     @Test
     void refusesToCorrectASessionOfATableTheActorDoesNotRun() {
@@ -361,7 +361,7 @@ class TableSessionServiceTest {
                 .hasMessage("Session not found: s10b");
     }
 
-    /** ADR-08 §4: marking a session played is its own action, and it starts from Scheduled. */
+    /** Marking a session played is its own action, and it starts from Scheduled. */
     @Test
     void marksASessionAsHeld() {
         GameTable table = table("t17", LocalDate.parse("2026-09-08"), 3);
@@ -381,7 +381,7 @@ class TableSessionServiceTest {
         assertThatThrownBy(() -> service().hold("s12", "master-1")).isInstanceOf(ConflictException.class);
     }
 
-    /** ADR-08 §3: the row stays as a record and the table gets the session back at the end. */
+    /** The row stays as a record and the table gets the session back at the end. */
     @Test
     void cancelsASessionAndAppendsAReplacementAtTheEndOfTheRun() {
         GameTable table = table("t19", LocalDate.parse("2026-09-08"), 3);
@@ -440,7 +440,7 @@ class TableSessionServiceTest {
         verify(notificationService).notifySessionCanceled("player-1", table);
     }
 
-    // ---------------------------------------------------------------- attendance (ADR-08 §4, §5)
+    // ---------------------------------------------------------------- attendance
 
     @Test
     void recordsAttendanceForThePlayersOfTheTable() {
@@ -455,11 +455,11 @@ class TableSessionServiceTest {
         ArgumentCaptor<SessionAttendance> saved = ArgumentCaptor.forClass(SessionAttendance.class);
         verify(attendanceRepository).save(saved.capture());
         assertThat(saved.getValue().getAttendance()).isEqualTo(AttendanceStatus.Present);
-        // Recording who came does not say the session happened - that is a separate action (ADR-08 §4).
+        // Recording who came does not say the session happened - that is a separate action.
         assertThat(target.getStatus()).isEqualTo(TableSessionStatus.Scheduled);
     }
 
-    /** The roster is the server's, not the caller's: a stranger's id is malformed input (ADR-05 §5). */
+    /** The roster is the server's, not the caller's: a stranger's id is malformed input. */
     @Test
     void refusesToRecordAttendanceForSomebodyWhoDoesNotPlayAtTheTable() {
         GameTable table = table("t23", LocalDate.parse("2026-09-08"), 3);
@@ -504,7 +504,7 @@ class TableSessionServiceTest {
                 });
     }
 
-    /** ADR-08 §5: three numbers, and the denominator is what was actually recorded. */
+    /** Three numbers, and the denominator is what was actually recorded. */
     @Test
     void summarizesAttendanceWithUnknownOutOfTheDenominator() {
         when(attendanceRepository.countByTableAndUser("t26", "player-1"))
@@ -518,11 +518,11 @@ class TableSessionServiceTest {
         assertThat(summary.present()).isEqualTo(8);
         assertThat(summary.excused()).isEqualTo(2);
         assertThat(summary.absent()).isEqualTo(1);
-        // 11, not 12: the twelfth session has nothing recorded and stays out (ADR-08 §5).
+        // 11, not 12: the twelfth session has nothing recorded and stays out.
         assertThat(summary.registered()).isEqualTo(11);
     }
 
-    /** A table that just started is all Unknown, and nobody reads as an absentee (ADR-08 §5). */
+    /** A table that just started is all Unknown, and nobody reads as an absentee. */
     @Test
     void summarizesATableWithNothingRecordedAsAllZeros() {
         when(attendanceRepository.countByTableAndUser("t27", "player-1")).thenReturn(List.of());
@@ -532,7 +532,7 @@ class TableSessionServiceTest {
         assertThat(summary).isEqualTo(new AttendanceSummaryResponse(0, 0, 0, 0));
     }
 
-    /** The profile's aggregate (F2.3): the same three numbers, with no game table to scope them to. */
+    /** The profile's aggregate: the same three numbers, with no game table to scope them to. */
     @Test
     void summarizesAttendanceAcrossEveryTableWithUnknownOutOfTheDenominator() {
         when(attendanceRepository.countByUser("player-1"))
@@ -549,7 +549,7 @@ class TableSessionServiceTest {
         assertThat(summary.registered()).isEqualTo(8);
     }
 
-    /** Nobody with an unblemished, unrecorded history reads as a chronic absentee (ADR-08 §5). */
+    /** Nobody with an unblemished, unrecorded history reads as a chronic absentee. */
     @Test
     void summarizesNoHistoryAcrossEveryTableAsAllZeros() {
         when(attendanceRepository.countByUser("player-2")).thenReturn(List.of());
@@ -557,10 +557,10 @@ class TableSessionServiceTest {
         assertThat(service().summarizeAll("player-2")).isEqualTo(new AttendanceSummaryResponse(0, 0, 0, 0));
     }
 
-    // ---------------------------------------------------------------- the history's batched read (ADR-19 §8, ADR-08 §5)
+    // ---------------------------------------------------------------- the history's batched read
 
     /**
-     * ADR-19 §8's whole reason to have its own repository method: one grouped query resolves every
+     * The whole reason to have a dedicated repository method: one grouped query resolves every
      * table's attendance for the page, {@code Unknown} stays out of each table's own denominator,
      * and a table with nothing recorded at all still comes back as zeroes rather than missing.
      */
@@ -580,7 +580,7 @@ class TableSessionServiceTest {
         verify(attendanceRepository, org.mockito.Mockito.times(1)).countByGameTablesAndUser(any(), anyString());
     }
 
-    /** A table nothing was ever recorded on still gets an entry, zero rather than absent (ADR-08 §5). */
+    /** A table nothing was ever recorded on still gets an entry, zero rather than absent. */
     @Test
     void summarizesATableWithNothingRecordedAsZeroesRatherThanAbsent() {
         when(attendanceRepository.countByGameTablesAndUser(List.of("t32"), "player-1")).thenReturn(List.of());
@@ -599,14 +599,14 @@ class TableSessionServiceTest {
         verify(attendanceRepository, never()).countByGameTablesAndUser(any(), anyString());
     }
 
-    // ---------------------------------------------------------------- the player's own view (ADR-05 §5)
+    // ---------------------------------------------------------------- the player's own view
 
     @Test
     void givesAPlayerTheirOwnCalendarAndTheirOwnAttendance() {
         GameTable table = table("t28", LocalDate.parse("2026-09-08"), 2);
         TableSession first = session(table, "s21", 1, "2026-09-08T20:00", TableSessionStatus.Held);
         when(gameTableRepository.findById("t28")).thenReturn(Optional.of(table));
-        // The veto gate runs first: this player is not vetoed, so the calendar is theirs (ADR-09 §4).
+        // The veto gate runs first: this player is not vetoed, so the calendar is theirs.
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t28", "player-1", List.of(TableRegistrationStatus.Blocked)))
                 .thenReturn(false);
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t28", "player-1", List.of(TableRegistrationStatus.Player)))
@@ -631,7 +631,7 @@ class TableSessionServiceTest {
         GameTable table = table("t29", LocalDate.parse("2026-09-08"), 2);
         when(gameTableRepository.findById("t29")).thenReturn(Optional.of(table));
         // The veto gate asks first, with [Blocked]: a stranger is not vetoed, they simply do not
-        // play here - which is the 403 below and not the 404 a vetoed person gets (ADR-09 §4).
+        // play here - which is the 403 below and not the 404 a vetoed person gets.
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t29", "stranger", List.of(TableRegistrationStatus.Blocked)))
                 .thenReturn(false);
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t29", "stranger", List.of(TableRegistrationStatus.Player)))
@@ -673,7 +673,7 @@ class TableSessionServiceTest {
         return new ArrayList<>(captor.getAllValues());
     }
 
-    /** The length is the slot's since ADR-08 §1; these tests are about dates, so three hours will do. */
+    /** The length is the slot's; these tests are about dates, so three hours will do. */
     private static TableScheduleEntry entry(Weekday weekday, String hourtime) {
         return new TableScheduleEntry(weekday, LocalTime.parse(hourtime), LocalTime.of(3, 0));
     }

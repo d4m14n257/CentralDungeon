@@ -6,7 +6,7 @@ import { PUBLISHABLE_CATEGORIES } from './categories'
 import type { FileCategory } from './types'
 
 /**
- * What `/file_type` offers, and what each choice sends (ADR-22 §1).
+ * What `/file_type` offers, and what each choice sends.
  *
  * **A command with fixed choices rather than free text**, because the values it searches are MIME
  * types: nobody is going to type
@@ -32,18 +32,18 @@ export function FILE_TYPE_CHOICES(t: TFunction): { value: string; label: string 
 }
 
 /**
- * What `/file_categories` offers: the cajones a file can belong to (ADR-14 §4, ADR-22 §2).
+ * What `/file_categories` offers: the categories a file can belong to.
  *
  * **A different question from `/file_type`, and both are commands with fixed choices.** The type is
- * the format — PDF, PNG — and the cajón is the flow the file came out of: table material, something
+ * the format — PDF, PNG — and the category is the flow the file came out of: table material, something
  * handed in, an announcement. Somebody looking for "the sheet I handed in" is asking the second, and
  * no amount of searching filenames answers it.
  *
- * The caller passes which cajones to offer, because on somebody's own library that is only theirs
- * (ADR-14 §5) while the platform's library offers the three publishable ones (ADR-14 §7).
+ * The caller passes which categories to offer, because on somebody's own library that is only theirs
+ * while the platform's library offers the three publishable ones.
  *
  * @param t          the translator of the `files` namespace
- * @param categories the cajones to offer
+ * @param categories the categories to offer
  * @returns the choices, in the order they were given
  */
 export function fileCategoryChoices(t: TFunction, categories: readonly FileCategory[]): { value: string; label: string }[] {
@@ -51,19 +51,19 @@ export function fileCategoryChoices(t: TFunction, categories: readonly FileCateg
 }
 
 /**
- * The commands `/my/files` accepts (ADR-22 §1, §3, ADR-14 §5).
+ * The commands `/my/files` accepts.
  *
- * **Only the cajones that are theirs**: offering one this person can never have a file in is offering
+ * **Only the categories that are theirs**: offering one this person can never have a file in is offering
  * a search that always comes back empty. Which those are is the server's answer, so it arrives as an
  * argument.
  *
  * And with **none** of them — an account that is neither player nor master, or the moment before the
  * server has answered — the command is not offered at all. It is the same rule one step further: a
  * `/file_categories` with an empty list is a command that can match nothing, and its help would read
- * "elegís entre:" with nothing after the colon.
+ * "you pick from:" with nothing after the colon.
  *
  * @param t          the translator of the `files` namespace
- * @param categories the cajones this person may file under
+ * @param categories the categories this person may file under
  * @returns the commands, in the order they are offered
  */
 export function myFileSearchFields(t: TFunction, categories: readonly FileCategory[]): SearchField[] {
@@ -78,12 +78,12 @@ export function myFileSearchFields(t: TFunction, categories: readonly FileCatego
 }
 
 /**
- * The commands `/admin/files` accepts (ADR-22 §1, §3, ADR-14 §5).
+ * The commands `/admin/files` accepts.
  *
  * Two differences from a person's own library, and both come from what the screen is — the platform's
- * library (ADR-14 §7): `/file_owner` exists, because another admin may have uploaded it, and the cajones
+ * library: `/file_owner` exists, because another admin may have uploaded it, and the categories
  * offered are **the three a file can be published into**, announcements included. The two player-side
- * ones would be a search that can never match: nothing is published there (ADR-14 §4).
+ * ones would be a search that can never match: nothing is published there.
  *
  * @param t the translator of the `files` namespace
  * @returns the commands, in the order they are offered

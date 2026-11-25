@@ -8,11 +8,11 @@ import { useBackendStatus } from '@/hooks/useBackendStatus'
 import { BrandMark } from '@/layouts/components/BrandMark'
 
 /**
- * The front door (diseno §4). Over the community's own gradient, the one place it shows
- * in full (ADR-21 §2). The small print is not decoration: it explains why there is no sign-up and no
- * password, which is the first question anybody arriving asks (ADR-05 §1).
+ * The front door. Over the community's own gradient, the one place it shows
+ * in full. The small print is not decoration: it explains why there is no sign-up and no
+ * password, which is the first question anybody arriving asks.
  *
- * The language switch lives inside the card (ADR-23 §2). This is the only screen with no `UserMenu`, so
+ * The language switch lives inside the card. This is the only screen with no `UserMenu`, so
  * without it somebody landing in a language they do not read has no way to know it can be changed —
  * and browser detection, which handles the common case, does not handle everybody's.
  */
@@ -31,7 +31,7 @@ export function LoginPage() {
           </Button>
         ) : (
           // With no backend, a real <a> would lead to the browser's own connection error instead of
-          // an explained one (principle 2, diseno §1) - an <a> takes no `disabled`, so in
+          // an explained one - an <a> takes no `disabled`, so in
           // this state it is replaced by a button with no href rather than a disabled link.
           <Button size="lg" className="mt-6 w-full" disabled>
             {t('login.cta')}

@@ -139,16 +139,16 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                                 .jsonPart("data", "{\"fileType\": \"SingleUse\"}");
                     })
                     .cell(allowed(200), PLAYER, MASTER, PRIMARY, SECONDARY, PLAYER_MASTER),
-            MatrixRow.variant("cajon PlayerApplication", "POST /api/v1/files", w -> MatrixRequest.path()
+            MatrixRow.variant("category PlayerApplication", "POST /api/v1/files", w -> MatrixRequest.path()
                             .filePart("file", w.uniqueBytes())
                             .jsonPart("data", "{\"fileType\": \"SingleUse\", \"fileCategory\": \"PlayerApplication\"}"))
                     .cell(allowed(201), PLAYER, PLAYER_MASTER),
-            MatrixRow.variant("cajon TableMaterial", "POST /api/v1/files", w -> MatrixRequest.path()
+            MatrixRow.variant("category TableMaterial", "POST /api/v1/files", w -> MatrixRequest.path()
                             .filePart("file", w.uniqueBytes())
                             .jsonPart("data", "{\"fileType\": \"SingleUse\", \"fileCategory\": \"TableMaterial\"}"))
                     .cell(allowed(201), MASTER)
                     .cell(denied(400), PLAYER),
-            MatrixRow.variant("cajon Announcement", "POST /api/v1/files", w -> MatrixRequest.path()
+            MatrixRow.variant("category Announcement", "POST /api/v1/files", w -> MatrixRequest.path()
                             .filePart("file", w.uniqueBytes())
                             .jsonPart("data", "{\"fileType\": \"SingleUse\", \"fileCategory\": \"Announcement\"}"))
                     .cell(denied(400), MASTER),
@@ -665,7 +665,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
         return file;
     }
 
-    /** @return a check that the response is exactly these cajones, in any order */
+    /** @return a check that the response is exactly these categories, in any order */
     private static MatrixCell.BodyCheck categories(String... expected) {
         return (w, body) -> assertThat(JsonPath.<List<String>>read(body, "$.categories")).containsExactlyInAnyOrder(expected);
     }

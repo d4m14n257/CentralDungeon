@@ -26,19 +26,19 @@ import org.springframework.transaction.annotation.Transactional;
  * A table's weekly agenda: reading it, and replacing it as a whole.
  *
  * <p><b>Replace, not add and remove one slot at a time.</b> The agenda is edited as a unit on
- * screen - a master looks at the week and says what it is - and the clash rules of ADR-08 §2 are about
+ * screen - a master looks at the week and says what it is - and the schedule clash rules are about
  * the whole agenda anyway: checking a slot in isolation would let a pair that is fine one at a time
  * and broken together through the door. So the caller sends the week it wants and this decides what
  * that means for the rows.
  *
  * <p>Two rules apply in order, and the order matters. First the agenda has to make sense on its own:
  * two slots of the <b>same</b> table whose sessions overlap are a {@code 400}, because that is input
- * that does not describe a playable week (ADR-08 §2). Only then is it compared against the rest of the
- * master's life, which is R1 and a {@code 409}.
+ * that does not describe a playable week. Only then is it compared against the rest of the
+ * master's life, which is the master clash rule and a {@code 409}.
  *
- * <p>Editing the agenda of a table that already has candidates <b>warns and does not expel</b> (ADR-15 §2,
- * ADR-08 §2): the candidates it now clashes with are notified, and what to do about it is theirs and their
- * master's to sort out. The system says what happened; it does not decide for them.
+ * <p>Editing the agenda of a table that already has candidates <b>warns and does not expel</b>: the
+ * candidates it now clashes with are notified, and what to do about it is theirs and their master's to sort
+ * out. The system says what happened; it does not decide for them.
  */
 @Service
 public class TableScheduleService {
@@ -58,16 +58,16 @@ public class TableScheduleService {
     /** The {@code table_schedules} rows this service owns. */
     private final TableScheduleRepository scheduleRepository;
 
-    /** Answers R1, and tells the service who a new agenda now clashes with. */
+    /** Answers the master clash rule, and tells the service who a new agenda now clashes with. */
     private final ScheduleConflictService scheduleConflictService;
 
     /** Who is signed up to the table whose agenda is changing. */
     private final TableRegistrationRepository registrationRepository;
 
-    /** Tells the affected people their commitments now overlap (ADR-08 §2, R4's sibling). */
+    /** Tells the affected people their commitments now overlap. */
     private final NotificationService notificationService;
 
-    /** Who runs the table: an agenda is measured against every one of them (ADR-08 §2). */
+    /** Who runs the table: an agenda is measured against every one of them. */
     private final MasterService masterService;
 
     /** Whether the actor may see the table a clash points at, which decides if it can be named. */
@@ -142,20 +142,20 @@ public class TableScheduleService {
      * {@code (table, weekday, hourtime)}, so a master who removes Tuesday 20:00 and puts it back
      * would otherwise collide with the row they just deleted (see {@link TableScheduleStatus}).
      *
-     * @param table    the table whose agenda is being set. Each slot carries its own length (ADR-08 §1),
+     * @param table    the table whose agenda is being set. Each slot carries its own length,
      *                 and one without a length claims no interval - it can sit in the agenda and
-     *                 never clash with anything (ADR-08 §2)
+     *                 never clash with anything
      * @param entries  the week the master wants. Empty clears the agenda
-     * @param actorId  who is acting, from the token (ADR-05 §5). R1 measures the agenda against
-     *                 <em>every</em> live master of the table (ADR-08 §2); the actor only decides whose
+     * @param actorId  who is acting, from the token. The master clash rule measures the agenda against
+     *                 <em>every</em> live master of the table; the actor only decides whose
      *                 clash it reads as. A table with no master yet - an admin creating an Unassigned
-     *                 one (ADR-06 §7) - has nobody to measure, so only its own coherence is checked and
-     *                 R1 waits for the masters to be assigned
+     *                 one - has nobody to measure, so only its own coherence is checked and
+     *                 the clash rule waits for the masters to be assigned
      * @return whether the agenda changed - a slot was added, removed, or kept with another length. The
      *         caller decides whom that is news for; this method only warns the candidates it clashes with
-     * @throws InvalidRequestException if two of the given slots overlap each other (ADR-08 §2)
+     * @throws InvalidRequestException if two of the given slots overlap each other
      * @throws ConflictException       if the agenda overlaps another live table one of its masters runs
-     *                                 or plays at - R1 of ADR-08 §2
+     *                                 or plays at
      */
     @Transactional
     public boolean replace(GameTable table, List<TableScheduleEntry> entries, @Nullable String actorId) {
@@ -175,14 +175,14 @@ public class TableScheduleService {
     }
 
     /**
-     * R1 of ADR-08 §2 for a group: refuses an agenda that overlaps what <b>any</b> of these people is
+     * The master clash rule for a group: refuses an agenda that overlaps what <b>any</b> of these people is
      * already committed to elsewhere. The masters of a table run it together, so measuring only whoever
      * is editing let a co-master's week through.
      *
      * <p>The first clash found is the one reported. When it is the actor's own it reads as theirs
      * ({@code SCHEDULE_CONFLICT}); anybody else's names the person ({@code MASTER_SCHEDULE_CONFLICT}).
      * English, and for a log: the sentence is rendered by the frontend from the code and its
-     * parameters, in the reader's language (ADR-23 §3).
+     * parameters, in the reader's language.
      *
      * <p>The other table's name goes in the answer only when the actor may see that table: a draft
      * nobody was shown would otherwise let whoever adds a co-master map that person's week. When they
@@ -239,7 +239,7 @@ public class TableScheduleService {
             } else {
                 slot.setStatus(TableScheduleStatus.Created);
                 slot.setDeletedAt(null);
-                // A slot that comes back can come back a different length (ADR-08 §1): the key is the day
+                // A slot that comes back can come back a different length: the key is the day
                 // and the hour, so changing only how long it runs is this branch and not an insert.
                 slot.setDuration(entry.duration());
             }
@@ -254,7 +254,7 @@ public class TableScheduleService {
 
     /**
      * Tells the people signed up to the table whose own commitments the new agenda now clashes with.
-     * Nobody is removed and nothing is refused: the notice is the whole of the action (ADR-15 §2, ADR-08 §2).
+     * Nobody is removed and nothing is refused: the notice is the whole of the action.
      */
     private void warnAffectedPeople(GameTable table) {
         for (TableRegistration registration : registrationRepository.findByGameTable_Id(table.getId())) {
@@ -287,7 +287,7 @@ public class TableScheduleService {
 
     /** The stretches of the week the requested agenda would occupy. A slot with no length occupies nothing. */
     private List<WeeklyInterval> intervalsOf(List<TableScheduleEntry> entries) {
-        // Each slot brings its own length since ADR-08 §1, so a slot without one is skipped rather than
+        // Each slot brings its own length, so a slot without one is skipped rather than
         // the whole agenda being written off - the two used to be the same thing.
         return entries.stream()
                 .filter(entry -> entry.duration() != null)

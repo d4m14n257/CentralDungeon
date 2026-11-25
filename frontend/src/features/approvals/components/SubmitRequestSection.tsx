@@ -16,8 +16,8 @@ interface SubmitRequestSectionProps {
   /**
    * The explanation of how a request works, handed to the dialog.
    *
-   * A node and not a `HelpLink` raised here: a feature never imports another one (§3.1.5). The
-   * screen composes the two, exactly as F3.1 did with the role and block dialogs.
+   * A node and not a `HelpLink` raised here: a feature never imports another one. The
+   * screen composes the two, exactly as it does with the role and block dialogs.
    */
   help?: ReactNode
 }
@@ -25,7 +25,7 @@ interface SubmitRequestSectionProps {
 /**
  * The way a screen offers a request: one button, or the news that one is already waiting.
  *
- * **This is where principle 2 of diseno §1 is paid.** A second request of the same
+ * **This is where "a button that cannot be used is not shown" is paid.** A second request of the same
  * kind is refused with `REQUEST_ALREADY_PENDING`, so a button offered while one is pending is a
  * button whose only possible outcome is a `409`. `GET /requests/mine?q=/status Pending` is what lets
  * the screen know the difference, and what is shown instead is the fact and its date — an answer,
@@ -36,7 +36,7 @@ interface SubmitRequestSectionProps {
  * answered ones: reading a page of it would conclude there was none and offer the button straight
  * into the refusal. The filter is what turns "nothing on page one" into "nothing".
  *
- * It is written once and used from the three screens that prompt a request (roles-y-alcance.md §4, F3.2)
+ * It is written once and used from the three screens that prompt a request
  * rather than three times, because the rule — ask, or see that you already asked — is the same in all
  * three and three copies of it are how they start to disagree.
  *

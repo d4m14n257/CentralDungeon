@@ -19,22 +19,22 @@ export interface TaskSubmissionsPanelProps {
    * How to render the files of one answer.
    *
    * A render prop because the file list belongs to `features/files` and a feature never imports from
-   * another: the screen composing the two is where they meet (regla dura 16, §3.1.5).
+   * another: the screen composing the two is where they meet.
    */
   renderFiles: (files: SubmittedFile[]) => ReactNode
-  /** Opens a person's card (ADR-10 §6), for whoever answered and whoever has not. Absent, no action. */
+  /** Opens a person's card, for whoever answered and whoever has not. Absent, no action. */
   onOpenPerson?: ((userId: string) => void) | undefined
 }
 
 /**
  * What came in for one task, and who has not answered.
  *
- * **Answers accumulate and none replaces another** (ADR-15 §2), so this is a history read forwards rather
+ * **Answers accumulate and none replaces another**, so this is a history read forwards rather
  * than "the latest version": somebody who sent three drafts appears three times, in order, and the
  * master decides which one they meant. There is no accept and no reject, because judging an answer
  * takes a criterion the software does not have.
  *
- * **The missing list is a list of people to talk to** (ADR-15 §2). It offers no action, and that is
+ * **The missing list is a list of people to talk to**. It offers no action, and that is
  * deliberate: not answering blocks nothing and removes nobody, so an "expulsar" button here would be
  * the interface promising something the rules refuse.
  *
@@ -47,7 +47,7 @@ export interface TaskSubmissionsPanelProps {
  */
 export function TaskSubmissionsPanel({ taskId, renderFiles, onOpenPerson }: TaskSubmissionsPanelProps) {
   const { t, i18n } = useTranslation('tasks')
-  // isLoadingError, not isError: see ADR-19 §4.
+  // isLoadingError, not isError: a failed background refetch must not replace data already on screen with an error.
   const { data, isPending, isLoadingError, refetch } = useTaskSubmissions(taskId)
   const timeZone = browserTimeZone()
 
@@ -112,7 +112,7 @@ export function TaskSubmissionsPanel({ taskId, renderFiles, onOpenPerson }: Task
                 </li>
               ))}
             </ul>
-            {/* ADR-15 §2 stated where it is easiest to forget: this list is information, not a sanction. */}
+            {/* Stated where it is easiest to forget: this list is information, not a sanction. */}
             <p className="text-fg-muted text-xs">{t('submissions.missingHint')}</p>
           </>
         )}

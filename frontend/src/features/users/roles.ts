@@ -1,11 +1,11 @@
 import type { AccountStatus, PlatformRole } from './types'
 
 /**
- * The four platform roles, **in the order of ADR-07 §8** — the same order `PlatformRole` declares them in
+ * The four platform roles, **in the fixed rank order** — the same order `PlatformRole` declares them in
  * and the same order the API returns them in.
  *
  * The order is read as increasing scope: the two anybody can hold, then the two that are one rank at
- * two scopes (ADR-06 §1). Chips, the role picker of the change dialog and the `/role` command all take
+ * two scopes. Chips, the role picker of the change dialog and the `/role` command all take
  * their order from here, so a listing and a dialog can never disagree about it.
  *
  * A written-out tuple rather than something derived from the union, because a union of literals has
@@ -14,9 +14,9 @@ import type { AccountStatus, PlatformRole } from './types'
 export const PLATFORM_ROLES = ['Player', 'Master', 'Admin', 'Owner'] as const satisfies readonly PlatformRole[]
 
 /**
- * The two roles an `Admin` may grant and revoke (§3 of roles-y-alcance.md).
+ * The two roles an `Admin` may grant and revoke.
  *
- * **The whole difference between an admin and an owner in F3, in one line**: everything else on the
+ * **The whole difference between an admin and an owner, in one line**: everything else on the
  * administration surface is shared, and what separates them is who may hand out the rank.
  */
 export const ADMIN_GRANTABLE_ROLES = ['Player', 'Master'] as const satisfies readonly PlatformRole[]
@@ -24,7 +24,7 @@ export const ADMIN_GRANTABLE_ROLES = ['Player', 'Master'] as const satisfies rea
 /**
  * The roles an `Owner` may grant: the same three an admin cannot all reach, without `Owner` itself.
  *
- * `Owner` is not granted from the application at all, not even by an owner (ADR-06 §1): for now it is
+ * `Owner` is not granted from the application at all, not even by an owner: for now it is
  * given from the database only. An owner may still take it away, which is a revocation and not part
  * of this list.
  */
@@ -33,7 +33,7 @@ export const OWNER_GRANTABLE_ROLES = ['Player', 'Master', 'Admin'] as const sati
 /**
  * The roles that make an account privileged — the ones that cannot be blocked, by anybody.
  *
- * Between peers there is no authority (§3): an admin does not block an admin and an owner does not
+ * Between peers there is no authority: an admin does not block an admin and an owner does not
  * block an owner, and generalising it to "nobody blocks anybody holding these" covers self-blocking
  * for free, since the actor always holds one of the two.
  */
@@ -52,7 +52,7 @@ export const ACCOUNT_STATUSES = ['Allowed', 'Blocked'] as const satisfies readon
  * disagree.
  *
  * @param roles the account's active roles
- * @returns whether blocking it is refused to everybody (ADR-05 §7, §3)
+ * @returns whether blocking it is refused to everybody
  */
 export function isPrivileged(roles: readonly PlatformRole[]): boolean {
   return roles.some((role) => (PRIVILEGED_ROLES as readonly PlatformRole[]).includes(role))

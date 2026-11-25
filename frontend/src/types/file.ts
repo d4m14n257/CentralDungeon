@@ -2,13 +2,13 @@
  * The wire shape of a file a table shares, in the root layer rather than inside `features/files`.
  *
  * It lives here for exactly the reason `types/catalog.ts` does: **two features need it** and a
- * feature never imports another (§3.1.2, regla dura 16). `files` owns everything about a file, and
+ * feature never imports another. `files` owns everything about a file, and
  * `tables` receives these nested inside a table's detail — a table arrives already carrying what it
  * shares, which is one round trip instead of two and which inherits the veto check that read already
- * performs (ADR-09 §4).
+ * performs.
  *
- * The alternative was re-declaring the same five fields in `tables`, and that is exactly what "un
- * tipo base por entidad" (§3.2) forbids: the day the backend adds a field, one of the two copies
+ * The alternative was re-declaring the same five fields in `tables`, and that is exactly what a
+ * second base type per entity forbids: the day the backend adds a field, one of the two copies
  * would keep describing the old shape.
  */
 
@@ -17,7 +17,7 @@
  *
  * A union of literals rather than a TS `enum`, because the backend serializes it as a string and
  * because `Record<TableFileType, …>` then forces every case to be covered when mapping it to a label
- * (§3.2 regla 9).
+ * (exhaustiveness).
  */
 export type TableFileType = 'Preparation' | 'Session'
 
@@ -26,18 +26,17 @@ export type TableFileType = 'Preparation' | 'Session'
  *
  * Deliberately narrow. There is no `isPrivate` here because **a private attachment is absent from
  * this list rather than listed and hidden** — a reader has no reason to know their master keeps notes
- * — and no owner, because who uploaded the map is not something anybody needs in order to open it
- * (ADR-14 §1).
+ * — and no owner, because who uploaded the map is not something anybody needs in order to open it.
  */
 export interface SharedFile {
   /** The file's identifier, which is what the download endpoint takes. */
   fileId: string
-  /** The original filename — what the reader recognises it by. Metadata only (ADR-13 §6). */
+  /** The original filename — what the reader recognises it by. Metadata only. */
   name: string
   /** The declared MIME type, so a screen can show the right icon. */
   mimeType: string
   /**
-   * The size as uploaded, before compression (ADR-13 §3). Shown because somebody on a phone deserves to
+   * The size as uploaded, before compression. Shown because somebody on a phone deserves to
    * know what a tap is about to cost them.
    */
   sizeBytes: number
@@ -45,10 +44,10 @@ export interface SharedFile {
 }
 
 /**
- * A file waiting to be sent (ADR-13 §5).
+ * A file waiting to be sent.
  *
  * **In the root layer and not inside `features/files`**, for the reason `SharedFile` is here: two
- * features need it and a feature never imports another (§3.1.2, regla dura 16). `files` owns the
+ * features need it and a feature never imports another. `files` owns the
  * picker that produces one and the hook that sends it; `tasks` holds a list of them while somebody
  * writes a request or an answer, and hands it back when they press send.
  *
@@ -57,7 +56,7 @@ export interface SharedFile {
  * confirm that creates the table — or sends the answer, or publishes the request — is what uploads.
  *
  * Two shapes, because only one of them has anything to upload: `new` is bytes still in the browser,
- * `existing` is something reused from the history (ADR-13 §2) or published by the platform (ADR-14 §1), which
+ * `existing` is something reused from the history or published by the platform, which
  * already has an id. `localId` exists only to key the list and remove one before sending — two files
  * with the same name are two entries, and `name` cannot tell them apart.
  */
@@ -77,7 +76,7 @@ export interface UploadFailure {
 }
 
 /**
- * What came back from sending a staged list (ADR-13 §5).
+ * What came back from sending a staged list.
  *
  * **`failed` is not an exception**, and that is the whole shape of it: a file that could not be
  * uploaded does not undo the rest. The table is created, the answer is sent, and what did upload is
@@ -90,7 +89,7 @@ export interface CommitResult {
   fileIds: string[]
   /** The files that could not be uploaded, each with why. Empty when everything went through. */
   failed: UploadFailure[]
-  /** The names the server recognised instead of storing again (ADR-13 §3, §4). */
+  /** The names the server recognised instead of storing again. */
   reused: string[]
 }
 

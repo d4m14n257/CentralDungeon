@@ -17,12 +17,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * A role granted to a person. Table {@code users_roles}.
  *
- * <p>Roles stack and have no hierarchy (ADR-06 §1): someone can hold Player and Master at once, or
+ * <p>Roles stack and have no hierarchy: someone can hold Player and Master at once, or
  * Master without Player. The only pair that never coexists is Admin and Owner, which are the same
- * role at two scopes (ADR-06 §1). Nothing here enforces that - {@code UserService} does.
+ * role at two scopes. Nothing here enforces that - {@code UserService} does.
  *
  * <p>Revoking a role marks the row rather than deleting it, so the record of who once held what
- * survives (ADR-03 §7).
+ * survives.
  */
 @Entity
 @Table(name = "users_roles")
@@ -44,7 +44,7 @@ public class UserRole {
     @JoinColumn(name = "role_id")
     private Role role;
 
-    /** Whether the grant still counts. Read on every request, never from a token (ADR-05 §3). */
+    /** Whether the grant still counts. Read on every request, never from a token. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private UserRoleStatus status = UserRoleStatus.Allowed;
@@ -116,16 +116,16 @@ public class UserRole {
     }
 
     /**
-     * Revokes the grant. The row stays; only its status and its timestamp move (ADR-03 §7).
+     * Revokes the grant. The row stays; only its status and its timestamp move.
      *
      * <p>One method for both fields rather than a {@code setStatus}, because they are one fact: a
      * grant that is {@code Deleted} with no {@code deletedAt} - or live with one - is a row that
      * contradicts itself, and nothing outside this class should be in a position to write it. That
      * is not hypothetical: {@code deleted_at} existed in the baseline and was never written by
-     * anything until F3.1, because revoking used to be a bare status flip.
+     * anything until revoking was implemented properly, because revoking used to be a bare status flip.
      *
      * <p>Whoever calls this has to evict the security cache, or the old roles stay live for up to
-     * its TTL (ADR-05 §3).
+     * its TTL.
      */
     public void revoke() {
         status = UserRoleStatus.Deleted;

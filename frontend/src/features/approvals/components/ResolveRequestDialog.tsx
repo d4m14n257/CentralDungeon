@@ -22,7 +22,7 @@ export type ResolveAction = 'approve' | 'reject'
 interface ResolveRequestDialogProps {
   /** The request being resolved, or null when the dialog is closed. */
   request: ApprovalRequestSummary | null
-  /** Approving or rejecting. The note is required either way (ADR-16 §1). */
+  /** Approving or rejecting. The note is required either way. */
   action: ResolveAction
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -30,18 +30,18 @@ interface ResolveRequestDialogProps {
    * The explanation of what approving each kind does, shown above the note.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura §3.1.5).
+   * never imports one.
    */
   help?: ReactNode
 }
 
 /**
- * Resolving a request, in its two acts (ADR-16 §1).
+ * Resolving a request, in its two acts.
  *
  * **The note is required on both of them.** The mechanism asks for a justification at each end, and
  * rejecting without one is the half that makes the other half worthless — whoever asked is told no
  * and has nothing to act on. Approving needs it just as much: it is the record of why the platform
- * granted something, and until F6 brings `audit_logs` it is the only one.
+ * granted something, and until a general audit log exists it is the only one.
  *
  * **What was asked for is on screen while the note is being written.** An admin deciding on a
  * request needs the reason they were given in front of them, not one dialog back.
@@ -83,7 +83,7 @@ export function ResolveRequestDialog({ request, action, open, onOpenChange, help
 
   async function onSubmit(values: ResolveApprovalRequestForm) {
     if (!request) return
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm(
       isApproving
         ? {

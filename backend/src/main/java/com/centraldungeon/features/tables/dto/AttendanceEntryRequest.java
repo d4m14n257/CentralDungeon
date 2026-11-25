@@ -12,9 +12,9 @@ import jakarta.validation.constraints.NotNull;
  * client for a field nothing reads.
  *
  * @param userId     the player. That they actually play at this table is checked in the service - a
- *                   roster is not something the caller gets to widen (ADR-05 §5)
+ *                   roster is not something the caller gets to widen
  * @param attendance what to record. {@code Unknown} is legal and is how a master undoes a mistake;
- *                   it stays out of the denominator either way (ADR-08 §5)
+ *                   it stays out of the denominator either way
  */
 public record AttendanceEntryRequest(@NotBlank String userId, @NotNull AttendanceStatus attendance) {
 }

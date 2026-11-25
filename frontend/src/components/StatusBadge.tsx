@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
- * The state tones of the design system (skill `diseno` §3), which is what a badge picks from.
+ * The state tones of the design system, which is what a badge picks from.
  *
  * These are **not** domain statuses and that is the whole point of naming them separately: `open`
  * means "the colour family for something that is open", and eight different features decide on their
@@ -39,7 +39,7 @@ interface StatusBadgeProps {
    * The label, **already translated**.
    *
    * A `ReactNode` and not a `string` so a feature can interpolate — `ClaimBadge` says who holds a row
-   * — but it is never optional: colour is never the only carrier of meaning (skill `diseno` §3),
+   * — but it is never optional: colour is never the only carrier of meaning,
    * and a badge with a dot and nothing to read is exactly that.
    */
   label: ReactNode
@@ -52,17 +52,17 @@ interface StatusBadgeProps {
 /**
  * A status as a badge: a coloured dot and a label, in the one shape the whole application uses.
  *
- * **It knows nothing about any domain, and it cannot** (`arquitectura` §3.1.2: «al subir se le
- * quita el dominio»). It receives the tone already chosen and the label already translated, so the
+ * **It knows nothing about any domain, and it cannot** (a shared component loses its domain
+ * as it moves up from a feature). It receives the tone already chosen and the label already translated, so the
  * two things that are genuinely each feature's — which of its states looks how, and what the state is
  * called in two languages — stay in the feature, next to the union they belong to.
  *
- * **Why it exists** (ADR-21 §6). It was written **ten** times before this: `TableStatusBadge`,
+ * **Why it exists**. It was written **ten** times before this: `TableStatusBadge`,
  * `SessionStatusBadge`, `RegistrationStatusBadge`, `UserStatusBadge`, `RequestStatusBadge`,
  * `CatalogStatusBadge`, `TaskStatusBadge`, `FileTypeBadge`, `ClaimBadge`, and once more inline in
- * `NotificationsPage` - each carrying this markup byte for byte. §3.1.2 puts the threshold at **two**
- * real uses and says why it is lower than the backend's: «acá la alternativa a subir no es un poco de
- * duplicación: es un import prohibido». Ten was not a borderline case.
+ * `NotificationsPage` - each carrying this markup byte for byte. The threshold for sharing is **two**
+ * real uses, lower than the backend's, because the alternative here is not a little duplication: it
+ * is a forbidden import between features. Ten was not a borderline case.
  *
  * What the ten actually differed in was three things - the i18n namespace, the key prefix, and the map
  * from status to tone - and all three stay where they were.

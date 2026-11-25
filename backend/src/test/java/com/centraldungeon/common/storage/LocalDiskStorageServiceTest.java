@@ -18,9 +18,9 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * The one class in F1.4 that touches the filesystem, and the one where the legacy's file handling
- * failed: it built paths out of the name the user typed (M21.5) and left orphans behind whenever a
- * transaction died mid-upload (M21.6).
+ * The one class that touches the filesystem, and the one where the legacy's file handling
+ * failed: it built paths out of the name the user typed and left orphans behind whenever a
+ * transaction died mid-upload.
  */
 class LocalDiskStorageServiceTest {
 
@@ -45,7 +45,7 @@ class LocalDiskStorageServiceTest {
     }
 
     /**
-     * The compression of ADR-13 §3 lives below the seam: callers hand over and get back the original bytes,
+     * The compression lives below the seam: callers hand over and get back the original bytes,
      * and what sits on disk is smaller. Asserting the gzip magic number is what proves the file was
      * not simply written through.
      */
@@ -61,7 +61,7 @@ class LocalDiskStorageServiceTest {
     }
 
     /**
-     * ADR-13 §6's guarantee, asserted rather than assumed. Every key the application passes is an id it
+     * The path-safety guarantee, asserted rather than assumed. Every key the application passes is an id it
      * generated, so this can only fail if some future caller starts passing something a person typed
      * - which is exactly the mistake worth catching.
      */
@@ -103,7 +103,7 @@ class LocalDiskStorageServiceTest {
     }
 
     /**
-     * M26.2: inside a transaction the content waits in staging and only becomes readable once the
+     * Inside a transaction the content waits in staging and only becomes readable once the
      * transaction commits. Before that it is not there at all - which is what stops a row from
      * pointing at a file the rollback was going to take away.
      */
@@ -120,7 +120,7 @@ class LocalDiskStorageServiceTest {
         assertThat(storage.read("file-1")).asString().isEqualTo("confirmado");
     }
 
-    /** The orphan the legacy left behind on every failed upload (M21.6). Nothing survives a rollback. */
+    /** The orphan the legacy left behind on every failed upload. Nothing survives a rollback. */
     @Test
     void aRollbackLeavesNothingBehind() {
         withSynchronization(() -> {

@@ -33,7 +33,7 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
     /**
      * Which tables currently hold a given file.
      *
-     * <p>This is what answers "may this person download this" without asking about roles (hard rule 17, ADR-05 §5):
+     * <p>This is what answers "may this person download this" without asking about roles:
      * a file is reachable through the tables it is attached to, and whether the reader belongs to any
      * of them is a membership question.
      *
@@ -47,15 +47,15 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
      * Which tables hold each of the given files, <b>named</b>, in one query for the whole page.
      *
      * <p>Two readers ask it. An owner looking at their own list wants the names, because "the sheet I
-     * use on Hijos del Vacío" is how a person recognises their own file (ADR-14 §3). An admin looking
+     * use on Children of the Void" is how a person recognises their own file. An admin looking
      * at the library wants them too - one file, three tables, the point being that linking is not
-     * copying (ADR-14 §1) - and each one as a link to its admin page.
+     * copying - and each one as a link to its admin page.
      *
      * <p>Joined against {@code GameTable} rather than reading the id off the key: the name is the
      * whole reason this exists, and the alternative - collect ids here, fetch tables in a second
      * round trip - is the N+1 this method is shaped to avoid.
      *
-     * <p>Named parameters only, never positional (ADR-03 §2).
+     * <p>Named parameters only, never positional.
      *
      * @param fileIds the files to resolve uses for
      * @return one row per live attachment. A file nothing points at is simply absent

@@ -6,7 +6,7 @@ import type { AccountStatus } from '../types'
 
 /**
  * Which tone each status wears. **The map stays here and not in `StatusBadge`**: which of this
- * feature's statuses counts as "open" is a decision about this domain (`arquitectura` §3.1.2).
+ * feature's statuses counts as "open" is a decision about this domain.
  */
 const STATE_TONES: Record<AccountStatus, StatusTone> = {
   Allowed: 'open',
@@ -18,7 +18,7 @@ const STATE_TONES: Record<AccountStatus, StatusTone> = {
  * status anybody can encounter is `Allowed`, because a blocked account cannot sign in.
  *
  * Its variants come from a `Record` over `AccountStatus`, so a new status cannot be added without
- * deciding how it looks (arquitectura §3.2, regla 9). `Blocked` gets its own token family rather
+ * deciding how it looks. `Blocked` gets its own token family rather
  * than borrowing `canceled`: a closed account and a cancelled table are not the same event, and the
  * two appear on admin screens next to each other.
  *

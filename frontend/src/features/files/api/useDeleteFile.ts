@@ -3,10 +3,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { filesApi } from './filesApi'
 
 /**
- * The owner letting go of their own file. Marks it gone; the bytes wait for F5 (ADR-03 §7, ADR-13 §8).
+ * The owner letting go of their own file. Marks it gone; the bytes are freed later by the platform owner.
  *
  * Invalidates the whole `files` branch, because a deleted file also stops showing on every table
- * that had it attached — the link survives as a record, the file does not (ADR-14 §1).
+ * that had it attached — the link survives as a record, the file does not.
  *
  * @returns the mutation, taking the id of the file to let go of
  */

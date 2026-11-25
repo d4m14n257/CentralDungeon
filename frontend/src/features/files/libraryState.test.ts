@@ -7,11 +7,11 @@ describe('hasPublishableCategory', () => {
     expect(hasPublishableCategory({ categories: [] })).toBe(false)
   })
 
-  it('is false when its only cajones are the player-side ones, which nothing is published into', () => {
+  it('is false when its only categories are the player-side ones, which nothing is published into', () => {
     expect(hasPublishableCategory({ categories: ['PlayerApplication', 'PlayerSubmission'] })).toBe(false)
   })
 
-  it('is true as soon as one of its cajones can be published into', () => {
+  it('is true as soon as one of its categories can be published into', () => {
     expect(hasPublishableCategory({ categories: ['PlayerSubmission', 'Announcement'] })).toBe(true)
   })
 })

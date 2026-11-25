@@ -80,7 +80,7 @@ beforeEach(() => {
 
 describe('AdminTablesPage', () => {
   /**
-   * ADR-16 §7: the screen stopped being a queue. It used to default to the review statuses, which made it
+   * The screen stopped being a queue. It used to default to the review statuses, which made it
    * a second tray with rules of its own — so it opens asking for **everything**, with no `q` of its
    * own and no status narrowing, and the reader does the narrowing.
    */
@@ -92,7 +92,7 @@ describe('AdminTablesPage', () => {
     await waitFor(() => expect(admin).toHaveBeenCalledWith(undefined, undefined, 0, 25))
   })
 
-  /** ADR-12 §7: what was searched and which page are in the URL, not in `useState`. */
+  /** What was searched and which page are in the URL, not in `useState`. */
   it('restores the search and the page from the URL', async () => {
     admin.mockResolvedValue(page([]))
 
@@ -101,7 +101,7 @@ describe('AdminTablesPage', () => {
     await waitFor(() => expect(admin).toHaveBeenCalledWith('/table_status Preparation', undefined, 2, 25))
   })
 
-  /** ADR-21 §11: the rows per page travel in the URL too, and only an offered size reaches the API. */
+  /** The rows per page travel in the URL too, and only an offered size reaches the API. */
   it('asks for the page size the URL names, and ignores one it does not offer', async () => {
     admin.mockResolvedValue(page([]))
 
@@ -115,7 +115,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * The mudanza of ADR-16 §7, from the side that loses: reviewing is the tray's, so these two buttons are
+   * Moving the review to the tray, from the side that loses: reviewing is the tray's, so these two buttons are
    * **gone** from here rather than offered in both places under different rules. A `Preparation`
    * table is exactly the row that used to carry them.
    */
@@ -140,7 +140,7 @@ describe('AdminTablesPage', () => {
     expect(row.getByRole('button', { name: 'Eliminar' })).toBeInTheDocument()
   })
 
-  /** And offers neither on a table that already has one: principle 2, absent rather than disabled. */
+  /** And offers neither on a table that already has one: absent rather than disabled. */
   it('offers neither on a table that already has a master', async () => {
     admin.mockResolvedValue(page([table({ status: 'Opened' })]))
 
@@ -163,7 +163,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * ADR-16 §5: a table somebody is reviewing right now says so, even though this screen offers no action
+   * A table somebody is reviewing right now says so, even though this screen offers no action
    * that needs the reservation. Without it an admin sees a `Preparation` table, goes to the tray to
    * review it, and finds it is not there.
    */
@@ -177,7 +177,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * ADR-20 §4 read the other way round: "there are no tables" is a fact about the platform and "nothing
+   * The empty-tray reading the other way round: "there are no tables" is a fact about the platform and "nothing
    * matched" is a fact about what was typed. Telling somebody who just filtered by `Canceled` that
    * the platform has no tables would answer a question they did not ask.
    */
@@ -192,7 +192,7 @@ describe('AdminTablesPage', () => {
     expect(await screen.findByText('Ninguna mesa coincide con esa búsqueda')).toBeInTheDocument()
   })
 
-  /** ADR-20 §1: no guard in the router, so the 403 has to land somewhere that explains itself. */
+  /** No guard in the router, so the 403 has to land somewhere that explains itself. */
   it('paints the forbidden state when the backend refuses the listing', async () => {
     admin.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
 
@@ -202,7 +202,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * The other half of the mudanza: an admin who learned the old screen comes here for "Aprobar",
+   * The other half of moving the review to the tray: an admin who learned the old screen comes here for "Aprobar",
    * finds a listing, and has no way to discover the buttons moved unless something says so. The
    * section whose text moved with them is the one this links, and its `listing` line is what answers
    * the question they actually have.
@@ -214,12 +214,12 @@ describe('AdminTablesPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona' }))
 
     const dialog = within(await screen.findByRole('dialog'))
-    // Since ADR-21 §10 a review is resolved from the tray or from the table's own status tab: both are said.
+    // A review is resolved from the tray or from the table's own status tab: both are said.
     expect(dialog.getByText(/se resuelve desde dos lugares: la «Bandeja»/)).toBeInTheDocument()
     expect(dialog.getByText(/«Mesas» tiene todas las mesas/)).toBeInTheDocument()
   })
 
-  /** ADR-22 §3: the search help documents **this** box's commands rather than a fixed list. */
+  /** The search help documents **this** box's commands rather than a fixed list. */
   it('documents its own six search commands', async () => {
     admin.mockResolvedValue(page([table()]))
 
@@ -235,9 +235,9 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * ADR-07 §1, from the side that had been missing: `pause()` and `resume()` have had an endpoint since
-   * E2 and no button on any screen. Each is offered on exactly the status it applies to — pausing a
-   * running table, resuming a paused one — because principle 2 shows an action only where it works.
+   * The pause and resume actions, from the side that had been missing: `pause()` and `resume()` had an endpoint
+   * and no button on any screen. Each is offered on exactly the status it applies to — pausing a
+   * running table, resuming a paused one — because an action is shown only where it works.
    */
   it('offers pausing on a running table and resuming on a paused one', async () => {
     admin.mockResolvedValue(page([table({ status: 'InProgress' })]))
@@ -266,7 +266,7 @@ describe('AdminTablesPage', () => {
     expect(row.queryByRole('button', { name: 'Reanudar' })).not.toBeInTheDocument()
   })
 
-  /** ADR-07 §2: `Pause` demands a justification, and it is the master who will read it. */
+  /** `Pause` demands a justification, and it is the master who will read it. */
   it('sends the pause with the reason that was written', async () => {
     admin.mockResolvedValue(page([table({ status: 'InProgress' })]))
     pause.mockResolvedValue(table({ status: 'Pause' }))
@@ -285,11 +285,11 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * ADR-08 §2 and ADR-23 §3, which is the whole reason this refusal was worth building a message for.
+   * A refusal that is worth building a dedicated message for.
    *
    * Resuming re-checks the master's agenda, because they may have taken another table while this one
    * was frozen. The backend answers naming that table in `errorParams`, and the screen has to say
-   * **which** one: "no pudimos completar la acción" would throw away the single fact that makes the
+   * **which** one: the generic failure message would throw away the single fact that makes the
    * problem solvable.
    */
   it('names the table the agenda clashes with when resuming is refused', async () => {
@@ -312,13 +312,13 @@ describe('AdminTablesPage', () => {
 
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1))
     expect(toastError).toHaveBeenCalledWith(expect.stringContaining('Las minas de Phandelver'))
-    // And never the backend's own English, which is written for a log (ADR-23 §3).
+    // And never the backend's own English, which is written for a log.
     expect(toastError).not.toHaveBeenCalledWith(expect.stringContaining('Cannot resume'))
   })
 
   /**
    * And the same refusal without its parameter falls back to the generic sentence rather than
-   * rendering «se pisa con «»», which would say less than saying nothing specific at all.
+   * rendering a clash message with an empty table name, which would say less than saying nothing specific at all.
    */
   it('falls back to the generic refusal when the clash carries no table name', async () => {
     admin.mockResolvedValue(page([table({ status: 'Pause' })]))

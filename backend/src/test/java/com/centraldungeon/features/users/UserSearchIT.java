@@ -91,7 +91,7 @@ class UserSearchIT {
                 .containsExactly("elpablo");
     }
 
-    /** The alternatives of one criterion: any one of them is enough (ADR-22 §1). */
+    /** The alternatives of one criterion: any one of them is enough. */
     @Test
     void commasSeparateAlternativesOfTheSameCriterion() {
         assertThat(discordNamesOf(userService.search("/discord_name juanma,pablosan", FIRST_PAGE)))
@@ -104,7 +104,7 @@ class UserSearchIT {
     }
 
     /**
-     * The rule F3.1 could most easily have broken. {@code UserSearchSpecification} now serves two
+     * The rule most easily broken. {@code UserSearchSpecification} serves two
      * audiences, and the picker's one still forces {@code status = Allowed} - no flag, no query and
      * no {@code /status} command can turn it off, because nobody blocked should ever be offered as a
      * master or a player.
@@ -133,7 +133,7 @@ class UserSearchIT {
         assertThat(adminDiscordNamesOf("/role Owner")).isEmpty();
     }
 
-    /** Un valor desconocido no es un 400: no matchea nada (§2.5). */
+    /** An unknown value is not a 400: it matches nothing. */
     @Test
     void anUnknownRoleOrStatusMatchesNothingInsteadOfFailing() {
         assertThat(adminDiscordNamesOf("/role Wizard")).isEmpty();

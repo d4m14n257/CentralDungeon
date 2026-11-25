@@ -42,7 +42,7 @@ import type { CatalogValue } from '@/types/catalog'
 import { useClientLimits } from '@/hooks/useClientLimits'
 import { useConfirm } from '@/hooks/useConfirm'
 
-/** The two states where the backend still accepts a rewrite of the table (ADR-04 §7). */
+/** The two states where the backend still accepts a rewrite of the table. */
 
 /**
  * `/master/tables/:id/edit` — rewriting a table that has not gone public yet.
@@ -52,8 +52,8 @@ import { useConfirm } from '@/hooks/useConfirm'
  * fifteen and needs to see at a glance what changes. It is the same fields and the same components,
  * laid out for a different question.
  *
- * **The save replaces the table, it does not patch it** (ADR-04 §7), and the agenda and the catalogs are
- * replaced as whole sets (ADR-04 §7). That is why every field is sent on every save, including the ones
+ * **The save replaces the table, it does not patch it**, and the agenda and the catalogs are
+ * replaced as whole sets. That is why every field is sent on every save, including the ones
  * nobody touched: a field left out would empty itself.
  *
  * It is the only way to answer a `ChangesRequested` — the resubmit button of the status notice moves
@@ -66,12 +66,12 @@ export function MasterTableEditPage() {
 /** What {@link TableEditPage} takes. */
 export interface TableEditPageProps {
   /**
-   * The admin's edit of somebody else's table, from /admin/tables/:id/edit (ADR-06 §8), rather than the
+   * The admin's edit of somebody else's table, from /admin/tables/:id/edit, rather than the
    * master's own. It changes five things and nothing else:
    *
    * - **who may and when**: an admin, in any status but the three that close a table, instead of the
    *   Primary in `Draft` or `ChangesRequested`;
-   * - **the endpoint**: `PUT …/admin-edit`, never the master's (ADR-06 §6);
+   * - **the endpoint**: `PUT …/admin-edit`, never the master's;
    * - **where it goes back to**: the admin's view of the table;
    * - **what the review says**: that every master of the table is told;
    * - **the week below the agenda is drawn empty**: it shows the reader's own commitments, and the
@@ -82,25 +82,25 @@ export interface TableEditPageProps {
 }
 
 /**
- * The rewrite form itself, shared by the master's edit and the admin's (ADR-06 §8) rather than written
- * twice: the fields, the pickers, the agenda and the replace-not-patch rule (ADR-04 §7) are the same, and
- * two copies of a 400-line form are two places for ADR-20 §5's bugs to come back.
+ * The rewrite form itself, shared by the master's edit and the admin's rather than written
+ * twice: the fields, the pickers, the agenda and the replace-not-patch rule are the same, and
+ * two copies of a 400-line form are two places for the same bugs to come back.
  *
  * It lives here and is mounted by `routes/admin/AdminTableEditPage` because a screen composing
- * domains is a route's job and not a feature's (§3.1.5); the admin route adds nothing but the mode.
+ * domains is a route's job and not a feature's; the admin route adds nothing but the mode.
  *
  * @param props.asAdmin the admin's edit rather than the master's
  */
 export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
   const { t } = useTranslation('master')
   const confirm = useConfirm()
-  // The type's and the week's words belong to the tables domain (regla dura 18).
+  // The type's and the week's words belong to the tables domain.
   const { t: tTables } = useTranslation('tables')
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   // useManagedTable and not useGameTable: the backend checks membership before reading anything and
-  // answers 403 when the actor does not run this table (ADR-06 §6).
+  // answers 403 when the actor does not run this table.
   const { data: table, isPending, error, isLoadingError, refetch } = useManagedTable(tableId)
   const { data: me } = useMe()
   const { data: tableTypes } = useTableTypes()
@@ -115,10 +115,10 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
   const [platforms, setPlatforms] = useState<CatalogValue[]>([])
   const [schedule, setSchedule] = useState<TableScheduleEntry[]>([])
 
-  // ADR-03 §6 took `users.timezone` out of the model, so the browser is the only source today; `lib/date.ts`
-  // takes the zone as a parameter so a profile preference would change this line and no other (ADR-19 §7).
+  // `users.timezone` is not in the model, so the browser is the only source today; `lib/date.ts`
+  // takes the zone as a parameter so a profile preference would change this line and no other.
   const timeZone = useMemo(() => browserTimeZone(), [])
-  // The reader's other commitments, so rewriting an agenda is looking and not guessing (ADR-08 §6). This
+  // The reader's other commitments, so rewriting an agenda is looking and not guessing. This
   // table is filtered out: it cannot clash with itself, and drawing it twice would say it did.
   const myWeek = useMySchedule()
   const pendingBlocks = schedule.map((entry) => ({
@@ -126,7 +126,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
     durationMinutes: minutesOfDay(entry.duration ?? DEFAULT_SLOT_DURATION),
   }))
 
-  /** Adds the hour the master clicked, in UTC, unless this table already claimed it (ADR-08 §1). */
+  /** Adds the hour the master clicked, in UTC, unless this table already claimed it. */
   function claimHour(utcStartMinute: number) {
     const weekday = WEEKDAYS[Math.floor(utcStartMinute / (24 * 60))]
     const hourtime = formatMinutes(utcStartMinute % (24 * 60))
@@ -155,12 +155,12 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
       whatToExpect: table.sections.whatToExpect ?? '',
       equipment: table.sections.equipment ?? '',
       safety: table.sections.safety ?? '',
-      // By code when the application shipped the type, by name when a person created it (ADR-23 §4):
+      // By code when the application shipped the type, by name when a person created it:
       // matching on the label alone broke as soon as the label started being translated.
       tableTypeId:
         tableTypes?.content.find((type) => (table.tableTypeCode ? type.code === table.tableTypeCode : type.name === table.tableTypeName))
           ?.id ?? '',
-      // A plain day, straight into the control: nothing to convert (ADR-07 §4).
+      // A plain day, straight into the control: nothing to convert.
       startDate: table.startDate ?? '',
       maxPlayers: table.maxPlayers === null ? '' : String(table.maxPlayers),
       totalSessions: table.totalSessions === null ? '' : String(table.totalSessions),
@@ -184,7 +184,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
     // **Every field, not only the text ones.** A field missing from here registers as `''`
     // against a default of `undefined`, which react-hook-form reads as dirty - and on the edit
     // page `keepDirtyValues` then defended that emptiness against the value the table actually
-    // had, which is how the table type was being silently dropped (ADR-20 §5).
+    // had, which is how the table type was being silently dropped.
     defaultValues: {
       name: '',
       description: '',
@@ -210,7 +210,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
   // "Changed" means changed from what the table said, which `formState.isDirty` cannot answer here:
   // the fields left out of `defaultValues` read as dirty the moment they register, and a page nobody
   // had touched refused to be left. `watch` and not `getValues` so it is recomputed on every
-  // keystroke - the blocker only ever sees what the last render put in its closure (ADR-20 §5).
+  // keystroke - the blocker only ever sees what the last render put in its closure.
   const written = form.watch()
   const formChanged =
     loadedValues !== undefined &&
@@ -218,7 +218,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
 
   // The catalogs and the agenda are compared against the table too, and for the same reason the
   // form is: a flag set from their `onChange` looked simpler and was wrong, because the pickers emit
-  // once while they settle and a page nobody had touched refused to be left (ADR-20 §5).
+  // once while they settle and a page nobody had touched refused to be left.
   const catalogsOrAgendaChanged =
     table !== undefined &&
     (!sameCatalog(systems, table.systems) ||
@@ -277,7 +277,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
   }
 
   async function onSubmit(values: CreateGameTableForm) {
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('edit.confirmTitle', { name: values.name }),
       description: t(asAdmin ? 'edit.adminConfirmDescription' : 'edit.confirmDescription'),
@@ -313,7 +313,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
 
   return (
     // Centred rather than hugging the left: these two are forms, and a form read against one
-    // edge of a wide screen is a column of text with a desert next to it (ADR-08 §1).
+    // edge of a wide screen is a column of text with a desert next to it.
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader
         title={t('edit.title', { name: table.name })}
@@ -352,7 +352,7 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
                     actually had - the screen then showed the placeholder for a classified table and
                     saving stored that emptiness. A person can never select nothing here: every
                     option carries an id, so an empty value is only ever the control talking to
-                    itself (ADR-20 §5).
+                    itself.
                   */}
                   <Select value={field.value ?? ''} onValueChange={(value) => value && field.onChange(value)}>
                     <FormControl>
@@ -465,18 +465,18 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
             <div className="space-y-2">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-sm font-medium">{t('create.scheduleLabel')}</p>
-                {/* The help is linked from the screen that needs it, by its #ref (ADR-20 §5, §6). */}
+                {/* The help is linked from the screen that needs it, by its #ref. */}
                 <HelpLink section="masters.schedule" className="text-xs">
                   {t('create.scheduleHelp')}
                 </HelpLink>
               </div>
               <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} />
 
-              {/* The same week the wizard offers (ADR-08 §6, §1): the master rewriting an agenda needs
+              {/* The same week the wizard offers: the master rewriting an agenda needs
                   to see what else they gave away just as much as the one building it does. The grid
                   is also the only way to add a slot, so the admin gets it too - empty of anybody's
                   commitments: theirs are not what this table clashes with, and the backend measures
-                  the clash against the table's Primary (ADR-06 §8). */}
+                  the clash against the table's Primary. */}
               <div className="space-y-2 pt-2">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h3 className="section-label">{tTables(asAdmin ? 'schedule.adminGridTitle' : 'schedule.inWizardTitle')}</h3>

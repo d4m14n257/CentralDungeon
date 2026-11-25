@@ -30,21 +30,21 @@ export function requestStatusChoices(t: TFunction): SearchChoice[] {
 }
 
 /**
- * The commands `/admin/requests` accepts (ADR-22 §1, §3).
+ * The commands `/admin/requests` accepts.
  *
  * **Written here and not in the component that renders the box**, the same way users and files
  * declare theirs: the list is what the box offers, what the help documents and what a `?q=` is read
- * against, and three copies of it free to disagree is exactly the drift ADR-22 §3 went to remove.
+ * against, and three copies of it free to disagree is exactly the drift this arrangement exists to remove.
  *
  * `/requested_by` is free text — a person's name is not something anybody could offer a list of —
  * and it searches the two names the platform keeps, the display one and the Discord one, because
- * whoever is looking knows one of them and not which of the two the system keeps where (ADR-22 §1).
+ * whoever is looking knows one of them and not which of the two the system keeps where.
  *
  * Without a command in front of it, what is typed searches the justification **and** the name of
  * whoever asked: the two things an admin reads a row for.
  *
  * An unknown value in `/request_type` or `/status` is **not** an error on either side: it simply
- * matches nothing, the same way a mistyped `/command` stays literal text (arquitectura §2.5).
+ * matches nothing, the same way a mistyped `/command` stays literal text.
  *
  * @param t the translator of the `admin` namespace
  * @returns the commands, in the order they are offered

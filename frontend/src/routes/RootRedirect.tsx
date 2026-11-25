@@ -10,7 +10,7 @@ import { clearDestination, peekDestination } from '@/lib/postLoginDestination'
 import { SignOutButton } from '@/layouts/components/SignOutButton'
 
 /**
- * `/` has no screen of its own (ADR-20 §2). Every context owns a prefix, so the root is a dispatcher:
+ * `/` has no screen of its own. Every context owns a prefix, so the root is a dispatcher:
  * it sends the reader to the home of the context they actually have.
  *
  * It exists so that nothing else has to know where somebody lands - the OAuth return, the
@@ -28,7 +28,7 @@ import { SignOutButton } from '@/layouts/components/SignOutButton'
  * remembered, so that cannot loop.
  *
  * It is also the one place an account with **no** context lands, since every context guard sends
- * what it refuses here (ADR-20 §2) - so that case is answered on screen instead of redirected.
+ * what it refuses here - so that case is answered on screen instead of redirected.
  */
 export function RootRedirect() {
   const { t } = useTranslation('common')
@@ -57,8 +57,8 @@ export function RootRedirect() {
     )
   }
 
-  // An account with no context at all - every role revoked (ADR-14 §5) - has no home to go to. Navigating
-  // anyway would send it to `/player`, whose guard sends it back here (ADR-20 §2): a loop, not an answer.
+  // An account with no context at all - every role revoked - has no home to go to. Navigating
+  // anyway would send it to `/player`, whose guard sends it back here: a loop, not an answer.
   if (contexts.length === 0) {
     return (
       <div className="flex min-h-svh items-center justify-center px-4">

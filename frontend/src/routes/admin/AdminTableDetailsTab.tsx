@@ -12,7 +12,7 @@ interface OutletContext {
 }
 
 /**
- * The first tab of `/admin/tables/:id` (ADR-06 §8): the table as its master wrote it - what is played, how
+ * The first tab of `/admin/tables/:id`: the table as its master wrote it - what is played, how
  * and where, the text, the rules, the capacity.
  *
  * **The admin's tab and not the master's**: the master wrote all of this and reads it back on the edit
@@ -30,7 +30,7 @@ export function AdminTableDetailsTab() {
   const catalogs: CatalogValue[] = [...table.systems, ...table.platforms]
   const notSet = t('tables.detail.notSet')
 
-  // The facts a moderator looks for first, each with its label and «Sin definir» rather than a blank:
+  // The facts a moderator looks for first, each with its label and an "undefined" placeholder rather than a blank:
   // a missing value is information too.
   const facts = [
     { label: tMaster('create.tableTypeLabel'), value: tableTypeLabel(tTables, table.tableTypeCode, table.tableTypeName) ?? notSet },

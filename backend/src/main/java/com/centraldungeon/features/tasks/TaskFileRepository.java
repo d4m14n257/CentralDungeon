@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-/** Reads and writes the {@code task_files} bridge table - the master's half of a request (ADR-15 §1). */
+/** Reads and writes the {@code task_files} bridge table - the master's half of a request. */
 public interface TaskFileRepository extends JpaRepository<TaskFile, TaskFileId> {
 
     /**
@@ -74,7 +74,7 @@ public interface TaskFileRepository extends JpaRepository<TaskFile, TaskFileId> 
 
     /**
      * The same reachability for a whole page of files, carrying the table's name - the third source
-     * of the uses somebody sees on their own library (ADR-14 §3).
+     * of the uses somebody sees on their own library.
      *
      * <p>It answers with {@link FileUsage}, a type of the {@code files} feature, for the reason
      * {@code SubmissionFileRepository} gives: the read rule already crosses this way, and a second
@@ -102,7 +102,7 @@ public interface TaskFileRepository extends JpaRepository<TaskFile, TaskFileId> 
      * <p>The join is the point: the link rows alone carry ids, and a screen needs names and sizes, so
      * resolving those separately would be a second round trip per request.
      *
-     * <p>Named parameters only, never positional (ADR-03 §2).
+     * <p>Named parameters only, never positional.
      *
      * @param taskIds the requests
      * @return one row per live blank, in no particular order; the service groups them by request

@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Deletes what an e2e run left behind, so the development database stops growing one run at a time
- * (ADR-24 §3). Playwright calls it once when the suite finishes.
+ * Deletes what an e2e run left behind, so the development database stops growing one run at a time.
+ * Playwright calls it once when the suite finishes.
  *
  * <p><b>It takes no parameters on purpose.</b> The patterns it deletes are fixed in
  * {@link TestDataService} - tables whose name contains "E2E" and users whose discordId starts with
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("test")
 public class TestDataController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final TestDataService testDataService;
 
     /**

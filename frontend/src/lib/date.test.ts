@@ -19,8 +19,8 @@ import {
 } from './date'
 
 /**
- * The community plays at night in America, which is the small hours of the next day in UTC (ADR-03 §6).
- * Every case here is that fact, from one angle or another — it is the most likely bug of F1.
+ * The community plays at night in America, which is the small hours of the next day in UTC.
+ * Every case here is that fact, from one angle or another — it is the most likely bug of the schedule screens.
  */
 const BUENOS_AIRES = 'America/Argentina/Buenos_Aires'
 const MADRID = 'Europe/Madrid'
@@ -82,13 +82,13 @@ describe('minutesOfDay and formatMinutes', () => {
 })
 
 describe('weekdayName', () => {
-  it('names the day in the given locale, never a hard-coded one (ADR-19 §7)', () => {
+  it('names the day in the given locale, never a hard-coded one', () => {
     expect(weekdayName('Tuesday', 'es-AR')).toBe('Martes')
     expect(weekdayName('Tuesday', 'en-US')).toBe('Tuesday')
   })
 
   it('capitalizes it even where the language would not, because it is a label and not a sentence', () => {
-    // `Intl` gives "miércoles" in Spanish; the accent has to survive the capital.
+    // `Intl` gives a lowercase, accented weekday name in Spanish; the accent has to survive the capital.
     expect(weekdayName('Wednesday', 'es-AR')).toBe('Miércoles')
     expect(weekdayName('Saturday', 'es-AR')).toBe('Sábado')
   })
@@ -102,7 +102,7 @@ describe('splitBlockByDay', () => {
     ])
   })
 
-  it('cuts a block that runs past midnight into the two days it touches (ADR-08 §2)', () => {
+  it('cuts a block that runs past midnight into the two days it touches', () => {
     // Tuesday 23:00 plus three hours ends Wednesday 02:00.
     expect(splitBlockByDay({ startMinute: 1440 + 1380, durationMinutes: 180 })).toEqual([
       { dayIndex: 1, startMinuteOfDay: 1380, durationMinutes: 60 },
@@ -120,7 +120,7 @@ describe('splitBlockByDay', () => {
 })
 
 describe('week minutes', () => {
-  it('round-trips a minute through a zone and back (ADR-03 §6)', () => {
+  it('round-trips a minute through a zone and back', () => {
     const tuesdayEvening = 1440 + 1200
     const local = utcWeekMinuteToLocal(tuesdayEvening, 'America/Argentina/Buenos_Aires')
 
@@ -166,7 +166,7 @@ describe('formatDateTime and formatDate', () => {
   /**
    * The backend serializes `LocalDateTime` with no offset — `2026-09-09T01:00:00` — and JavaScript
    * reads a date like that as **local** time. Without normalizing it, a session at 01:00 UTC showed
-   * as 01:00 to somebody three hours behind: exactly the bug the conversion exists to prevent (ADR-03 §6).
+   * as 01:00 to somebody three hours behind: exactly the bug the conversion exists to prevent.
    */
   it('reads a bare instant from the API as UTC and not as the reader wall clock', () => {
     expect(formatDateTime('2026-09-09T01:00:00', 'es', BUENOS_AIRES)).toMatch(/8 sept/)
@@ -187,9 +187,9 @@ describe('formatDateTime and formatDate', () => {
 })
 
 /**
- * ADR-07 §4: `start_date` is a day, and a day does not move.
+ * `start_date` is a day, and a day does not move.
  *
- * The suite runs three hours behind UTC on purpose (ADR-19 §7), which is exactly the zone where treating
+ * The suite runs three hours behind UTC on purpose, which is exactly the zone where treating
  * a date as an instant shows the day before — the bug this function exists to not have.
  */
 describe('formatPlainDate', () => {
@@ -212,13 +212,13 @@ describe('formatRelativeDate', () => {
     expect(formatRelativeDate('2026-01-10T12:00:00', 'es', now)).toBe('hace 8 meses')
   })
 
-  it('speaks the reader’s language, because the locale is a parameter (ADR-19 §7)', () => {
+  it('speaks the reader’s language, because the locale is a parameter', () => {
     expect(formatRelativeDate('2026-09-07T12:00:00', 'en', now)).toBe('3 days ago')
   })
 
   /**
    * The API sends `2026-09-10T11:00:00` with no offset and JavaScript reads a bare date-time as
-   * local, which would make an hour ago read as hours off for anybody not on UTC (ADR-03 §6).
+   * local, which would make an hour ago read as hours off for anybody not on UTC.
    */
   it('reads the instant as UTC even when it does not say so', () => {
     expect(formatRelativeDate('2026-09-10T11:00:00', 'es', now)).toBe('hace 1 hora')

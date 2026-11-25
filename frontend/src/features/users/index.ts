@@ -1,6 +1,6 @@
 /**
- * Public surface of the users feature (ADR-19 §1): the session's own profile, the picker, onboarding, and
- * the administration of accounts that `/admin/users` is built on (F3.1).
+ * Public surface of the users feature: the session's own profile, the picker, onboarding, and
+ * the administration of accounts that `/admin/users` is built on.
  * Anything not listed here is private to it.
  */
 
@@ -27,7 +27,7 @@ export { useUserProfile } from './api/useUserProfile'
 export { useUserTables } from './api/useUserTables'
 export { PersonSummaryDialog } from './components/PersonSummaryDialog'
 export { useUserSearch } from './api/useUserSearch'
-/** Who may do what on /admin/users - the rule of §3, so no screen holds a loose `if` about roles. */
+/** Who may do what on /admin/users - the role-granting rule, so no screen holds a loose `if` about roles. */
 export { useUserAdminCapabilities, type UserAdminCapabilities } from './hooks/useUserAdminCapabilities'
 export { adminUserSearchFields, userSearchFields } from './searchFields'
 export { ACCOUNT_STATUSES, PLATFORM_ROLES, isPrivileged } from './roles'
@@ -40,7 +40,7 @@ export {
   type ChangeUserStatusForm,
   type CompleteOnboardingForm,
 } from './schemas'
-/** The feature's domain types. Each is written once in `types.ts` and derived from there (arquitectura §3.2). */
+/** The feature's domain types. Each is written once in `types.ts` and derived from there. */
 export type {
   AccountStatus,
   AdminUserDetail,

@@ -10,7 +10,7 @@ import { queuePath } from '@/config/paths'
 import { useQueue } from '@/features/queue'
 
 /**
- * `/admin` — the home of the Admin context (ADR-20 §3), and where an administrator lands on entering.
+ * `/admin` — the home of the Admin context, and where an administrator lands on entering.
  *
  * **A welcome and a way into the tray, on purpose.** The tray is what an admin has to do next, so
  * the home links it with how many items wait. That count is not a metric: nobody has decided which
@@ -19,11 +19,11 @@ import { useQueue } from '@/features/queue'
  *
  * **The count is the tray's own total**, read as a page of one: it is the same list, with the same
  * reservation rule — an item another admin took is not in it — so the number never promises more than
- * the tray will show. Who may see the page is `AdminLayout`'s guard (ADR-20 §2).
+ * the tray will show. Who may see the page is `AdminLayout`'s guard.
  */
 export function AdminHomePage() {
   const { t } = useTranslation('admin')
-  // isLoadingError, not isError: a background refetch that fails must not blank a count that loaded (ADR-19 §4).
+  // isLoadingError, not isError: a background refetch that fails must not blank a count that loaded.
   const { data, isPending, isLoadingError, refetch } = useQueue(0, 1)
 
   return (

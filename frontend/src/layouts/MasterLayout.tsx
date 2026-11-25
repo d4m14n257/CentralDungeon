@@ -7,8 +7,7 @@ import { MasterSectionNav } from './components/MasterSectionNav'
 /**
  * The shell of the master context, /master/*.
  *
- * Only for an account that has the context (ADR-20 §2): the `Master` role **or** a live row in `masters`
- * (ADR-06 §4), because running a table is membership, not the role - a co-master assigned without it
+ * Only for an account that has the context: the `Master` role **or** a live row in `masters`, because running a table is membership, not the role - a co-master assigned without it
  * still runs theirs. Anybody else is sent back to their own home before this shell paints.
  */
 export function MasterLayout() {

@@ -6,7 +6,7 @@ import { tasksApi } from './tasksApi'
 
 /**
  * Closing the intake of a task. What came in stays readable — closing ends the intake, it does not
- * erase the history (ADR-15 §2).
+ * erase the history.
  *
  * @param tableId the table the task belongs to, for the branches to invalidate
  * @returns the mutation, taking the task to close

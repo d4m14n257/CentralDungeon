@@ -9,14 +9,14 @@ import java.util.Optional;
  * What kind of work an item of the shared admin tray is - the fine discriminator, next to the coarse
  * one that says which table the row came from ({@link QueueSource}).
  *
- * <p>A code and not a sentence (ADR-23 §3): the backend says <em>what</em> is waiting and the frontend
+ * <p>A code and not a sentence: the backend says <em>what</em> is waiting and the frontend
  * writes the phrase in the reader's language, exactly as {@code MasterWorkItemKind} does for the
  * master's tray.
  *
- * <p><b>Two values, not four.</b> the {@code arquitectura} skill §4.5 lists four sources - the two here,
+ * <p><b>Two values, not four.</b> the queue design lists four sources - the two here,
  * plus {@code comments} in {@code Under review} and {@code system_feedback} in {@code New} - and the
- * last two land in F5 <em>with the features that produce them</em>. Declaring them today would create
- * two constants nothing can emit, which is the orphan this phase already paid for once
+ * last two will land <em>with the features that produce them</em>. Declaring them today would create
+ * two constants nothing can emit, which is the orphan the project already paid for once
  * ({@code ApprovalRequestType} documents the same decision).
  */
 public enum QueueItemKind {
@@ -30,7 +30,7 @@ public enum QueueItemKind {
      *
      * <p>Not {@code Draft}, which nobody has sent; not {@code ChangesRequested}, where the ball is
      * back with the master; not {@code Unassigned}, which is waiting for a master rather than for a
-     * review (arquitectura §4.5, ADR-07 §1). A tray that listed those would be showing an admin work that
+     * review. A tray that listed those would be showing an admin work that
      * is not theirs to do.
      */
     TableWaitingReview;
@@ -46,10 +46,10 @@ public enum QueueItemKind {
      * enforces it".
      *
      * <p>{@code @JsonValue} is here anyway, and it earns its place: it is what makes the enum safe to
-     * accept in a body or to publish directly the day something does either - F5 adding two kinds, or
-     * a filter that takes one. Without it that day is the one ADR-04 §5 describes, where every response
+     * accept in a body or to publish directly the day something does either - two more kinds being added, or
+     * a filter that takes one. Without it that day is the one where every response
      * publishes a value every request is rejected for, and {@code PlatformRole} has already paid for
-     * it once in this phase. {@code QueueItemKindJsonTest} pins both directions <em>and</em> pins
+     * it once. {@code QueueItemKindJsonTest} pins both directions <em>and</em> pins
      * that the DTO's string is the same string, which is the half that could actually drift today.
      *
      * @return the wire name, never null

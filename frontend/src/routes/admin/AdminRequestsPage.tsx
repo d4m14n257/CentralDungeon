@@ -37,35 +37,35 @@ import { ApiError } from '@/types/api'
 
 /**
  * `/admin/requests` — every request somebody made of an admin, and the two things an admin can do
- * with one: approve it or turn it down, each with a reason (ADR-16 §1, F3.2).
+ * with one: approve it or turn it down, each with a reason.
  *
- * **It opens filtered by what is waiting, and says so in the URL** (ADR-22 §6). A tray that opens
+ * **It opens filtered by what is waiting, and says so in the URL**. A tray that opens
  * showing what is already resolved is not a tray anybody can work from — it is a log. Entering with no
  * `?q=` redirects, replacing the history entry so «back» does not loop, to `?q=/status Pending`; the
  * endpoint itself answers everything with no `q`, like every other listing. The `/status` chip is then a
  * normal one: visible, removable, and what is typed composes with it. Removing it leaves an **empty**
  * `?q=`, which means «all» and does not redirect again; «clear filters» goes back to the default.
  *
- * **The empty tray is good news, not a broken screen** (ADR-20 §4, the same reading as `/master`):
+ * **The empty tray is good news, not a broken screen** (the same reading as `/master`):
  * nothing is waiting for an action. That is a different sentence from "your search found nothing",
  * and telling somebody who just filtered by `Rejected` that the platform is all caught up would
  * answer a question they did not ask.
  *
  * **Approving is not one act.** A `MasterGrant` hands the role out through the very same
  * `UserRoleService` that `/admin/users` uses — never a second road to the same grant
- * (roles-y-alcance.md §4, F3.2) — while a `TableOpen` creates a draft with the proposed name, run by
+ * — while a `TableOpen` creates a draft with the proposed name, run by
  * the requester as its Primary and without the role. The dialog says which one is about to happen.
  *
- * **What was searched and which page are in the URL** (ADR-12 §7), like the other four admin screens: a
+ * **What was searched and which page are in the URL**, like the other four admin screens: a
  * row is something one admin sends to another, and state that only lives in `useState` cannot be
  * linked to.
  *
- * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
+ * One of the wide tables: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **Behind the admin context's guard** (ADR-20 §2): an account without `Admin` or `Owner` is sent home by
+ * **Behind the admin context's guard**: an account without `Admin` or `Owner` is sent home by
  * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
- * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
+ * backend authorizes on its own and the page must not go blank if it refuses.
  */
 export function AdminRequestsPage() {
   const [searchParams] = useSearchParams()
@@ -82,11 +82,11 @@ function AdminRequestsList() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page: in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
-  // of ADR-22 §1. The entry without `?q=` was already redirected to the default by the screen above.
+  // of the query. The entry without `?q=` was already redirected to the default by the screen above.
   const fields = useMemo(() => approvalRequestSearchFields(t), [t])
   const search = useSearchQuery({
     fields,
@@ -101,7 +101,7 @@ function AdminRequestsList() {
 
   /**
    * Writes the screen's state into the URL, resetting the page whenever the search changes. An empty
-   * `q` is kept as `?q=` and not deleted: its absence is what the screen redirects on (ADR-22 §6).
+   * `q` is kept as `?q=` and not deleted: its absence is what the screen redirects on.
    */
   function updateParams(changes: Record<string, string>) {
     const next = new URLSearchParams(searchParams)
@@ -191,7 +191,7 @@ function AdminRequestsList() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
-          already showing rows (ADR-19 §4). */}
+          already showing rows. */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && data.totalElements > 0 && (
         <PageOutOfRangeState
@@ -217,7 +217,7 @@ function AdminRequestsList() {
               <>
                 {/* Absent on anything already resolved, never greyed out: a resolution is not
                     re-resolved, and a button that can only answer `REQUEST_ALREADY_RESOLVED` is a
-                    button that should not be there (principle 2). */}
+                    button that should not be there. */}
                 {request.status === 'Pending' && (
                   <>
                     <IconAction
@@ -253,8 +253,8 @@ function AdminRequestsList() {
       )}
 
       {/* The dialog gets its help as a node rather than raising it itself: `HelpLink` lives in
-          `features/help`, and a feature never imports another one (§3.1.5). The screen is what may
-          compose the two, so the explanation still sits inside the dialog that prompts it (ADR-20 §5). */}
+          `features/help`, and a feature never imports another one. The screen is what may
+          compose the two, so the explanation still sits inside the dialog that prompts it. */}
       <ResolveRequestDialog
         request={resolveDialog.item?.request ?? null}
         action={resolveDialog.item?.action ?? 'approve'}
@@ -273,7 +273,7 @@ function AdminRequestsList() {
             <DialogTitle>{t('requests.detailDialogTitle', { name: detailDialog.item?.requestedByName ?? '' })}</DialogTitle>
             <DialogDescription>{t('requests.detailDialogDescription')}</DialogDescription>
           </DialogHeader>
-          {/* An id and not the row (§3.1.5): the panel asks for its own data, so what it shows is the
+          {/* An id and not the row: the panel asks for its own data, so what it shows is the
               request as it is now - which matters here, since another admin's resolution is exactly
               what is most likely to have landed in between. */}
           {detailDialog.item && <RequestDetailPanel requestId={detailDialog.item.id} />}

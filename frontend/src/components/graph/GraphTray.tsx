@@ -11,11 +11,10 @@ export interface GraphTrayProps {
 }
 
 /**
- * The side panel of a node canvas (skill `diseno` §5, ADR-12 §7): what the canvas needs next to it and
+ * The side panel of a node canvas: what the canvas needs next to it and
  * cannot draw as a node - bringing another group in, a legend, what floating means.
  *
- * Next to the canvas from `md` up and above it below, like every two-column layout (skill `diseno`
- * §5.b); the grid is the page's, the frame and the spacing are this component's.
+ * Next to the canvas from `md` up and above it below, like every two-column layout; the grid is the page's, the frame and the spacing are this component's.
  *
  * @param props.title       the heading
  * @param props.description what the tray is for

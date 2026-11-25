@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { HelpButton, type HelpSectionId } from '@/features/help'
 
 /**
- * The one main action of a screen (ADR-21 §5). An object and not a node, so every screen's button comes
+ * The one main action of a screen. An object and not a node, so every screen's button comes
  * out the same: violet, normal size, at the right edge.
  */
 interface PageAction {
@@ -20,11 +20,11 @@ interface PageAction {
   disabled?: boolean
 }
 
-/** Where «Volver» goes and what it says. */
+/** Where "Back" goes and what it says. */
 interface PageBack {
   /** The screen it returns to. */
   to: string
-  /** What it says, already translated — «Volver a archivos», naming where it leads. */
+  /** What it says, already translated — "Back to files", naming where it leads. */
   label: string
 }
 
@@ -38,19 +38,19 @@ interface PageHeaderProps {
   badge?: ReactNode
   /** The screen this one returns to, as a small link above the title. */
   back?: PageBack
-  /** The help section that explains the screen, opened by «Cómo funciona». */
+  /** The help section that explains the screen, opened by "How it works". */
   help?: HelpSectionId
   /** The screen's one main action, at the right edge. */
   action?: PageAction | undefined
 }
 
 /**
- * The top of a screen, laid out the same way on every one of them (ADR-21 §5).
+ * The top of a screen, laid out the same way on every one of them.
  *
- * - **«Volver»**, when the screen has somewhere to return to, is a small link **above** the title —
+ * - **"Back"**, when the screen has somewhere to return to, is a small link **above** the title —
  *   never a button across from it, where it looked like the screen's action.
  * - **Title and description** on the left.
- * - **On the right, always in this order**: «Cómo funciona» (`HelpButton`) and then the main action,
+ * - **On the right, always in this order**: "How it works" (`HelpButton`) and then the main action,
  *   violet and normal size, against the edge — however long the description is: the text wraps, the
  *   buttons do not move. Below `sm` they go under the title.
  *
@@ -66,7 +66,7 @@ interface PageHeaderProps {
  * @param props.description optional one-line purpose
  * @param props.badge       optional qualifier next to the title
  * @param props.back        optional screen to return to
- * @param props.help        optional help section for «Cómo funciona»
+ * @param props.help        optional help section for "How it works"
  * @param props.action      optional main action
  */
 export function PageHeader({ title, description, badge, back, help, action }: PageHeaderProps) {
@@ -101,8 +101,8 @@ export function PageHeader({ title, description, badge, back, help, action }: Pa
 }
 
 /**
- * A button never wraps its label, and the label of this one can be a sentence - a disabled «Ya tenés una
- * postulación en curso» says why instead of hiding. It wraps, and the button grows a line, rather than
+ * A button never wraps its label, and the label of this one can be a sentence - a disabled "You already have an
+ * application in progress" says why instead of hiding. It wraps, and the button grows a line, rather than
  * pushing the page wider than the screen.
  */
 const ACTION_LABEL_WRAPS = 'h-auto min-h-9 max-w-full whitespace-normal'

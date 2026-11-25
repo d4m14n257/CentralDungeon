@@ -27,9 +27,9 @@ import {
 
 interface OutletContext {
   tableId: string
-  /** Set by /admin/tables/:id (ADR-06 §8): what the table asked and what came back, with nothing to publish or close. */
+  /** Set by /admin/tables/:id: what the table asked and what came back, with nothing to publish or close. */
   readOnly?: boolean
-  /** Opens a person's card (ADR-10 §6); the screen that mounts the tab decides what that is. */
+  /** Opens a person's card; the screen that mounts the tab decides what that is. */
   onOpenPerson?: (userId: string) => void
 }
 
@@ -40,20 +40,20 @@ interface OutletContext {
  * Three things the screen has to keep true, because each one is a rule that reads as a missing
  * feature to anybody who does not know it:
  *
- * - **Publishing notifies** (ADR-15 §5). Creating and publishing are one act; there is no draft to save.
+ * - **Publishing notifies**. Creating and publishing are one act; there is no draft to save.
  *   Correcting afterwards deliberately does not notify again.
- * - **The system does not judge answers** (ADR-15 §2). There is no accept and no reject — answers pile up
+ * - **The system does not judge answers**. There is no accept and no reject — answers pile up
  *   and the master reads them.
- * - **Missing an answer costs nothing** (ADR-15 §2). The roster of who has not answered offers no action,
+ * - **Missing an answer costs nothing**. The roster of who has not answered offers no action,
  *   on purpose.
  *
- * A child route rather than local state (§3.1.6 regla 5), so the tab has its own URL, survives a
+ * A child route rather than local state, so the tab has its own URL, survives a
  * refresh and can be linked to.
  *
  * The picker of who to address and the list of sessions come from other features, so they are read
- * **here** and passed down as plain data: a feature never imports from another (regla dura 16).
+ * **here** and passed down as plain data: a feature never imports from another.
  *
- * Mounted under /admin/tables/:id too, read-only (ADR-06 §8): the board and every answer, without
+ * Mounted under /admin/tables/:id too, read-only: the board and every answer, without
  * publishing, correcting or closing.
  */
 export function MasterTableTasksTab() {
@@ -62,7 +62,7 @@ export function MasterTableTasksTab() {
   const { tableId, readOnly, onOpenPerson } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
 
-  // isLoadingError, not isError: see ADR-19 §4.
+  // isLoadingError, not isError: a failed refetch keeps the rows already on screen.
   const { data: tasks, isPending, isLoadingError, refetch } = useTableTasks(tableId)
   const { data: players } = useTablePlayers(tableId)
   const { data: sessions } = useTableSessions(tableId)
@@ -70,13 +70,13 @@ export function MasterTableTasksTab() {
   /**
    * Who a `Single` task can be addressed to: the people actually playing, and not the vetoed ones.
    *
-   * **The roster stopped being only players in F3.4.** A vetoed row stays on the list — that is what
+   * **The roster is not only players.** A vetoed row stays on the list — that is what
    * makes the veto reversible — so `useTablePlayers` now answers `Player` **and** `Blocked`, and
    * anything that treats the whole list as "who is at this table" quietly widened with it.
    *
    * Without this filter the picker offers somebody the backend refuses with `400`: an option whose
-   * only possible outcome is an error, which is principle 2 exactly backwards. And the person has
-   * stopped seeing the table at all (ADR-09 §4), so a request addressed to them could never be answered.
+   * only possible outcome is an error, which is exactly backwards. And the person has
+   * stopped seeing the table at all, so a request addressed to them could never be answered.
    */
   const addressablePlayers = (players ?? []).filter((player) => player.status === 'Player')
 
@@ -98,14 +98,14 @@ export function MasterTableTasksTab() {
   }
 
   /**
-   * Uploads the blanks, then publishes or corrects the request (ADR-13 §5).
+   * Uploads the blanks, then publishes or corrects the request.
    *
    * A blank that failed does not hold the request back: it goes out with the ones that made it, and
    * the master is told which to add — the request is theirs and editable, so completing it is one
    * more edit rather than writing it again.
    */
   async function handleSubmit(draft: TaskDraft) {
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm(
       editing
         ? { title: t('board.editConfirmTitle'), description: t('board.editConfirmDescription') }
@@ -189,7 +189,7 @@ export function MasterTableTasksTab() {
           players={addressablePlayers}
           sessions={(sessions ?? []).map((session) => ({ id: session.id, sequenceNumber: session.sequenceNumber }))}
           isBusy={publish.isPending || update.isPending}
-          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="MasterRequest" />}
+          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished category="MasterRequest" />}
           onSubmit={handleSubmit}
         />
       )}

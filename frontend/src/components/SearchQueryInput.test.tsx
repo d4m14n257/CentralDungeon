@@ -13,7 +13,7 @@ const FIELDS = [
 ]
 
 /**
- * A command with fixed choices (ADR-22 §1), kept out of the shared harness on purpose: the tests about
+ * A command with fixed choices, kept out of the shared harness on purpose: the tests about
  * moving through the list count what is in it, and a third field would change what they mean.
  */
 const CHOICE_FIELDS = [
@@ -63,7 +63,7 @@ function query() {
 
 describe('SearchQueryInput', () => {
   /**
-   * A search is a second Enter (ADR-22 §4). The first closes what is typed into a chip; only Enter on the
+   * A search is a second Enter. The first closes what is typed into a chip; only Enter on the
    * empty text sends it. It used to search the text as it was typed, so every half-thought —
    * `/table_name d`, `/table_name db` — went to the server before its owner had decided.
    */
@@ -149,7 +149,7 @@ describe('SearchQueryInput', () => {
   })
 
   /**
-   * The standardisation of ADR-22 §3: picking writes text, and text is all there is until Enter.
+   * Picking writes text, and text is all there is until Enter.
    *
    * It used to pin the chip on the spot, so the very same command reached two different states
    * depending on whether it was picked from the list or typed out — and which of the two somebody did
@@ -271,10 +271,10 @@ describe('SearchQueryInput', () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), 'juan{Enter}pablo{Enter}')
-    // The first «y» is the one joining the two criteria; the second is the one waiting for whatever
+    // The first connector chip is the one joining the two criteria; the second is the one waiting for whatever
     // comes next, which is a different connector and has its own chip.
     await userEvent.click(screen.getAllByRole('button', { name: 'y' })[0]!)
-    // Toggling edits the query; the Enter on the empty text is what searches it (ADR-22 §4).
+    // Toggling edits the query; the Enter on the empty text is what searches it.
     expect(query()).toHaveTextContent(/^$/)
     await userEvent.type(searchBox(), '{Enter}')
 
@@ -297,7 +297,7 @@ describe('SearchQueryInput', () => {
     expect(screen.getByRole('button', { name: 'o' })).toBeInTheDocument()
   })
 
-  /** The default «y» waiting after the last chip joins nothing yet, so it is not drawn as a stray word. */
+  /** The default connector waiting after the last chip joins nothing yet, so it is not drawn as a stray word. */
   it('does not draw a lone default connector after the only chip', async () => {
     render(<Harness />)
 
@@ -307,7 +307,7 @@ describe('SearchQueryInput', () => {
     expect(screen.queryByRole('button', { name: 'y' })).not.toBeInTheDocument()
   })
 
-  /** Once there is something to join, the waiting one is «y» by default and says how it will be joined. */
+  /** Once there is something to join, the waiting one is the default connector and says how it will be joined. */
   it('shows the waiting connector once the next criterion is being typed', async () => {
     render(<Harness />)
 
@@ -321,14 +321,14 @@ describe('SearchQueryInput', () => {
 
     await userEvent.type(searchBox(), '/us{Enter}juan{Enter}{Enter}')
     await userEvent.click(screen.getByRole('button', { name: 'Quitar criterio: juan' }))
-    // Removing is editing too: the results still answer the chip until Enter confirms (ADR-22 §4).
+    // Removing is editing too: the results still answer the chip until Enter confirms.
     expect(query()).toHaveTextContent('/user_name juan')
     await userEvent.type(searchBox(), '{Enter}')
 
     expect(query()).toBeEmptyDOMElement()
   })
 
-  /** Nothing is pinned any more, so Backspace has one job: undo the last chip (ADR-22 §3). */
+  /** Nothing is pinned any more, so Backspace has one job: undo the last chip. */
   it('Backspace on an empty box returns the last chip to the input, as the text that made it', async () => {
     render(<Harness />)
 
@@ -379,7 +379,7 @@ describe('SearchQueryInput', () => {
   })
 
   /**
-   * The second kind of command (ADR-22 §1): choosing it offers its values instead of waiting for somebody
+   * The second kind of command: choosing it offers its values instead of waiting for somebody
    * to spell one. Nobody is going to type `application/vnd.openxmlformats-…`, and nobody should have
    * to know it exists.
    */
@@ -405,7 +405,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('/file_type application/pdf')
   })
 
-  /** A chosen value is text like any other until Enter, and it is the label that is written (ADR-22 §3). */
+  /** A chosen value is text like any other until Enter, and it is the label that is written. */
   it('picking a value writes its label into the text and closes nothing', async () => {
     render(<ChoiceHarness />)
 

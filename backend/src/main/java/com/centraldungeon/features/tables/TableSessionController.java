@@ -25,14 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
  * the session itself ({@code /sessions/{id}/hold}).
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role. Who may touch a concrete
- * table's calendar is <b>pertenencia</b> - a row in {@code masters} - which a {@code @PreAuthorize}
- * cannot see, so the service checks it before reading anything (hard rule 17, ADR-05 §5, ADR-06 §4). The annotation is
- * still written out on each method and never inherited (regla dura 4, CVE-2025-41248).
+ * table's calendar is <b>membership</b> - a row in {@code masters} - which a {@code @PreAuthorize}
+ * cannot see, so the service checks it before reading anything. The annotation is
+ * still written out on each method and never inherited (CVE-2025-41248).
  */
 @RestController
 public class TableSessionController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final TableSessionService tableSessionService;
 
     /**
@@ -51,7 +51,7 @@ public class TableSessionController {
      * @param tableId     the table
      * @param currentUser the actor, from the token; the service checks they run the table
      * @return 200 with its sessions, first to last. 403 when the actor neither runs it nor is an admin. While the
-     *         table is paused the pending sessions are not in the list (ADR-07 §2, ADR-08 §3)
+     *         table is paused the pending sessions are not in the list
      */
     @GetMapping("/api/v1/game-tables/{tableId}/sessions")
     @PreAuthorize("isAuthenticated()")
@@ -64,8 +64,8 @@ public class TableSessionController {
      *
      * @param tableId     the table
      * @param currentUser the actor, from the token. Both halves of the answer are about them and
-     *                    there is no parameter that could name anybody else (ADR-05 §5)
-     * @return 200 with their sessions and the three numbers of ADR-08 §5. 403 when they do not play there
+     *                    there is no parameter that could name anybody else
+     * @return 200 with their sessions and the three attendance numbers. 403 when they do not play there
      */
     @GetMapping("/api/v1/game-tables/{tableId}/sessions/mine")
     @PreAuthorize("isAuthenticated()")
@@ -92,7 +92,7 @@ public class TableSessionController {
     }
 
     /**
-     * A master declaring a session was played. Separate from recording attendance on purpose (ADR-08 §4).
+     * A master declaring a session was played. Separate from recording attendance on purpose.
      *
      * @param sessionId   the session
      * @param currentUser the actor, from the token
@@ -105,7 +105,7 @@ public class TableSessionController {
     }
 
     /**
-     * A master calling off one session. The table gets it back at the end (ADR-08 §3).
+     * A master calling off one session. The table gets it back at the end.
      *
      * @param sessionId   the session
      * @param currentUser the actor, from the token
@@ -119,7 +119,7 @@ public class TableSessionController {
     }
 
     /**
-     * A master recording who was at a session (ADR-08 §4).
+     * A master recording who was at a session.
      *
      * <p>{@code PUT} because the roster travels as a whole: it is filled in as one list on screen,
      * and a half-saved roster would be a state the screen has to explain.

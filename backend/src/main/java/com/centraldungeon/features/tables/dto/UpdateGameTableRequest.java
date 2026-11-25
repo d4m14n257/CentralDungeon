@@ -19,10 +19,10 @@ import org.jspecify.annotations.Nullable;
  * record and not a reuse of {@link CreateGameTableRequest} because the two differ in what they are
  * allowed to say: creating decides nothing about who runs the table, editing cannot change it
  * either, and keeping them apart is what stops a field added to one from silently appearing in the
- * other (arquitectura §2.3).
+ * other.
  *
  * @param name          the table's title
- * @param description   what the table is about, as rich text. Re-sanitized on every save (ADR-03 §8)
+ * @param description   what the table is about, as rich text. Re-sanitized on every save
  * @param permitted     the house rules. Rich text, same sanitization
  * @param requirements  what is asked of a player to be accepted, as rich text. Same sanitization
  * @param tableTypeId   how the table is run, or null to leave it unclassified
@@ -30,10 +30,10 @@ import org.jspecify.annotations.Nullable;
  *                      value costs a lookup when the links are rewritten
  * @param tagIds        the tags the table ends up labelled with. Empty clears them. At most 64
  * @param platformIds   where the table ends up being played. Empty clears them. At most 64
- * @param startDate     the day the table starts running (ADR-07 §4). A plain date: no session takes
+ * @param startDate     the day the table starts running. A plain date: no session takes
  *                      its hour from here, the weekly agenda does
- * @param totalSessions how many sessions are planned (ADR-08 §3)
- * @param maxPlayers    the player cap (ADR-07 §5), or null for no cap
+ * @param totalSessions how many sessions are planned
+ * @param maxPlayers    the player cap, or null for no cap
  * @param schedule      the weekly agenda the table ends up with, in UTC. Empty clears it
  * @param sections      the four optional sections of rich text the table ends up with. Absent clears
  *                      all four, like any other field of a full replacement

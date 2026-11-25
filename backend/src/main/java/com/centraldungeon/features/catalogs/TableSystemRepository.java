@@ -26,7 +26,7 @@ public interface TableSystemRepository extends JpaRepository<TableSystem, TableS
      * Counts, in one grouped query, how many tables use each of the given systems - so a page of
      * twenty values on /admin/catalogs costs one round trip instead of twenty.
      *
-     * <p>Named parameters only, never positional (ADR-03 §2).
+     * <p>Named parameters only, never positional.
      *
      * @param valueIds the systems to count. A system nothing points at is absent from the result
      *                 rather than reported as zero
@@ -48,7 +48,7 @@ public interface TableSystemRepository extends JpaRepository<TableSystem, TableS
      * <p>Accepted only: a profile is read by people who do not run those tables, and a proposal nobody
      * reviewed or a value taken out of service is not shown to them.
      *
-     * <p>Named parameters only, never positional (ADR-03 §2).
+     * <p>Named parameters only, never positional.
      *
      * @param gameTableIds the tables of the page. An empty collection is the caller's to avoid
      * @return one row per live link to an accepted system, by system name. A table with none is absent

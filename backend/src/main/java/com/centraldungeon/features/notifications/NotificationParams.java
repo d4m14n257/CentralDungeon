@@ -5,7 +5,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The names a notification's sentence needs filled in, stored alongside the row rather than baked
- * into it (ADR-23 §3).
+ * into it.
  *
  * <p><b>Why a notification does not store its own text.</b> A row is written once and read for
  * months, and the person reading it can change the language of the application in between. Storing
@@ -25,15 +25,14 @@ import org.jspecify.annotations.Nullable;
  * before it existed simply has no such key, and reads back with it null.
  *
  * @param tableName      the table the notification is about, for every type that names one
- * @param otherTableName the second table, for a clash that has to name both (ADR-08 §2)
+ * @param otherTableName the second table, for a clash that has to name both
  * @param actorName      the person who did the thing, for the types where somebody acted
  * @param tableId        the table, for a notification whose related entity is not the table itself - the
  *                       veto outcome points at an application, and the click has to land on the table's
  *                       players. Null for every other type
  * @param taskTitle      what the table is asking for, so the bell can say <em>which</em> request
- *                       arrived (ADR-15 §5). "The table is asking you for something" is a worse headline
- *                       than "Ficha de personaje", for the same reason ADR-18 §5 gives for naming the
- *                       applicant
+ *                       arrived. "The table is asking you for something" is a worse headline
+ *                       than "Character sheet", for the same reason the applicant is named
  * @param membership     how the recipient is joined to the table, for the table-change notifications
  *                       that reach both its masters and its players, so the click lands on the right
  *                       screen. Null for every other type, and for rows written before it existed
@@ -95,11 +94,11 @@ public record NotificationParams(
     /**
      * A notification whose sentence needs no name filled in at all.
      *
-     * <p>The two request outcomes of F3.2 are the first to use it. A fifth field naming the request
+     * <p>The two request outcomes are the first to use it. A fifth field naming the request
      * type was written and then removed: the rendered sentences do not name it, so the column would
-     * have carried a value into every row that nothing ever read - which is the same orphan this
-     * slice refused to create when it declared three request types instead of five. It goes in the
-     * day a sentence asks for it, together with that sentence.
+     * have carried a value into every row that nothing ever read - which is the same orphan the request types
+     * avoid by being declared only with their producers. It goes in the day a sentence asks for it, together
+     * with that sentence.
      *
      * @return the parameters, with nothing set
      */

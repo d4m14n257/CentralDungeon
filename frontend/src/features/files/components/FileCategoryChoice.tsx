@@ -6,11 +6,11 @@ import { cn } from '@/lib/utils'
 import type { FileCategory } from '../types'
 
 interface FileCategoryChoiceProps {
-  /** The cajón currently chosen. Always one — this is a choice, not a filter. */
+  /** The category currently chosen. Always one — this is a choice, not a filter. */
   value: FileCategory
-  /** Called with the cajón that was picked. */
+  /** Called with the category that was picked. */
   onChange: (value: FileCategory) => void
-  /** The cajones to offer. Only the actor's own (ADR-14 §5). */
+  /** The categories to offer. Only the actor's own. */
   options: readonly FileCategory[]
   /** The accessible name of the group, since the chips have no visible legend of their own. */
   label: string
@@ -21,7 +21,7 @@ interface FileCategoryChoiceProps {
 }
 
 /**
- * Choosing which cajón a file goes in, as chips (ADR-14 §4).
+ * Choosing which category a file goes in, as chips.
  *
  * **Chips and not a `<Select>`**, for the reason {@link FileCategoryFilter} is one too: the whole set
  * is two to four short values, and a dropdown hides what is on offer behind a click. Here it matters
@@ -29,16 +29,16 @@ interface FileCategoryChoiceProps {
  * option at once is what lets them make it without exploring.
  *
  * **It always has a value**, which is the difference from the filter: clicking the active chip does
- * nothing rather than clearing it. A file has to be filed somewhere, and "no cajón" is not an answer
+ * nothing rather than clearing it. A file has to be filed somewhere, and "no category" is not an answer
  * this control may produce.
  *
  * `radio` and not `button` on each chip: one of a set, exactly one chosen, which is what a radio
  * group *is* — and it gives arrow-key navigation for free. The visual is a chip; the semantics are
  * what a screen reader needs.
  *
- * @param props.value     the cajón currently chosen
- * @param props.onChange  called with the cajón that was picked
- * @param props.options   the cajones to offer
+ * @param props.value     the category currently chosen
+ * @param props.onChange  called with the category that was picked
+ * @param props.options   the categories to offer
  * @param props.label     the accessible name of the group
  * @param props.disabled  disables the group while an upload is in flight
  * @param props.className extra classes for the caller's layout

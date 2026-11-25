@@ -10,11 +10,11 @@ import type { PlatformRole } from '../types'
  * scans the source for literals and cannot see a class name built from a template string.
  *
  * A `Record` over `PlatformRole` rather than a lookup with a fallback, so a fifth role could not be
- * added without deciding how it looks (arquitectura §3.2, regla 9).
+ * added without deciding how it looks.
  *
  * `Admin` and `Owner` read differently from the other two because they are a different kind of
- * thing: they are the rank (ADR-06 §1), and an admin scanning this column is looking for exactly them.
- * The colour is never the only carrier — the label is always there (skill `diseno` §3).
+ * thing: they are the rank, and an admin scanning this column is looking for exactly them.
+ * The colour is never the only carrier — the label is always there.
  */
 const ROLE_CLASSES: Record<PlatformRole, string> = {
   Player: 'bg-raised text-fg-muted border-border',
@@ -24,7 +24,7 @@ const ROLE_CLASSES: Record<PlatformRole, string> = {
 }
 
 /**
- * Somebody's active roles, as chips, **in the order of ADR-07 §8** — Player, Master, Admin, Owner.
+ * Somebody's active roles, as chips, **in the fixed order** — Player, Master, Admin, Owner.
  *
  * It sorts rather than trusting what arrived. The API sends them in this order already, and the
  * point of sorting anyway is that the column reads the same on every row whatever the server's
@@ -32,7 +32,7 @@ const ROLE_CLASSES: Record<PlatformRole, string> = {
  * "Player · Master" makes an admin compare two rows character by character.
  *
  * An account with no roles at all **says so in words**, and this is the one place on the screen that
- * fills an empty value in. It is a real state — every account is *created* with `Player` (ADR-05 §1),
+ * fills an empty value in. It is a real state — every account is *created* with `Player`,
  * which is a statement about signup and not an invariant, so a role can be revoked down to none —
  * and it is a state somebody *decided*, unlike the blank name or country next to it, which are
  * fields nobody got around to filling. On a phone, where the row is a card and the label sits beside

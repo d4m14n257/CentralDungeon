@@ -2,10 +2,10 @@ import { expect, type Page } from '@playwright/test'
 import { acceptReview } from './review'
 
 /**
- * Reviewing a table, from where F3.3 moved it to (ADR-16 §7, §5).
+ * Reviewing a table, from the shared admin tray where reviews live.
  *
  * **Seven specs had their own copy of these six lines** pointed at `/admin/tables`, which is exactly
- * why the move of one slice broke seven files at once. One copy here: when the review moves again, or
+ * why moving the review broke seven files at once. One copy here: when the review moves again, or
  * grows a step, it is one edit rather than a hunt.
  *
  * **These helpers do not take the item first, on purpose.** An earlier version did, because the rule
@@ -16,7 +16,7 @@ import { acceptReview } from './review'
  * walks: open the tray, press the button. Reserving first is a separate behaviour and belongs in a
  * spec about reserving, not baked into every table that needs approving to reach the next assertion.
  *
- * The row is a `<tr>`: `/admin/queue` is one of the wide tables of skill `diseno` §5.b, and the
+ * The row is a `<tr>`: `/admin/queue` is one of the wide tables, and the
  * card layout it falls back to below `md` is `display:none` at Playwright's viewport, so it is not in
  * the accessibility tree at all.
  */

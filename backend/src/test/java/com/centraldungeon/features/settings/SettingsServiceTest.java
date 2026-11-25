@@ -29,10 +29,10 @@ import org.springframework.cache.CacheManager;
 import org.springframework.util.unit.DataSize;
 
 /**
- * The rules of {@code /admin/settings} (ADR-17 §3): where a value comes from when nobody has changed it,
+ * The rules of {@code /admin/settings}: where a value comes from when nobody has changed it,
  * what happens when somebody does, and what the API refuses.
  *
- * <p>The three that carry the weight of the slice:
+ * <p>The three that carry the weight of the feature:
  *
  * <ul>
  *   <li><b>No row means the shipped default.</b> {@code system_settings} holds overrides only, so a
@@ -221,7 +221,7 @@ class SettingsServiceTest {
 
     // ---------------------------------------------------------------- what it refuses
 
-    /** Above the ceiling: a 400 carrying both bounds, because "out of range" alone says nothing (ADR-23 §3). */
+    /** Above the ceiling: a 400 carrying both bounds, because "out of range" alone says nothing. */
     @Test
     void aValueAboveTheCeilingIsRefusedWithBothBoundsInTheError() {
         assertThatThrownBy(() -> service.update(SettingKey.FILES_MAX_FILE_SIZE_MB, 500, "más grande", actor))
@@ -240,7 +240,7 @@ class SettingsServiceTest {
 
     /**
      * <b>Nothing is written when the value is refused</b>, and the assertion is that it was never
-     * attempted rather than that nothing is stored - the same shape F3.2 used for ADR-16 §2's validation.
+     * attempted rather than that nothing is stored - the same shape the approval-request tests use for reference validation.
      */
     @Test
     void arefusedValueNeverReachesEitherTable() {
@@ -259,7 +259,7 @@ class SettingsServiceTest {
      *
      * <p>{@code spring.servlet.multipart.max-file-size} rejects an oversized part before a byte
      * reaches a controller, so a setting allowed past it would produce a raw container failure where
-     * the frontend expects the explained {@code FILE_TOO_LARGE} (ADR-23 §3). A comment asking the two
+     * the frontend expects the explained {@code FILE_TOO_LARGE}. A comment asking the two
      * numbers to agree is not a mechanism; a boot failure naming both is.
      */
     @Test

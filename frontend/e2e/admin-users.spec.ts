@@ -2,11 +2,9 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { acceptReview } from './helpers/review'
 
 /**
- * F3.1 end to end: the sentence `roles-y-alcance.md §4, F3.1` measures the slice by.
- *
- * > un owner asciende a alguien a admin; ese admin abre `/admin/users`, puede dar el rol de master y
- * > **no encuentra ninguna forma** de dar el de admin; el owner intenta quitarse su propio rol y
- * > recibe el `409`.
+ * User administration end to end: an owner promotes someone to admin; that admin opens `/admin/users`,
+ * can grant the master role and **finds no way at all** to grant the admin one; the owner tries to
+ * remove their own role and gets a `409`.
  *
  * It is the one check that crosses both halves: the capability rule lives in the frontend
  * (`useUserAdminCapabilities`) and the refusal lives in the backend (`UserRoleService`), and only a
@@ -64,8 +62,8 @@ async function newActor(
 }
 
 /**
- * Types a criterion, closes it into a chip and searches it: the first Enter closes one (ADR-22 §3), the
- * second, on the empty text, is what searches (ADR-22 §4).
+ * Types a criterion, closes it into a chip and searches it: the first Enter closes one, the
+ * second, on the empty text, is what searches.
  */
 async function search(page: Page, criterion: string) {
   const box = page.getByRole('combobox', { name: 'Buscar usuarios' })
@@ -89,7 +87,7 @@ async function openRoleDialog(page: Page, discordId: string) {
 }
 
 /**
- * The whole `Se prueba:` of F3.1, in one run — because the three sentences are one situation and
+ * The whole scenario in one run, because the three sentences are one situation and
  * splitting them would mean promoting somebody three times.
  */
 test('an owner promotes an admin, that admin cannot promote anybody, and the owner cannot step down', async ({ browser }) => {
@@ -110,13 +108,13 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
 
     const dialog = await openRoleDialog(owner.page, futureAdminId)
     // The owner sees Admin besides the two anybody can hold - the assertion a `hasRole('ADMIN')` would
-    // not reach - and no Owner to give: the application grants it to nobody (ADR-06 §1).
+    // not reach - and no Owner to give: the application grants it to nobody.
     for (const role of ['Jugador', 'Master', 'Admin']) {
       await expect(dialog.getByRole('button', { name: new RegExp(`^${role}\\b`) })).toBeVisible()
     }
     await expect(dialog.getByRole('button', { name: /^Owner\b/ })).toHaveCount(0)
     await dialog.getByRole('button', { name: /^Admin\b/ }).click()
-    await dialog.getByLabel('Motivo').fill('Promoción de prueba E2E de F3.1')
+    await dialog.getByLabel('Motivo').fill('Promoción de prueba E2E')
     await dialog.getByRole('button', { name: 'Dar el rol' }).click()
     await acceptReview(owner.page)
     await expect(dialog).toBeHidden()
@@ -132,7 +130,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await rowOf(owner.page, futureAdminId).getByRole('link', { name: futureAdminId }).click()
     const history = owner.page.getByRole('main')
     await expect(history.getByRole('heading', { name: 'Lo que hicieron los admins con esta cuenta' })).toBeVisible()
-    await expect(history).toContainText('Promoción de prueba E2E de F3.1')
+    await expect(history).toContainText('Promoción de prueba E2E')
     await expect(history).toContainText(ownerId)
 
     // ---- 3. That admin opens /admin/users. The sign-in is a no-op: step 1 already granted Admin.
@@ -145,7 +143,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     // Master, yes.
     await expect(adminDialog.getByRole('button', { name: /^Master\b/ })).toBeVisible()
     await expect(adminDialog.getByRole('button', { name: /^Jugador\b/ })).toBeVisible()
-    // Admin and Owner: **no way at all**. Not disabled - absent (principle 2 of diseno §1).
+    // Admin and Owner: **no way at all**. Not disabled - absent: an action the reader cannot take is not drawn.
     await expect(adminDialog.getByRole('button', { name: /^Admin\b/ })).toHaveCount(0)
     await expect(adminDialog.getByRole('button', { name: /^Owner\b/ })).toHaveCount(0)
 
@@ -158,7 +156,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await expect(rowOf(futureAdmin.page, playerId)).toContainText('Master', { timeout: 15_000 })
 
     // ---- 4. The owner cannot step down: on their own account neither Owner nor Admin is offered.
-    // Absent, not disabled (principle 2 of diseno §1); the server's 409 stays as the real guard.
+    // Absent, not disabled; the server's 409 stays as the real guard.
     await owner.page.goto('/admin/users')
     await search(owner.page, `/discord_name ${ownerId}`)
     const ownOwnDialog = await openRoleDialog(owner.page, ownerId)
@@ -202,17 +200,17 @@ test('the /role command travels from the box through the URL to the backend', as
     await search(owner.page, `/discord_name ${prefix} /and /role Master`)
 
     // The canonical string the box built is the one the address bar carries and the one
-    // SearchQueryParser reads on the other side (ADR-12 §7, ADR-22 §3).
+    // SearchQueryParser reads on the other side.
     await expect(owner.page).toHaveURL(/q=%2Frole\+Master|q=.*role.*Master/)
     await expect(rowOf(owner.page, masterId)).toBeVisible()
     await expect(rowOf(owner.page, playerId)).toHaveCount(0)
 
-    // The state is in the URL, so a reload has to come back to the same rows (ADR-12 §7).
+    // The state is in the URL, so a reload has to come back to the same rows.
     await owner.page.reload()
     await expect(rowOf(owner.page, masterId)).toBeVisible()
     await expect(rowOf(owner.page, playerId)).toHaveCount(0)
 
-    // A role nobody has is an empty result, never a 400 (§2.5).
+    // A role nobody has is an empty result, never a 400.
     await owner.page.goto(`/admin/users?q=${encodeURIComponent(`/discord_name ${masterId} /and /role Owner`)}`)
     await expect(owner.page.getByText('Nadie coincide con esa búsqueda')).toBeVisible()
 
@@ -228,7 +226,7 @@ test('the /role command travels from the box through the URL to the backend', as
 
 /**
  * The other half of the matrix: a block is the door closing, and the accounts holding a rank are out
- * of reach of it - which the screen expresses by not offering the button at all (ADR-05 §7, §3).
+ * of reach of it - which the screen expresses by not offering the button at all.
  */
 test('an account can be blocked and let back in, and one holding a rank is never offered a block', async ({ browser }) => {
   // Same reason as above: the marker before the role, so one search brings the three of them up.
@@ -258,7 +256,7 @@ test('an account can be blocked and let back in, and one holding a rank is never
 
     await rowOf(owner.page, victimId).getByRole('button', { name: 'Bloquear' }).click()
     const blockDialog = owner.page.getByRole('dialog')
-    // The dialog says what a block implies before it is confirmed (ADR-05 §7).
+    // The dialog says what a block implies before it is confirmed.
     await expect(blockDialog).toContainText('no va a poder volver a entrar')
     await expect(blockDialog).toContainText('Sus datos se conservan')
     await blockDialog.getByLabel('Motivo').fill('Prueba E2E de bloqueo')

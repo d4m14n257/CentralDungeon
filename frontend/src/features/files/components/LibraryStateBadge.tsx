@@ -6,7 +6,7 @@ import type { LibraryState } from '../libraryState'
 
 /**
  * Which tone each state wears. Here and not in `StatusBadge`: which of the library's states counts
- * as "open" is this domain's decision (arquitectura §3.1.2).
+ * as "open" is this domain's decision.
  */
 const STATE_TONES: Record<LibraryState, StatusTone> = {
   Unpublished: 'draft',
@@ -16,7 +16,7 @@ const STATE_TONES: Record<LibraryState, StatusTone> = {
 }
 
 /**
- * Where a file stands in the platform's library, as a badge (ADR-14 §7): the column that tells an admin
+ * Where a file stands in the platform's library, as a badge: the column that tells an admin
  * whether masters can see it, whether it waits, or whether it was taken out of the pickers.
  *
  * @param props.state where the file stands

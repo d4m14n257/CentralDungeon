@@ -64,7 +64,7 @@ describe('EditProfileDialog', () => {
     expect(updateProfile).not.toHaveBeenCalled()
   })
 
-  /** ADR-10 §4: the two doors stay distinct, and the refusal says which one was the wrong door. */
+  /** The two doors stay distinct, and the refusal says which one was the wrong door. */
   it('tells the reader what the server refused with, from its code', async () => {
     updateProfile.mockRejectedValue(
       new ApiError(409, { title: 'Conflict', status: 409, detail: 'Onboarding still pending', errorCode: 'ONBOARDING_PENDING' }),

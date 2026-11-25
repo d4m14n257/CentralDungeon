@@ -21,7 +21,7 @@ import '@/styles/globals.css'
 import '@/styles/base.css'
 
 // Before anything renders: a schema defined at module load would otherwise validate once with zod's
-// English text before the map is in place (ADR-07 §3).
+// English text before the map is in place.
 installZodErrorMap()
 
 const root = document.getElementById('root')

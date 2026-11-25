@@ -11,7 +11,7 @@ import type { HelpSectionBodyProps } from './registry'
  * The help that serves anybody, whatever their role.
  *
  * Each export is the **body** of a section, without its heading: the heading is the dialog's title
- * and lives in the registry, so a section cannot end up announced twice (ADR-20 §5).
+ * and lives in the registry, so a section cannot end up announced twice.
  */
 
 const TABLE_STATUSES: GameTableStatus[] = [
@@ -28,10 +28,10 @@ const TABLE_STATUSES: GameTableStatus[] = [
 ]
 
 /**
- * The rules of the search language, in the order they are read (ADR-22 §1).
+ * The rules of the search language, in the order they are read.
  *
  * `enter`, `naming` and `choices` sit right after `field` because they are what somebody needs the
- * moment they first press `/`: what closes a criterion (ADR-22 §3), what the commands are called, and that
+ * moment they first press `/`: what closes a criterion, what the commands are called, and that
  * some of them are picked from a list instead of typed.
  */
 const SEARCH_RULES = [
@@ -51,10 +51,10 @@ const SEARCH_RULES = [
 const CONTEXT_ROLES = ['player', 'master', 'admin', 'owner']
 
 /**
- * The three things somebody can ask an admin for (ADR-16 §1).
+ * The three things somebody can ask an admin for.
  *
  * Written out here rather than imported from `features/approvals`: a feature never imports another
- * one (arquitectura §3.1.5), and the help is text about the mechanism rather than a second
+ * one, and the help is text about the mechanism rather than a second
  * consumer of it. The ids are the ones the API spells, so the section and the badge cannot end up
  * naming different things.
  */
@@ -83,7 +83,7 @@ function hasChoices(field: SearchField): boolean {
 }
 
 /**
- * The worked examples of **this** box, built from the commands it accepts (ADR-22 §3).
+ * The worked examples of **this** box, built from the commands it accepts.
  *
  * They used to be five fixed rows about `/user_name` and `/discord_name`, shown to everybody — so on
  * `/my/files`, where neither command exists, the help taught two things that do not work and none of
@@ -120,7 +120,7 @@ function searchExamples(fields: readonly SearchField[], t: TFunction): SearchExa
 
 /**
  * How the search query language works: its rules, which are the same everywhere, and its commands and
- * examples, which are those of the box that raised the question (ADR-22 §3).
+ * examples, which are those of the box that raised the question.
  */
 export function SearchHelp({ searchFields = [] }: HelpSectionBodyProps) {
   const { t } = useTranslation('help')
@@ -131,7 +131,7 @@ export function SearchHelp({ searchFields = [] }: HelpSectionBodyProps) {
       <p className="text-fg-muted text-sm">{t('basics.search.intro')}</p>
       <HelpList items={SEARCH_RULES.map((key) => t(`basics.search.${key}`))} />
       <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4, 5].map((n) => t(`basics.search.steps.step${n}`))} />
-      {/* **The commands of this buscador, named** (ADR-22 §2, §3). Nobody guesses that `/file_categories`
+      {/* **The commands of this buscador, named**. Nobody guesses that `/file_categories`
           exists, and a list of somebody else's commands is a list of things that do not work here. */}
       {searchFields.length > 0 && (
         <div className="space-y-2">
@@ -224,7 +224,7 @@ export function AccountHelp() {
 }
 
 /**
- * What a request is, from the side of whoever makes one (ADR-16 §1, F3.2).
+ * What a request is, from the side of whoever makes one.
  *
  * **It exists because the mechanism is invisible from the outside.** Somebody presses "ask for the
  * master role" and then nothing happens on their screen: no queue they can watch, no place the
@@ -259,12 +259,12 @@ export function NotificationsHelp() {
 }
 
 /**
- * `/my/files`, the person's own library (ADR-14 §5, ADR-21 §5).
+ * `/my/files`, the person's own library.
  *
  * Under `basics` because the library is both a player's and a master's: the same screen, with the
- * cajones each role fills. What it says is what the screen cannot show by itself — that reusing costs
- * nothing, where the cajón comes from when it is not asked, and when a file goes away on its own. The
- * purge line says what the backend does (ADR-13 §3): a file no table holds, unused for three months, is
+ * categories each role fills. What it says is what the screen cannot show by itself — that reusing costs
+ * nothing, where the category comes from when it is not asked, and when a file goes away on its own. The
+ * purge line says what the backend does: a file no table holds, unused for three months, is
  * marked gone, and only published files are exempt.
  */
 export function MyFilesHelp() {
@@ -272,17 +272,17 @@ export function MyFilesHelp() {
 
   return (
     <>
-      <HelpList items={['what', 'cajon', 'usages', 'reuse', 'purge', 'remove'].map((key) => t(`basics.myFiles.${key}`))} />
+      <HelpList items={['what', 'category', 'usages', 'reuse', 'purge', 'remove'].map((key) => t(`basics.myFiles.${key}`))} />
       <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`basics.myFiles.steps.step${n}`))} />
     </>
   )
 }
 
 /**
- * `/my/schedule`, the person's whole week (ADR-08 §6, ADR-21 §5).
+ * `/my/schedule`, the person's whole week.
  *
  * The screen is a grid, and a grid does not say what its colours mean for, where a block leads, or
- * that a gap in it is a gap the server accepts (ADR-08 §2) — which is the reason to open it before
+ * that a gap in it is a gap the server accepts — which is the reason to open it before
  * applying to a table or creating one.
  */
 export function MyScheduleHelp() {

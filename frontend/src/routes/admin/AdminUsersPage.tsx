@@ -33,7 +33,7 @@ import { ApiError } from '@/types/api'
 
 /**
  * `/admin/users` — every account the platform has, and the two things an administrator can do to
- * one: move its roles and close it (F3.1).
+ * one: move its roles and close it.
  *
  * **It is the one screen that sees blocked accounts.** Everywhere else, `Allowed` is the only status
  * that can appear — the picker's endpoint filters the rest out and a blocked person cannot sign in —
@@ -42,20 +42,20 @@ import { ApiError } from '@/types/api'
  * **Which buttons exist is a capability question, asked once** (`useUserAdminCapabilities`) and never
  * a loose `if` in this JSX. An admin finds no way at all to hand out `Admin` or `Owner`, and nobody
  * is offered a block on an account that holds either: not a greyed-out button, not one that fails
- * when pressed — the button is not there (principle 2 of diseno §1). The backend refuses
- * the same things independently, endpoint by endpoint (ADR-20 §1), which is what makes this a display
+ * when pressed — the button is not there. The backend refuses
+ * the same things independently, endpoint by endpoint, which is what makes this a display
  * decision rather than the security.
  *
- * **What was searched and which page are in the URL** (ADR-12 §7), like `/admin/catalogs` and
+ * **What was searched and which page are in the URL**, like `/admin/catalogs` and
  * `/admin/files`: a row is something one admin sends to another, and state that only lives in
  * `useState` cannot be linked to.
  *
- * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
+ * One of the wide tables: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **Behind the admin context's guard** (ADR-20 §2): an account without `Admin` or `Owner` is sent home by
+ * **Behind the admin context's guard**: an account without `Admin` or `Owner` is sent home by
  * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
- * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
+ * backend authorizes on its own and the page must not go blank if it refuses.
  */
 export function AdminUsersPage() {
   const { t, i18n } = useTranslation('admin')
@@ -63,12 +63,12 @@ export function AdminUsersPage() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page: in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
-  // of ADR-22 §1. Hydrating from `?q=` on mount is what makes a filtered view linkable (ADR-12 §7). One list
-  // of commands, given to the box, used to read the URL and to build the help (ADR-22 §3).
+  // of the query. Hydrating from `?q=` on mount is what makes a filtered view linkable. One list
+  // of commands, given to the box, used to read the URL and to build the help.
   const fields = useMemo(() => adminUserSearchFields(t), [t])
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
@@ -95,7 +95,7 @@ export function AdminUsersPage() {
   }
 
   const columns: DataTableColumn<AdminUserSummary>[] = [
-    // The handle opens the account (ADR-06 §8): the row is where an admin finds somebody, the record is where they read them.
+    // The handle opens the account: the row is where an admin finds somebody, the record is where they read them.
     {
       id: 'discordUsername',
       header: t('users.columns.discordUsername'),
@@ -108,7 +108,7 @@ export function AdminUsersPage() {
     },
     { id: 'status', header: t('users.columns.status'), role: 'badge', cell: (user) => <UserStatusBadge status={user.status} /> },
     // No fallback text for a missing name or country: somebody who never set one is not an error,
-    // and "no country" is not information anybody asked for (skill `diseno` §5).
+    // and "no country" is not information anybody asked for.
     { id: 'name', header: t('users.columns.name'), cell: (user) => user.name ?? '' },
     { id: 'country', header: t('users.columns.country'), cell: (user) => user.country ?? '' },
     { id: 'roles', header: t('users.columns.roles'), cell: (user) => <AdminUserRolesCell roles={user.roles} /> },
@@ -138,7 +138,7 @@ export function AdminUsersPage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
-          already showing rows (ADR-19 §4). */}
+          already showing rows. */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && data.totalElements > 0 && (
         <PageOutOfRangeState
@@ -177,7 +177,7 @@ export function AdminUsersPage() {
                 )}
                 {/* Reading the record is not an action on the account, so it is offered on every row
                     - including the ones nobody may touch. It used to open the history alone; the
-                    history now lives on the record with everything else (ADR-06 §8). */}
+                    history now lives on the record with everything else. */}
                 <IconAction
                   icon={<IdCard className="size-4" />}
                   label={t('users.viewRecord')}
@@ -200,9 +200,9 @@ export function AdminUsersPage() {
       )}
 
       {/* The two dialogs get their help as a node rather than raising it themselves: `HelpLink`
-          lives in `features/help`, and a feature never imports another one (§3.1.5). The screen is
+          lives in `features/help`, and a feature never imports another one. The screen is
           what may compose the two, so the explanation still sits inside the dialog that prompts it
-          (ADR-20 §5) instead of in an index nobody opens. */}
+          instead of in an index nobody opens. */}
       <RoleChangeDialog
         user={roleDialog.item ?? null}
         grantableRoles={grantableRoles}

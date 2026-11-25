@@ -19,7 +19,7 @@ import { RequestTypeBadge } from './RequestTypeBadge'
  * and the summary has no field for it, so without this the answer would be written and then
  * unreadable.
  *
- * It takes an **id and not the row** (§3.1.5): it asks for its own data, so what it shows is the
+ * It takes an **id and not the row**: it asks for its own data, so what it shows is the
  * request as it is now rather than as the listing last saw it — which matters exactly here, since
  * the other admin's resolution is the thing most likely to have landed in between.
  *

@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { filesApi } from './filesApi'
 
 /**
- * Publishing a file of the platform's library that is not published — never published yet, or hidden
- * (ADR-14 §7). From then on masters see it in the picker and can attach it (ADR-14 §1).
+ * Publishing a file of the platform's library that is not published — never published yet, or hidden.
+ * From then on masters see it in the picker and can attach it.
  *
  * @returns the mutation, taking the id of the file to publish
  */

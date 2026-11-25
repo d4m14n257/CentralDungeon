@@ -3,11 +3,10 @@ package com.centraldungeon.common.security;
 import java.util.Set;
 
 /**
- * The actor of the current request, resolved from the JWT - never from a path variable
- * (ADR-05 §5).
+ * The actor of the current request, resolved from the JWT - never from a path variable.
  *
  * <p>The roles in here were read from the database by {@code JwtAuthenticationFilter} during this
- * request, not lifted from the token's claims: the JWT asserts identity, not authorization (ADR-05 §3).
+ * request, not lifted from the token's claims: the JWT asserts identity, not authorization.
  *
  * @param userId the authenticated user's id. This is the id that goes into a {@code WHERE}, and the
  *               only one a service may trust
@@ -20,7 +19,7 @@ public record CurrentUser(String userId, Set<String> roles) {
      * Tells whether the actor holds a role.
      *
      * <p>Careful: a role is not membership. Holding {@code Master} means "can create tables of my
-     * own", not "runs this table" - that one is decided by a row in {@code masters} (ADR-06 §4).
+     * own", not "runs this table" - that one is decided by a row in {@code masters}.
      *
      * @param roleName the role to look for, as it is named in {@code roles}
      * @return true when the actor currently holds it

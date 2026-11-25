@@ -4,8 +4,8 @@ package com.centraldungeon.features.files.dto;
  * A table's file as a candidate or a player sees it, read-only.
  *
  * <p>Travels inside {@code GameTableDetailResponse}, not through an endpoint of its own - the same
- * decision F1.3 took for the calendar. That read <b>already</b> decides who may see the table, down
- * to answering 404 to somebody vetoed (ADR-09 §4), so the files inherit that one answer instead of
+ * decision the calendar read takes. That read <b>already</b> decides who may see the table, down
+ * to answering 404 to somebody vetoed, so the files inherit that one answer instead of
  * repeating the check somewhere it could drift out of step with it.
  *
  * <p>Deliberately smaller than {@link TableFileResponse}: no {@code isPrivate} - a private
@@ -15,10 +15,10 @@ package com.centraldungeon.features.files.dto;
  * @param fileId        the file's identifier, which is what the download endpoint takes
  * @param name          the original filename, which is what the reader recognises it by
  * @param mimeType      the declared MIME type, so the screen can show the right icon
- * @param sizeBytes     the size as it was uploaded, before compression (ADR-13 §3). Shown because somebody
+ * @param sizeBytes     the size as it was uploaded, before compression. Shown because somebody
  *                      on a phone deserves to know what a tap is about to cost them
  * @param tableFileType what the file is doing on the table - prepared beforehand, or produced at a
- *                      session - as a string (arquitectura §2.3)
+ *                      session - as a string
  */
 public record SharedFileResponse(String fileId, String name, String mimeType, long sizeBytes, String tableFileType) {
 }

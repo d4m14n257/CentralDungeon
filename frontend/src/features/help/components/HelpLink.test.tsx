@@ -7,7 +7,7 @@ import { HELP_SECTIONS } from '../sections/registry'
 import { HelpLink } from './HelpLink'
 
 /**
- * ADR-20 §5: the help stopped being a route so that reading it would stop costing the work in progress.
+ * The help stopped being a route so that reading it would stop costing the work in progress.
  * These are the two properties that has to hold on to.
  */
 describe('HelpLink', () => {

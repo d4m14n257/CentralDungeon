@@ -35,7 +35,7 @@ function isTableStatus(value: string): value is GameTableStatus {
 
 /**
  * The person's tables, one page at a time, each opening its admin view. Its own component because it
- * owns the page number and its own query (§3.1.5).
+ * owns the page number and its own query.
  */
 function UserTablesSection({ userId }: { userId: string }) {
   const { t } = useTranslation('admin')
@@ -76,7 +76,7 @@ function UserTablesSection({ userId }: { userId: string }) {
 }
 
 /**
- * `/admin/users/:id` — one account, whole, as an admin reads it (ADR-06 §8).
+ * `/admin/users/:id` — one account, whole, as an admin reads it.
  *
  * **Everything about the person, and the actions on them, in one place.** The list of `/admin/users`
  * answers "who is there"; this answers "who is this": their profile (Discord handle, country,
@@ -85,11 +85,11 @@ function UserTablesSection({ userId }: { userId: string }) {
  * and what admins did to the account and why. It replaced the history dialog of the list, which showed
  * the last of those and nothing else.
  *
- * Reached from the list and from any person on a table an admin is reading (ADR-06 §8). **No karma and no
- * comments yet** (ADR-10 §5): both are F5, and when they arrive they belong here.
+ * Reached from the list and from any person on a table an admin is reading. **No karma and no
+ * comments yet**: both are still to be built, and when they arrive they belong here.
  *
- * Each block reads its own data from the id (§3.1.5): the account from the admin read, the profile
- * from the profile read - which an admin always passes (ADR-06 §8) - the tables and the history from theirs.
+ * Each block reads its own data from the id: the account from the admin read, the profile
+ * from the profile read - which an admin always passes - the tables and the history from theirs.
  */
 export function AdminUserDetailPage() {
   const { t, i18n } = useTranslation('admin')
@@ -143,7 +143,7 @@ export function AdminUserDetailPage() {
           title={t('users.detail.standingTitle')}
           actions={
             <>
-              {/* Absent, never greyed out: the same two checks the list's row applies (principle 2). */}
+              {/* Absent, never greyed out: the same two checks the list's row applies. */}
               {grantableRoles.length > 0 && (
                 <Button type="button" size="sm" variant="outline" onClick={() => roleDialog.open()}>
                   {t('users.changeRoles')}

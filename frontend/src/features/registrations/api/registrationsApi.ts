@@ -19,13 +19,13 @@ export const registrationsApi = {
   /**
    * The table's current players — its roster, for the master.
    *
-   * A different question from `candidates`, which is the FIFO queue waiting to get in (ADR-09 §1). The
+   * A different question from `candidates`, which is the FIFO queue waiting to get in. The
    * first thing that needed it is choosing who a `Single` task is addressed to: offering the whole
    * platform there would be offering people who cannot be chosen.
    */
   players: (tableId: string) => api.get<TablePlayer[]>(`/api/v1/game-tables/${tableId}/players`),
   accept: (registrationId: string) => api.post<Registration>(`/api/v1/registrations/${registrationId}/accept`),
-  /** Withdrawing one's own pending application - the way out R4's clash notice needs (ADR-08 §2). */
+  /** Withdrawing one's own pending application - the way out the schedule-clash notice needs. */
   withdraw: (registrationId: string) => api.delete(`/api/v1/registrations/${registrationId}`),
   reject: (registrationId: string, justification: string) =>
     api.post<Registration, { justification: string }>(`/api/v1/registrations/${registrationId}/reject`, { justification }),
@@ -54,7 +54,7 @@ export const registrationsApi = {
    *
    * Nothing changes for the person while the request waits. **Its answer is deliberately not read**
    * — see {@link UnreadBody}: what comes back is an `ApprovalRequestDetailResponse`, and that is
-   * `features/approvals`' vocabulary — a feature never imports from another (regla dura 16). The
+   * `features/approvals`' vocabulary — a feature never imports from another. The
    * screen re-reads the table's pending veto requests instead, which is the list it renders.
    *
    * @param tableId        the table

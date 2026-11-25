@@ -3,7 +3,7 @@ import { authBlockedPath, paths } from '@/config/paths'
 import { ApiError, type PageResponse, type ProblemDetail, type TokenResponse } from '@/types/api'
 
 /**
- * The access token lives only in memory (ADR-05 §2) - never localStorage. AuthProvider
+ * The access token lives only in memory - never localStorage. AuthProvider
  * is the only caller of setAccessToken, right after OAuth2 login and after each refresh.
  */
 let accessToken: string | null = null
@@ -11,8 +11,8 @@ let accessToken: string | null = null
 /**
  * Stores the access token every later request is signed with, or clears it on logout.
  *
- * The token lives **in memory only** - never `localStorage`, never `sessionStorage` (ADR-05 §2). The app
- * renders rich text written by other people (ADR-03 §8), which is the most direct XSS surface it has, and
+ * The token lives **in memory only** - never `localStorage`, never `sessionStorage`. The app
+ * renders rich text written by other people, which is the most direct XSS surface it has, and
  * a token in web storage is readable by any script that gets in through it. The refresh token is not
  * here at all: it is an httpOnly cookie the frontend can neither read nor write.
  *
@@ -235,7 +235,7 @@ async function request<TRes>(method: string, path: string, options: RequestOptio
  *
  * Almost every call in this app only wants the body — the status either was 2xx or already became an
  * `ApiError`. This exists for the handful where a 200 and a 201 **mean different things**, which is
- * the uploads of ADR-13 §4: a file that was recognised rather than written answers 200, and that is the
+ * the uploads, where a file that was recognised rather than written answers 200, and that is the
  * only signal telling the screen to say so.
  *
  * @template TRes the response body's type
@@ -256,7 +256,7 @@ async function requestWithStatus<TRes>(method: string, path: string, options: Re
  * What a download hands back: the bytes and the name to save them under.
  *
  * The name comes from the response, not from anything the caller knows, because it is the server
- * that holds the original filename - it is metadata on the file row and never part of a path (ADR-13 §6).
+ * that holds the original filename - it is metadata on the file row and never part of a path.
  */
 export interface DownloadedFile {
   blob: Blob
@@ -296,12 +296,12 @@ async function download(path: string, fallback: string): Promise<DownloadedFile>
 }
 
 /**
- * The one HTTP client, typed (ADR-19 §3). It injects the bearer token, turns a `ProblemDetail` body into
+ * The one HTTP client, typed. It injects the bearer token, turns a `ProblemDetail` body into
  * a typed `ApiError`, and handles the 401 in a single place: refresh once, retry the call, and if
  * the refresh fails too, clear the session and go to /login.
  *
  * A feature never calls `fetch` directly - it builds its own module on top of this one, which is
- * what makes a backend contract change a compile error instead of a runtime surprise (ADR-19 §3).
+ * what makes a backend contract change a compile error instead of a runtime surprise.
  */
 export const api = {
   get: <TRes>(path: string, params?: QueryParams) => request<TRes>('GET', path, { params }),
@@ -311,7 +311,7 @@ export const api = {
   patch: <TRes, TBody = unknown>(path: string, body?: TBody) => request<TRes>('PATCH', path, { body }),
   delete: <TRes = void>(path: string) => request<TRes>('DELETE', path),
   upload: <TRes>(path: string, files: File[], body?: unknown) => request<TRes>('POST', path, { files, body }),
-  /** An upload whose caller needs the status: 201 wrote something, 200 recognised it (ADR-13 §4). */
+  /** An upload whose caller needs the status: 201 wrote something, 200 recognised it. */
   uploadWithStatus: <TRes>(path: string, files: File[], body?: unknown) => requestWithStatus<TRes>('POST', path, { files, body }),
   /** Binary responses. Everything else here returns JSON; this one returns the bytes and a filename. */
   download: (path: string, fallbackFilename: string) => download(path, fallbackFilename),

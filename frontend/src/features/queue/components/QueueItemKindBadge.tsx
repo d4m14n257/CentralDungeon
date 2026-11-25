@@ -14,7 +14,7 @@ import type { QueueItemKind } from '../types'
  *
  * The label is a `Record` lookup through the `admin` namespace, so a kind added to
  * `QueueItemKind` without a translation shows its key and is caught immediately rather than
- * rendering as an empty chip — which is what F5 will do when it adds the two sources F3.3 left out.
+ * rendering as an empty chip — which is what would happen when the two missing sources are added.
  *
  * @param props.kind what sort of work the row is
  */

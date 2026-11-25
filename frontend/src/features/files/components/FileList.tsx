@@ -19,7 +19,7 @@ export interface FileListItem {
   fileId: string
   name: string
   mimeType: string
-  /** The size as uploaded, before compression (ADR-13 §3) — the number the person recognises. */
+  /** The size as uploaded, before compression — the number the person recognises. */
   sizeBytes: number
 }
 
@@ -46,7 +46,7 @@ interface FileListProps<T extends FileListItem> {
  * caller reimplementing that.
  *
  * One column, always: a file list is read down, and it appears inside tabs and cards where a table
- * would have to become a card list on a phone anyway (§5.b).
+ * would have to become a card list on a phone anyway.
  *
  * @template T the row shape, anything that reduces to {@link FileListItem}
  * @param props.files         the rows to show

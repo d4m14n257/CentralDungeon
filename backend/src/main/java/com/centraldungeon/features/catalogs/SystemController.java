@@ -25,14 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
  * in {@link AdminCatalogController}.
  *
  * <p>Concrete class with its own {@code @PreAuthorize} on every method, even though the logic comes
- * from a generic base (arquitectura §2.4, last line): reading this file has to answer who can call
- * what, and an inherited annotation is the shape CVE-2025-41248 describes (ADR-05 §4).
+ * from a generic base: reading this file has to answer who can call
+ * what, and an inherited annotation is the shape CVE-2025-41248 describes.
  */
 @RestController
 @RequestMapping("/api/v1/systems")
 public class SystemController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final SystemService systemService;
 
     /**
@@ -43,10 +43,10 @@ public class SystemController {
     }
 
     /**
-     * Accepted values only (ADR-12 §3): what the wizard's combobox offers and what a filter can use.
+     * Accepted values only: what the wizard's combobox offers and what a filter can use.
      *
      * @param query    the search box, or null for the whole catalog
-     * @param pageable page, size and sort; by name, with a tie-break by id (ADR-07 §9)
+     * @param pageable page, size and sort; by name, with a tie-break by id
      * @return 200 with one page of accepted systems
      */
     @GetMapping
@@ -58,16 +58,16 @@ public class SystemController {
     }
 
     /**
-     * Whoever writes a table proposes - a Master, an admin, or somebody assigned to run one (ADR-06 §4);
-     * only an admin accepts and classifies (ADR-12 §3).
+     * Whoever writes a table proposes - a Master, an admin, or somebody assigned to run one;
+     * only an admin accepts and classifies.
      *
      * @param request     the name to add to the catalog
-     * @param currentUser the proposer, from the token (ADR-05 §5)
+     * @param currentUser the proposer, from the token
      * @return 201 with the created system, in {@code Created}. 409 if the
      *         name is already taken, 403 if the proposer writes no table
      */
     @PostMapping
-    // Authenticated here, decided in the service: proposing is pertenencia as well as role (ADR-06 §4).
+    // Authenticated here, decided in the service: proposing is membership as well as role.
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CatalogValueResponse> propose(
             @Valid @RequestBody CreateCatalogValueRequest request, @AuthenticationPrincipal CurrentUser currentUser) {

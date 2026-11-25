@@ -8,9 +8,9 @@ import type { AddMasterRequest } from '../types'
 /**
  * Adds a co-master to a table, or hands the table over to one of them.
  *
- * Asking for `Primary` promotes the target and demotes whoever held it: a table has exactly one
- * (ADR-06 §3). Only the current holder may do either, and the backend is what says so — membership, not
- * the platform role (ADR-06 §4).
+ * Asking for `Primary` promotes the target and demotes whoever held it: a table has exactly one.
+ * Only the current holder may do either, and the backend is what says so — membership, not
+ * the platform role.
  *
  * @param tableId the table whose masters change
  * @returns the mutation, taking who to add or promote and as what

@@ -6,13 +6,13 @@ import { staleTime } from '@/config/query'
 import { usersApi } from './usersApi'
 
 /**
- * Somebody else's profile, `/users/:id` (ADR-10 §1, §2).
+ * Somebody else's profile, `/users/:id`.
  *
  * The backend answers **404** — never 403, never a 200 with fields missing — for anyone the actor
- * cannot currently see, whether the id never existed or the two-week visibility window of ADR-10 §2 has
- * closed (ADR-10 §3). `UserProfilePage` is what turns that 404 into a softer explanation on screen; this
+ * cannot currently see, whether the id never existed or the two-week visibility window has
+ * closed. `UserProfilePage` is what turns that 404 into a softer explanation on screen; this
  * hook only carries the status through, exactly like `error.status === 403` does elsewhere for a
- * veto (ADR-19 §4).
+ * veto.
  *
  * @param id the profile to read
  * @returns the query for that profile

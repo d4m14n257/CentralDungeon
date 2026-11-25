@@ -1,12 +1,12 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 
 /**
- * The context chip reports **where you are**, not what you hold (ADR-20 §2) - and since
- * ADR-20 §2, where you are is always a context you hold: forcing another one sends you home.
+ * The context chip reports **where you are**, not what you hold - and where you are is always a
+ * context you hold: forcing another one sends you home.
  *
  * It used to be checked inside the help spec, which was where the test actors with exactly one role
- * happened to be built. ADR-20 §5 removed that spec's reason to exist and this has nothing to do with the
- * help, so it lives on its own.
+ * happened to be built. The help no longer has screens of its own and this has nothing to do with it,
+ * so it lives on its own.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
@@ -25,8 +25,8 @@ test('a context the account does not have sends it home, and the chip names wher
     await testLogin(context.request, `e2e-chip-${runId}`, true)
     const page = await context.newPage()
 
-    // ADR-20 §2: without the Player role, /player is not a door - the guard sends the account back to its
-    // own home instead of painting the player shell (this used to assert the opposite, ADR-20 §2).
+    // Without the Player role, /player is not a door - the guard sends the account back to its
+    // own home instead of painting the player shell (this used to assert the opposite).
     await page.goto('/player')
     await expect(page).toHaveURL(/\/master$/)
     await expect(page.getByRole('banner').getByText('Master', { exact: true })).toBeVisible()

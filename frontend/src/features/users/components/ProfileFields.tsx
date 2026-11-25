@@ -16,14 +16,14 @@ interface ProfileFieldsProps {
 
 /**
  * The display name and country inputs, shared by the onboarding step and the profile edit so the
- * two cannot drift apart (ADR-10 §4). It renders fields only: the frame, the confirmation and the
+ * two cannot drift apart. It renders fields only: the frame, the confirmation and the
  * mutation belong to whoever mounts it.
  *
  * @param props.form the form holding `name` and `country`
  */
 export function ProfileFields({ form }: ProfileFieldsProps) {
   const { t, i18n } = useTranslation('users')
-  // Named and sorted in the reader's language: the alphabet changes with it (ADR-23 §2).
+  // Named and sorted in the reader's language: the alphabet changes with it.
   const countries = useMemo(() => countriesIn(i18n.language), [i18n.language])
 
   return (

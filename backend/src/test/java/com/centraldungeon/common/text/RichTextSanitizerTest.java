@@ -7,7 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * The XSS gate of ADR-03 §8. Every case here is something a table's description could actually carry, and
+ * The XSS gate. Every case here is something a table's description could actually carry, and
  * every one of them is rendered in somebody else's browser.
  */
 class RichTextSanitizerTest {
@@ -45,7 +45,7 @@ class RichTextSanitizerTest {
         assertThat(sanitizer.sanitize("<a href=\"https://example.org\">docs</a>")).contains("https://example.org");
     }
 
-    /** Only http(s) survives (ADR-05 §6): a mailto link is an address harvested off a public page. */
+    /** Only http(s) survives: a mailto link is an address harvested off a public page. */
     @Test
     void dropsMailtoLinks() {
         assertThat(sanitizer.sanitize("<a href=\"mailto:someone@example.org\">write</a>")).isEqualTo("write");

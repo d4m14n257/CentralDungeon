@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
  *
  * @param id             the session
  * @param sequenceNumber which session of the run this is, from 1
- * @param scheduledAt    when it happens, <b>in UTC</b> (ADR-03 §6)
+ * @param scheduledAt    when it happens, <b>in UTC</b>
  * @param status         planned, played or called off
- * @param myAttendance   what was recorded for the actor of the token and nobody else (ADR-05 §5), or
+ * @param myAttendance   what was recorded for the actor of the token and nobody else, or
  *                       {@code Unknown} when nothing was
  */
 public record PlayerSessionResponse(

@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 /**
- * One setting somebody changed. Table {@code system_settings} (ADR-17 §3).
+ * One setting somebody changed. Table {@code system_settings}.
  *
  * <p><b>A row means "overridden", and its absence means "still the shipped default".</b> The
  * catalogue is {@link SettingKey}, in code; this table holds only the keys a human moved. That is
@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
  *
  * <p>{@code updated_by} and {@code updated_at} answer "who has it like this and since when" on the
  * screen itself. They are the <em>current</em> state and not the history - the history is
- * {@link SystemSettingChange}, and ADR-17 §3's «cada cambio se audita» is that table's job. This one only
+ * {@link SystemSettingChange}, and auditing every change is that table's job. This one only
  * ever remembers the last change, which is all the listing needs.
  */
 @Entity
@@ -46,8 +46,8 @@ public class SystemSetting {
     /**
      * How the text is read back, copied from the key.
      *
-     * <p>Denormalized on purpose, and the column is V1's: it is what lets somebody reading the table
-     * with a SQL client know what they are looking at without the enum in front of them. The enum
+     * <p>Denormalized on purpose, and the column is the baseline migration's: it is what lets somebody
+     * reading the table with a SQL client know what they are looking at without the enum in front of them. The enum
      * stays the authority - nothing reads this column back.
      */
     @Enumerated(EnumType.STRING)
@@ -59,7 +59,7 @@ public class SystemSetting {
     @Column(nullable = false, length = 32)
     private SettingCategory category;
 
-    /** Who changed it last - always the actor from the token (ADR-05 §5). */
+    /** Who changed it last - always the actor from the token. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by")
     private User updatedBy;
@@ -77,7 +77,7 @@ public class SystemSetting {
      *
      * @param key       which setting is being overridden
      * @param value     the new value, already validated against the key's range
-     * @param updatedBy who is changing it, always the actor from the token (ADR-05 §5)
+     * @param updatedBy who is changing it, always the actor from the token
      */
     public SystemSetting(SettingKey key, String value, User updatedBy) {
         this.settingKey = key.wireName();
@@ -150,7 +150,7 @@ public class SystemSetting {
      * this.
      *
      * @param value     the new value, already validated against the key's range
-     * @param updatedBy who is changing it, always the actor from the token (ADR-05 §5)
+     * @param updatedBy who is changing it, always the actor from the token
      */
     public void update(String value, User updatedBy) {
         this.value = value;

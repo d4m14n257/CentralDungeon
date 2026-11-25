@@ -1,9 +1,9 @@
 package com.centraldungeon.features.tasks;
 
 /**
- * Where one answer to a task stands. <b>One value</b> (ADR-15 §2).
+ * Where one answer to a task stands. <b>One value</b>.
  *
- * <p>The design of ADR-15 §1 originally had {@code Accepted} and {@code Rejected} as well. They were
+ * <p>The original design also had {@code Accepted} and {@code Rejected} as well. They were
  * dropped on purpose: judging whether a submitted character sheet is the right one takes a criterion
  * the system does not have and should not pretend to have, so there is no approval flow and the
  * master reviews by looking. Submitting is one call and it lands as {@link #Submitted}.

@@ -36,8 +36,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The five rules of "Visibilidad de perfiles" (arquitectura §4.5), one case per rule and its
- * negative, plus the two-week window of ADR-10 §2 and the row-status guard of ADR-07 §8.
+ * The five rules of profile visibility, one case per rule and its
+ * negative, plus the two-week window and the row-status guard.
  */
 @ExtendWith(MockitoExtension.class)
 class ProfileVisibilityServiceTest {
@@ -55,9 +55,9 @@ class ProfileVisibilityServiceTest {
     private UserRoleRepository userRoleRepository;
 
     /**
-     * The visibility window, a setting since F3.5 (ADR-10 §2, ADR-17 §3) and a constant of the service before
-     * that. Stubbed to the same fourteen days, so every case below keeps asserting ADR-10 §2's rule
-     * against ADR-10 §2's number - what moved is where the number comes from.
+     * The visibility window, a setting and no longer a constant of the service.
+     * Stubbed to the same fourteen days, so every case below keeps asserting the rule
+     * against its number - what moved is where the number comes from.
      */
     @Mock
     private SettingsService settingsService;
@@ -79,7 +79,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("same-person", "same-person")).doesNotThrowAnyException();
     }
 
-    /** ADR-06 §8: nothing narrows an admin's view. */
+    /** Nothing narrows an admin's view. */
     @Test
     void anAdminSeesAnyProfile() {
         when(userRoleRepository.findActiveRoleNames("admin-1")).thenReturn(Set.of("Admin"));
@@ -106,7 +106,7 @@ class ProfileVisibilityServiceTest {
         verifyNoInteractions(masterRepository, registrationRepository, gameTableRepository);
     }
 
-    /** ADR-10 §1: a master's profile is open to anybody with a session while their table is public. */
+    /** A master's profile is open to anybody with a session while their table is public. */
     @Test
     void aPlayerSeesTheMasterOfAnOpenedTable() {
         GameTable table = table("table-1", GameTableStatus.Opened, null);
@@ -115,7 +115,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("master-1", "player-1")).doesNotThrowAnyException();
     }
 
-    /** The negative of ADR-10 §1: a table nobody outside it could ever look at grants nothing. */
+    /** The negative of the master-profile rule: a table nobody outside it could ever look at grants nothing. */
     @Test
     void aPlayerDoesNotSeeTheMasterOfATableStillInDraft() {
         GameTable table = table("table-2", GameTableStatus.Draft, null);
@@ -124,7 +124,7 @@ class ProfileVisibilityServiceTest {
         assertThatThrownBy(() -> service().requireVisible("master-2", "player-1")).isInstanceOf(NotFoundException.class);
     }
 
-    /** ADR-10 §1: literal - the master sees the candidate the moment the application arrives, unaccepted. */
+    /** Literal - the master sees the candidate the moment the application arrives, unaccepted. */
     @Test
     void aMasterSeesACandidateWhoAppliedWithoutHavingBeenAccepted() {
         GameTable table = table("table-3", GameTableStatus.Opened, null);
@@ -137,7 +137,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("candidate-1", "master-3")).doesNotThrowAnyException();
     }
 
-    /** The negative of ADR-10 §1: a master sees only the people who actually applied to their tables. */
+    /** The negative of the candidate rule: a master sees only the people who actually applied to their tables. */
     @Test
     void aMasterDoesNotSeeAStrangerWhoNeverApplied() {
         GameTable table = table("table-4", GameTableStatus.Opened, null);
@@ -146,7 +146,7 @@ class ProfileVisibilityServiceTest {
         assertThatThrownBy(() -> service().requireVisible("stranger", "master-4")).isInstanceOf(NotFoundException.class);
     }
 
-    /** ADR-10 §1: two live Players of the same table see each other. */
+    /** Two live Players of the same table see each other. */
     @Test
     void twoPlayersOfTheSameTableSeeEachOther() {
         GameTable table = table("table-5", GameTableStatus.InProgress, null);
@@ -159,7 +159,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("player-b", "player-a")).doesNotThrowAnyException();
     }
 
-    /** ADR-10 §2: two weeks and a day after closed_at, the link that used to grant visibility no longer does. */
+    /** Two weeks and a day after closed_at, the link that used to grant visibility no longer does. */
     @Test
     void visibilityIsGoneTwoWeeksAndADayAfterClosedAt() {
         LocalDateTime closedAt = LocalDateTime.now().minusDays(14).minusDays(1);
@@ -169,7 +169,7 @@ class ProfileVisibilityServiceTest {
         assertThatThrownBy(() -> service().requireVisible("master-6", "player-1")).isInstanceOf(NotFoundException.class);
     }
 
-    /** ADR-10 §2's companion fact: no special case for Pause, because its closed_at is null while it lives. */
+    /** A companion fact of the two-week window: no special case for Pause, because its closed_at is null while it lives. */
     @Test
     void aPausedTableStaysVisibleEvenSixMonthsIn() {
         GameTable table = table("table-7", GameTableStatus.Pause, null);
@@ -178,7 +178,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("master-7", "player-1")).doesNotThrowAnyException();
     }
 
-    /** ADR-07 §8: a deleted master row is a record, not a permission - it authorizes nothing here either. */
+    /** A deleted master row is a record, not a permission - it authorizes nothing here either. */
     @Test
     void aDeletedMasterRowGrantsNoVisibility() {
         GameTable table = table("table-8", GameTableStatus.Opened, null);

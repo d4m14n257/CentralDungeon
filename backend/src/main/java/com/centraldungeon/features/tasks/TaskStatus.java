@@ -3,8 +3,8 @@ package com.centraldungeon.features.tasks;
 /**
  * Where a task is in its short life: taking answers or done taking them.
  *
- * <p>There is no {@code Draft}. <b>Creating a task is publishing it</b>, because ADR-15 §5 makes
- * publication the moment the recipients are told, and a draft nobody was told about is a row that
+ * <p>There is no {@code Draft}. <b>Creating a task is publishing it</b>, because publication is
+ * the moment the recipients are told, and a draft nobody was told about is a row that
  * does nothing. The screen's "publish" button and the {@code POST} are the same act.
  */
 public enum TaskStatus {
@@ -16,7 +16,7 @@ public enum TaskStatus {
      * The master is no longer taking answers.
      *
      * <p>What was already submitted stays readable - closing ends the intake, it does not erase the
-     * history (ADR-15 §2).
+     * history.
      */
     Closed
 }

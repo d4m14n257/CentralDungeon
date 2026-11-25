@@ -94,7 +94,7 @@ describe('AdminFilesPage', () => {
   }
 
   /** «and N more» opens every table of the file, each one linked: the row carries them all. */
-  it('opens every table of the file from «y N más»', async () => {
+  it('opens every table of the file from the "and N more" button', async () => {
     renderWith(Array.from({ length: 5 }, (_, index) => ({ id: `table-${index + 1}`, name: `Mesa ${index + 1}` })))
 
     const table = await screen.findByRole('table', { name: 'Archivos' })
@@ -107,7 +107,7 @@ describe('AdminFilesPage', () => {
   })
 
   /** Up to three tables are all there is to say, so there is nothing to open. */
-  it('offers no «y N más» button with three tables or fewer', async () => {
+  it('offers no "and N more" button with three tables or fewer', async () => {
     renderWith([1, 2, 3].map((index) => ({ id: `table-${index}`, name: `Mesa ${index}` })))
 
     await screen.findByRole('table', { name: 'Archivos' })

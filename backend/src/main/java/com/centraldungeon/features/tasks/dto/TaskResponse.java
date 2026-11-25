@@ -8,35 +8,35 @@ import org.jspecify.annotations.Nullable;
  * A task as the people running the table see it, on the Peticiones tab.
  *
  * <p>Separate from {@link ApplicableTaskResponse} because the two audiences are allowed to know
- * different things (arquitectura §2.3): the master sees how many people have answered and how many
+ * different things: the master sees how many people have answered and how many
  * were asked, and a recipient has no business seeing either - who else handed in their character
  * sheet is not theirs to know.
  *
  * @param taskId                the task's identifier
  * @param gameTableId           the table doing the asking
- * @param tableSessionId        the session this is tied to, or null for "at any point" (ADR-15 §1)
+ * @param tableSessionId        the session this is tied to, or null for "at any point"
  * @param sessionSequenceNumber which session of the run that is, from 1, so the screen can say
  *                              "session 4" without a second request. Null together with the id above
- * @param audience              who is being asked, as a string (arquitectura §2.3)
+ * @param audience              who is being asked, as a string
  * @param targetUserId          the one person addressed, or null on any audience but {@code Single}
  * @param targetUserName        how to name that person on screen. Null together with the id above
  * @param title                 the headline
- * @param description           the detail, as sanitized rich text (ADR-03 §8). Null when the title said it all
+ * @param description           the detail, as sanitized rich text. Null when the title said it all
  * @param acceptsText           whether a written answer is expected
  * @param acceptsFiles          whether files are expected
  * @param isMandatory           whether the master labelled it indispensable. <b>Informational</b>: it
- *                              changes what the screen says and blocks nothing (ADR-15 §2)
- * @param dueAt                 when the master would like it by, in UTC (ADR-03 §6), or null. Nothing
+ *                              changes what the screen says and blocks nothing
+ * @param dueAt                 when the master would like it by, in UTC, or null. Nothing
  *                              happens when it passes
  * @param status                where the task is in its life, as a string
  * @param submissionCount       how many answers it has. Answers accumulate, so this can exceed the
- *                              number of people (ADR-15 §2)
+ *                              number of people
  * @param respondentCount       how many different people have answered. This is the number that means
  *                              "handed in"
  * @param recipientCount        how many people were asked, derived from the audience at read time and
  *                              never stored - a table that gains a player gains a recipient
  * @param createdAt             when it was published, in UTC. Publishing and creating are the same
- *                              act: there is no draft (ADR-15 §5)
+ *                              act: there is no draft
  */
 public record TaskResponse(
         String taskId,

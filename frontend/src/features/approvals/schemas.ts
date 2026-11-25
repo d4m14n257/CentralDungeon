@@ -20,8 +20,8 @@ import type { Equals, Expect } from '@/types/utils'
  */
 export const submitApprovalRequestSchema = z
   .object({
-    // The submittable three and not all five: the two F3.4 added are raised from their own entity's
-    // route, because `POST /requests` carries no `entityId` on purpose (F3.2 §0d).
+    // The submittable three and not all five: the two later kinds are raised from their own entity's
+    // route, because `POST /requests` carries no `entityId` on purpose.
     type: z.enum(SUBMITTABLE_REQUEST_TYPES),
     justification: z.string().trim().min(1).max(4000),
     tableName: z.string().trim().max(128),
@@ -38,7 +38,7 @@ export type SubmitApprovalRequestForm = z.infer<typeof submitApprovalRequestSche
 /**
  * Validates a resolution: the note, which both approving and rejecting send.
  *
- * **Obligatory in the two acts** (ADR-16 §1). The mechanism asks for a reason at both ends, and a
+ * **Obligatory in the two acts**. The mechanism asks for a reason at both ends, and a
  * rejection nobody explained is the half that makes the other half worthless.
  */
 export const resolveApprovalRequestSchema = z.object({
@@ -49,7 +49,7 @@ export const resolveApprovalRequestSchema = z.object({
 export type ResolveApprovalRequestForm = z.infer<typeof resolveApprovalRequestSchema>
 
 /**
- * Form and payload cannot drift apart (arquitectura §3.2, regla 7): if the API's input type gains
+ * Form and payload cannot drift apart: if the API's input type gains
  * a field or renames one, these stop compiling instead of failing at runtime.
  */
 export type SubmitFormMatchesPayload = Expect<Equals<SubmitApprovalRequestForm, SubmitApprovalRequestInput>>

@@ -5,16 +5,16 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * An admin approving a draft - the only road from Preparation to Opened (ADR-07 §1).
+ * An admin approving a draft - the only road from Preparation to Opened.
  *
- * **Performed from `/admin/queue` and no longer from `/admin/tables`** (ADR-16 §7, F3.3): reviewing is
+ * **Performed from `/admin/queue` and no longer from `/admin/tables`**: reviewing is
  * work that waits, so it belongs to the tray. The endpoint did not move — it is the table
  * aggregate's — the screen that offers it did.
  *
  * Approving a table nobody has taken reserves it implicitly; what the backend refuses is approving
- * one a colleague is already working on (`ITEM_ALREADY_CLAIMED`, ADR-16 §5).
+ * one a colleague is already working on (`ITEM_ALREADY_CLAIMED`).
  *
- * It invalidates two branches through `queryKeys` and not through a hand-written literal (§3.3): the
+ * It invalidates two branches through `queryKeys` and not through a hand-written literal: the
  * admin listing, where the row changes status, and **the whole tray**, where the row disappears
  * because the work it represented is done.
  *
@@ -24,13 +24,13 @@ export function useApproveTable() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (tableId: string) => gameTablesApi.approve(tableId),
-    // The tray writes the refusal itself, in the reader's language, from the code (ADR-23 §3). Without
+    // The tray writes the refusal itself, in the reader's language, from the code. Without
     // this the global toast of `config/query.ts` fires too - and since `ITEM_ALREADY_CLAIMED` is not
-    // one of its `EXPLAINED_ERROR_CODES`, the reader would be told "no pudimos completar la acción"
+    // one of its `EXPLAINED_ERROR_CODES`, the reader would be shown the generic failure message
     // on top of (or instead of) the one sentence that says what actually happened.
     meta: { showsItsOwnError: true },
     onSuccess: (_table, tableId) => {
-      // The table's own admin view too (ADR-06 §8): approving or sending it back from its status tab has to
+      // The table's own admin view too: approving or sending it back from its status tab has to
       // show the new status and the new line of history without a reload.
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managedDetail(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.statusHistory(tableId) })

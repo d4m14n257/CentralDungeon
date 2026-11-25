@@ -3,7 +3,7 @@ import { Outlet } from 'react-router'
 /**
  * A card centred on the canvas, with no header: the OAuth return and the onboarding.
  * /login is deliberately outside this layout — it is painted full-bleed over the brand gradient
- * (ADR-21 §2) and therefore builds its own frame.
+ * and therefore builds its own frame.
  */
 export function PublicLayout() {
   return (

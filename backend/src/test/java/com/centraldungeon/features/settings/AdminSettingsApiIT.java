@@ -48,10 +48,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * {@code /admin/settings} over HTTP (ADR-17 §3), and the row of the matrix it belongs to.
+ * {@code /admin/settings} over HTTP, and the row of the matrix it belongs to.
  *
- * <p><b>Row "Editar {@code system_settings}: sí / sí".</b> roles-y-alcance.md §3 puts editing
- * settings among the capabilities the two ranks share, and §7 names the way that gets broken:
+ * <p><b>Row "Edit {@code system_settings}: yes / yes".</b> the role matrix puts editing
+ * settings among the capabilities the two ranks share, and names the way that gets broken:
  * {@code hasRole('ADMIN')} written where {@code hasAnyRole('ADMIN','OWNER')} was meant leaves the
  * owner outside a screen and nobody notices, because the test actor in development is usually an
  * admin. So the three routes are walked by <em>both</em> ranks with the same expectation - the same
@@ -59,11 +59,11 @@ import org.testcontainers.mysql.MySQLContainer;
  *
  * <p>It has to go over HTTP because four things exist nowhere else: the {@code @PreAuthorize} on
  * each method, {@code SettingKey}'s {@code @JsonValue} in both directions, the {@code ProblemDetail}
- * the frontend branches on (ADR-23 §3), and {@code SettingKey.from} turning an unknown path segment into
+ * the frontend branches on, and {@code SettingKey.from} turning an unknown path segment into
  * a 404 rather than a 500.
  *
- * <p><b>And the acceptance criterion of the slice, end to end</b>: «un admin cambia el tope por
- * archivo; la subida siguiente lo respeta sin reiniciar nada». That is one assertion about the cache
+ * <p><b>And the acceptance criterion, end to end</b>: "an admin changes the per-file cap; the next
+ * upload honours it without restarting anything". That is one assertion about the cache
  * and one about {@code /settings/limits}, and neither is reachable from a service test.
  */
 @SpringBootTest
@@ -220,10 +220,10 @@ class AdminSettingsApiIT {
                 .andExpect(jsonPath("$[?(@.key=='profiles.visibility_window_days')].retroactive").value(true));
     }
 
-    // ---------------------------------------------------------------- what the slice promises
+    // ---------------------------------------------------------------- what the feature promises
 
     /**
-     * <b>«Un admin cambia el tope por archivo; la subida siguiente lo respeta sin reiniciar nada».</b>
+     * <b>"An admin changes the per-file cap; the next upload honours it without restarting anything".</b>
      *
      * <p>Three assertions, and the middle one is the point: the accessor is cached, so a change that
      * did not clear the cache would go on answering the old number for the rest of the TTL - and the
@@ -248,9 +248,9 @@ class AdminSettingsApiIT {
     }
 
     /**
-     * <b>«El cambio queda registrado con quién y cuándo».</b> A platform-wide change produces no
+     * <b>"The change is recorded with who made it and when".</b> A platform-wide change produces no
      * notification and no visible event, so the audit row is the only trace it leaves - and reading
-     * it back is what keeps the table from being write-only (roles-y-alcance.md §7).
+     * it back is what keeps the table from being write-only.
      */
     @Test
     @DisplayName("every change leaves its row, with who, when and why")
@@ -282,7 +282,7 @@ class AdminSettingsApiIT {
 
     // ---------------------------------------------------------------- what it refuses
 
-    /** Out of range is a 400 carrying both bounds: "too big" without the numbers says nothing (ADR-23 §3). */
+    /** Out of range is a 400 carrying both bounds: "too big" without the numbers says nothing. */
     @Test
     void aValueOutsideTheKeysRangeIsRefusedWithItsBounds() throws Exception {
         update(owner, FILE_CAP, 500, "enorme")
@@ -304,7 +304,7 @@ class AdminSettingsApiIT {
         as(get(BASE + "/files.max_file_size/history"), owner).andExpect(status().isNotFound());
     }
 
-    /** A blank reason is a 400: a change nobody explained is a change nobody can review (ADR-17 §3). */
+    /** A blank reason is a 400: a change nobody explained is a change nobody can review. */
     @Test
     void aBlankJustificationIsRefused() throws Exception {
         update(owner, FILE_CAP, 3, "   ")

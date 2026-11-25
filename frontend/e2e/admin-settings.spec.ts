@@ -2,10 +2,8 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { acceptReview } from './helpers/review'
 
 /**
- * F3.5 end to end: the sentence `roles-y-alcance.md` measures the slice by.
- *
- * > un admin cambia el tope por archivo; la subida siguiente lo respeta sin reiniciar nada, y el
- * > cambio queda registrado con quién y cuándo.
+ * Platform settings end to end: an admin changes the per-file cap, the next upload respects it without
+ * restarting anything, and the change is recorded with who made it and when.
  *
  * **It is the one check that crosses both halves, and the crossing is the whole point.** The number
  * lives in `system_settings`, the backend reads it through a cached accessor, and a *different*
@@ -84,7 +82,7 @@ async function changeSetting(page: Page, label: string, value: string, reason: s
 }
 
 /**
- * The whole `Se prueba:` of F3.5 in one run, because the sentences are one situation: a value is
+ * The whole scenario in one run, because the sentences are one situation: a value is
  * changed, a different screen respects it, and the change left a record.
  */
 test('an admin raises the file cap, the next upload screen respects it, and the change is on the record', async ({ browser }) => {
@@ -116,9 +114,9 @@ test('an admin raises the file cap, the next upload screen respects it, and the 
     await refusing.getByLabel('Motivo').fill('Fuera de rango a propósito')
     await refusing.getByRole('button', { name: 'Guardar el cambio' }).click()
     // Refused by the form itself, so there is nothing to review: the review only opens for a change
-    // that could be written (ADR-21 §9).
+    // that could be written.
     await expect(refusing.getByText('Tiene que estar entre 1 y 25')).toBeVisible()
-    // Closing a half-filled form asks first (ADR-19 §6), which is `FormDialog` doing its job and not
+    // Closing a half-filled form asks first, which is `FormDialog` doing its job and not
     // something this dialog had to remember. Confirming the discard is part of the path.
     await refusing.getByRole('button', { name: 'Cerrar' }).click()
     await admin.page.getByRole('button', { name: 'Descartar lo hecho' }).click()
@@ -170,8 +168,8 @@ test('an admin raises the file cap, the next upload screen respects it, and the 
 })
 
 /**
- * The row of the matrix, in the browser: editing settings is a capability `Admin` and `Owner` share
- * (`roles-y-alcance.md` §3), so an owner finds the same screen with the same buttons.
+ * The row of the permissions matrix, in the browser: editing settings is a capability `Admin` and
+ * `Owner` share, so an owner finds the same screen with the same buttons.
  *
  * It is the display half of what `AdminSettingsApiIT` asserts over HTTP. A `hasRole('ADMIN')` would
  * be caught there; what this catches is the other shape of the same bug - a screen that hides a
@@ -192,12 +190,11 @@ test('an owner finds the same settings screen an admin does', async ({ browser }
 })
 
 /**
- * The warning of ADR-17 §3, on the card and before anything is opened.
+ * The warning about a retroactive setting, on the card and before anything is opened.
  *
- * The visibility window is the one setting of this slice whose change is retroactive: it is evaluated
+ * The visibility window is the one setting whose change is retroactive: it is evaluated
  * on every profile read, so lowering it takes visibility away from people who have it at that
- * instant. ADR-17 §3 asks for the warning by name, and a warning that only appears after saving is not
- * one.
+ * instant. The warning has to say so, and a warning that only appears after saving is not one.
  */
 test('the retroactive setting says so before anybody opens it', async ({ browser }) => {
   const adminId = `e2e-f35-warn-${runId}`

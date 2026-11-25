@@ -69,7 +69,7 @@ function ResolveBanRequestDialog({
 
   async function onSubmit(values: ResolveApprovalRequestForm) {
     if (!request) return
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t(isApproving ? 'banRequests.confirmApproveTitle' : 'banRequests.confirmRejectTitle', {
         name: request.targetUserName,
@@ -88,8 +88,8 @@ function ResolveBanRequestDialog({
     )
   }
 
-  // The title names the person, because that is what is being decided: a dialog headed "Aceptar el
-  // pedido de veto" over two open requests is a decision taken half-blind.
+  // The title names the person, because that is what is being decided: a dialog headed "Accept the
+  // veto request" over two open requests is a decision taken half-blind.
   const title = t(isApproving ? 'banRequests.approveDialogTitle' : 'banRequests.rejectDialogTitle', {
     name: request?.targetUserName ?? '',
   })
@@ -113,7 +113,7 @@ function ResolveBanRequestDialog({
               <p className="whitespace-pre-wrap">{request.justification}</p>
             </div>
           )}
-          {/* Approving is not "marcar como visto": it applies the veto then and there. */}
+          {/* Approving is not "mark as seen": it applies the veto then and there. */}
           {isApproving && (
             <p className="text-fg-muted text-sm">{t('banRequests.approveEffect', { name: request?.targetUserName ?? '' })}</p>
           )}
@@ -133,7 +133,7 @@ function ResolveBanRequestDialog({
           {errorKey !== null && (
             <p role="alert" className="inline-error">
               {/* The sentences live in the `admin` namespace, where the mechanism's vocabulary
-                  already is: one place where a refusal of a request has a wording (ADR-16 §7). */}
+                  already is: one place where a refusal of a request has a wording. */}
               {t(errorKey, { ns: 'admin' })}
             </p>
           )}
@@ -153,15 +153,15 @@ interface BanRequestsSectionProps {
    * has to see the request is still waiting, or they will ask twice.
    */
   canResolve: boolean
-  /** The help link the screen hands down — a feature never imports `features/help` (§3.1.5). */
+  /** The help link the screen hands down — a feature never imports `features/help`. */
   help?: ReactNode
 }
 
 /**
  * The veto requests waiting on one table. Masters read them; an admin answers them.
  *
- * **A section of this feature and not of the screen, receiving an id and doing its own query**
- * (§3.1.5): the players tab already composes three domains, and a block that fetched through props
+ * **A section of this feature and not of the screen, receiving an id and doing its own query**:
+ * the players tab already composes three domains, and a block that fetched through props
  * would make the tab the owner of a query about a mechanism it knows nothing about.
  *
  * **Everyone who may open the list sees it; only an admin sees the buttons.** A master who asked
@@ -177,7 +177,7 @@ interface BanRequestsSectionProps {
  */
 export function BanRequestsSection({ tableId, canResolve, help }: BanRequestsSectionProps) {
   const { t, i18n } = useTranslation('master')
-  // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (ADR-19 §4).
+  // isLoadingError, not isError: a failed background refetch must not blank a list that loaded.
   const { data, isPending, isLoadingError, refetch } = useTableBanRequests(tableId)
   const dialog = useDisclosure<{ request: BanRequest; resolution: BanResolution }>()
 

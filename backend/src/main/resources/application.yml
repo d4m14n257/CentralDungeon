@@ -2,8 +2,8 @@ spring:
   application:
     name: centraldungeon-backend
   # Only a fallback for when nothing else activates a profile - `-Dspring-boot.run.profiles=...`,
-  # SPRING_PROFILES_ACTIVE, or --spring.profiles.active (systemd's ExecStart in prod, arquitectura
-  # §8.2) all take precedence over this. Without it, `./mvnw spring-boot:run` alone starts with zero
+  # SPRING_PROFILES_ACTIVE, or --spring.profiles.active (systemd's ExecStart in prod) all take
+  # precedence over this. Without it, `./mvnw spring-boot:run` alone starts with zero
   # profiles active, and dev/prod/test never even load - there's no spring.datasource anywhere else.
   profiles:
     default: dev
@@ -14,8 +14,8 @@ spring:
   data:
     web:
       pageable:
-        # A page is a page: `?size=100000` cannot turn a paginated endpoint into a full dump
-        # (ADR-04 §6). Each endpoint sets its own default with @PageableDefault.
+        # A page is a page: `?size=100000` cannot turn a paginated endpoint into a full dump.
+        # Each endpoint sets its own default with @PageableDefault.
         default-page-size: 20
         max-page-size: 100
   flyway:
@@ -24,8 +24,8 @@ spring:
   servlet:
     multipart:
       # The container's own cap, and the backstop behind the editable one. Enforced before a single
-      # byte reaches a controller, where the application's rule produces the explained message
-      # (ADR-23 §3) - so it is kept strictly above the largest value files.max_file_size_mb can be raised
+      # byte reaches a controller, where the application's rule produces the explained message,
+      # so it is kept strictly above the largest value files.max_file_size_mb can be raised
       # to (25 MB, SettingKey), and SettingsService refuses to start if that ever stops being true.
       # It answers only for a request that lies about its size.
       max-file-size: 26MB
@@ -34,9 +34,9 @@ spring:
     type: caffeine
     cache-names: userAuth,systemSettings
     caffeine:
-      # TTL is the revocation window, not a performance number (arquitectura §2.6):
+      # TTL is the revocation window, not a performance number:
       # explicit @CacheEvict on block/role-change makes it immediate, this is the safety net.
-      # systemSettings (ADR-17 §3) works the same way: SettingsService clears it on afterCommit, so an
+      # systemSettings works the same way: SettingsService clears it on afterCommit, so an
       # edited limit applies to the next request, and this is what bounds a cache somebody's
       # SQL client changed behind the application's back.
       spec: expireAfterWrite=60s,maximumSize=10000
@@ -47,7 +47,7 @@ spring:
           discord:
             # Spring validates these as non-blank at startup even before any login attempt.
             # The placeholders let the app boot; real Discord login stays broken (as it should)
-            # until a real Discord application is created and these are overridden (ADR-05 §1).
+            # until a real Discord application is created and these are overridden.
             client-id: ${DISCORD_CLIENT_ID:placeholder-create-a-discord-app}
             client-secret: ${DISCORD_CLIENT_SECRET:placeholder-create-a-discord-app}
             authorization-grant-type: authorization_code
@@ -83,7 +83,7 @@ app:
   cookie:
     secure: ${APP_COOKIE_SECURE:true}
   jwt:
-    # Dev-only default, 32+ bytes for HS256. Never used as-is outside a local machine (ADR-05 §2).
+    # Dev-only default, 32+ bytes for HS256. Never used as-is outside a local machine.
     secret: ${APP_JWT_SECRET:dev-only-insecure-secret-change-me-0123456789abcdef}
     access-token-ttl: PT15M
     refresh-token-ttl: P30D
@@ -91,7 +91,7 @@ app:
     # Where the blobs live. Never inside the repository - the dev default is gitignored and prod
     # points this at a real volume.
     root: ${APP_STORAGE_ROOT:./storage}
-    # The legacy's own whitelist (M21.4), which is the only part of its file handling worth keeping.
+    # The legacy's own whitelist, which is the only part of its file handling worth keeping.
     # It had no size or count limit whatsoever, but it did check the type.
     allowed-mime-types:
       - image/png
@@ -99,8 +99,8 @@ app:
       - application/pdf
       - application/msword
       - application/vnd.openxmlformats-officedocument.wordprocessingml.document
-    # How long a file survives unused before the purge marks it gone (ADR-13 §3). Marks only - freeing the
-    # bytes is the platform owner's, from the administration menu, and that is F5 (ADR-13 §8).
+    # How long a file survives unused before the purge marks it gone. Marks only - freeing the
+    # bytes is the platform owner's, from the administration menu, which is not built yet.
     retention: P90D
   # The doors anybody can repeat. Operation, not a community rule, so they are here and not in
   # system_settings; the test profile raises them all. Login and refresh count per client IP (an IPv6
@@ -127,8 +127,8 @@ app:
     master-candidates:
       requests: 30
       window: PT1M
-  # app.queue.claim-timeout and app.storage.max-file-size both lived here until F3.5 and both
-  # moved to system_settings (ADR-17 §3): they are decisions of whoever runs the community, not of
+  # app.queue.claim-timeout and app.storage.max-file-size both lived here once and both
+  # moved to system_settings: they are decisions of whoever runs the community, not of
   # whoever deploys the application, and their defaults now live in SettingKey. What stays in this
   # file is the second kind - where the blobs go, which MIME types the parser accepts, how long the
   # purge waits.

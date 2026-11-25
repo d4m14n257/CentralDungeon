@@ -21,10 +21,10 @@ import type { FileCategory, StagedFile } from '../types'
 
 interface FilePickerProps {
   /**
-   * Called with the file that was chosen — **staged, not sent** (ADR-13 §5).
+   * Called with the file that was chosen — **staged, not sent**.
    *
    * **The three sources end in the same callback on purpose**: to whoever is assembling the set they
-   * are the same decision, and the difference is only what the confirm has to do about each (ADR-13 §2). A
+   * are the same decision, and the difference is only what the confirm has to do about each. A
    * fresh pick arrives as bytes still in the browser; something reused or published arrives as an id
    * that is already on the server.
    */
@@ -32,7 +32,7 @@ interface FilePickerProps {
   /** True while the caller is sending, to keep the buttons from firing twice. */
   isBusy?: boolean
   /**
-   * What is already staged, shown under the upload zone so a pick has visible feedback (ADR-13 §5).
+   * What is already staged, shown under the upload zone so a pick has visible feedback.
    *
    * It has to be here rather than only in the caller: with nothing uploading at pick time, the list
    * is the only thing that says the file was taken.
@@ -41,35 +41,34 @@ interface FilePickerProps {
   /** Called with the key of a staged entry to drop. Required whenever `staged` is given. */
   onRemove?: (key: string) => void
   /**
-   * Whether to offer what the platform published (ADR-13 §2, ADR-14 §1). False hides the tab entirely.
+   * Whether to offer what the platform published. False hides the tab entirely.
    */
   offerPublished?: boolean
   /**
-   * The cajón this picker is standing in (ADR-14 §4) — the flow the file is being chosen for.
+   * The category this picker is standing in — the flow the file is being chosen for.
    *
    * **It is what the published tab asks for**, and it is how the community's blanks reach the right
    * moment: a master attaching to their table passes `TableMaterial` and gets the sheet published for
    * that; the same master writing a request passes `MasterRequest` and gets the forms published for
    * that. The old audience could not do this — it said who ends up reading the file, which is a
-   * different question, and narrowing by it hid exactly the file ADR-14 §1 exists to share.
+   * different question, and narrowing by it hid exactly the file the published library exists to share.
    */
-  cajon?: FileCategory
+  category?: FileCategory
 }
 
 /**
- * Choosing a file: upload a new one, or reuse one that already exists (ADR-13 §2).
+ * Choosing a file: upload a new one, or reuse one that already exists.
  *
- * **This is the cost lever of the whole fase** (ADR-13 §3, which repealed the per-user quota of ADR-13 §3 in
- * favour of attacking volume). Reuse only reduces anything if it is as easy as uploading, so the two
+ * **This is the cost lever of file storage** (the platform attacks volume instead of capping each user). Reuse only reduces anything if it is as easy as uploading, so the two
  * are peers here — two tabs of the same control, not an upload box with a link tucked underneath.
  * The same character sheet on a second table has to cost nothing.
  *
- * Three sources, and the third is what makes ADR-14 §1 real: a master attaching the community's default
+ * Three sources, and the third is what makes sharing real: a master attaching the community's default
  * sheet picks it from **Published** and links it, rather than downloading it and uploading a copy of
  * their own. That tab shows everything published unless a caller narrows it — see
  * {@link FilePickerProps.publishedAudience} for why narrowing it by the reader's own role is wrong.
  *
- * **The published tab is narrowed to the cajón the picker stands in** (ADR-14 §4), which is what makes it
+ * **The published tab is narrowed to the category the picker stands in**, which is what makes it
  * usable once the community has published more than a handful — and what puts the right blank in
  * front of the right moment without anybody filtering by hand.
  *
@@ -78,9 +77,9 @@ interface FilePickerProps {
  * @param props.onRemove       called with the key of a staged entry to drop
  * @param props.isBusy         true while the caller is acting on a pick
  * @param props.offerPublished whether to offer what the platform published
- * @param props.cajon          the flow the file is being chosen for; narrows the published tab
+ * @param props.category          the flow the file is being chosen for; narrows the published tab
  */
-export function FilePicker({ onPick, isBusy = false, offerPublished = false, cajon, staged, onRemove }: FilePickerProps) {
+export function FilePicker({ onPick, isBusy = false, offerPublished = false, category, staged, onRemove }: FilePickerProps) {
   const { t, i18n } = useTranslation('files')
   const [tab, setTab] = useState('upload')
   const [search, setSearch] = useState('')
@@ -88,8 +87,8 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
   const [historyCategory, setHistoryCategory] = useState<FileCategory | null>(null)
 
   const history = useMyFiles(debouncedSearch || undefined, historyCategory ?? undefined, 0, tab === 'reuse')
-  // Narrowed to the cajón this picker stands in: what the community published *for this moment*.
-  const published = usePublicFiles(cajon, tab === 'published' && offerPublished)
+  // Narrowed to the category this picker stands in: what the community published *for this moment*.
+  const published = usePublicFiles(category, tab === 'published' && offerPublished)
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="space-y-4">
@@ -102,7 +101,7 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
       <TabsContent value="upload" className="space-y-3">
         <FileDropzone onStaged={onPick} isBusy={isBusy} />
         {/* What is about to be sent. Nothing has left the browser yet, so this list is the whole
-            confirmation that the pick landed (ADR-13 §5). */}
+            confirmation that the pick landed. */}
         {staged !== undefined && onRemove !== undefined && <StagedFileList files={staged} onRemove={onRemove} />}
       </TabsContent>
 
@@ -127,8 +126,8 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
                   sizeBytes={file.sizeBytes}
                   meta={
                     <div className="flex flex-wrap items-center gap-2">
-                      {file.categories.map((category) => (
-                        <FileCategoryBadge key={category} category={category} />
+                      {file.categories.map((fileCategory) => (
+                        <FileCategoryBadge key={fileCategory} category={fileCategory} />
                       ))}
                       {file.lastUsedAt && (
                         <span className="text-fg-muted text-xs">
@@ -177,8 +176,8 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
                     sizeBytes={file.sizeBytes}
                     meta={
                       <div className="flex flex-wrap items-center gap-2">
-                        {file.categories.map((category) => (
-                          <FileCategoryBadge key={category} category={category} />
+                        {file.categories.map((fileCategory) => (
+                          <FileCategoryBadge key={fileCategory} category={fileCategory} />
                         ))}
                       </div>
                     }

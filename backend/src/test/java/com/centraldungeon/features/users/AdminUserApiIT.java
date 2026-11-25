@@ -26,20 +26,19 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * <b>The matrix of roles-y-alcance.md §3, walked rather than tabulated.</b> §7 of that document
- * names the risk this class exists to answer: {@code hasRole('ADMIN')} where
- * {@code hasAnyRole('ADMIN','OWNER')} was meant leaves the owner outside a screen and nobody
- * notices, because in development the test actor is usually an admin. So every one of the seven
+ * <b>The role matrix, walked rather than tabulated.</b> The risk this class exists to answer:
+ * {@code hasRole('ADMIN')} where {@code hasAnyRole('ADMIN','OWNER')} was meant leaves the owner
+ * outside a screen and nobody notices, because in development the test actor is usually an admin. So every one of the seven
  * routes is called by <em>both</em> ranks, and the expectation for the owner is the same 200 the
  * admin gets - not a 403 the table would have let slip.
  *
  * <p>It goes over HTTP because that is the only place four things exist at all: the
  * {@code @PreAuthorize} on each method, Jackson's binding of {@code PlatformRole} from the body,
- * the shape of the {@code ProblemDetail} the frontend branches on (ADR-23 §3), and the
+ * the shape of the {@code ProblemDetail} the frontend branches on, and the
  * {@code @PageableDefault}. None of them is reachable from a service test.
  *
  * <p>Real tokens through the real {@link JwtService} and the real filter chain, so the roles are
- * read from the database the way {@code JwtAuthenticationFilter} reads them on every request (ADR-05 §3)
+ * read from the database the way {@code JwtAuthenticationFilter} reads them on every request
  * - which is also what makes the Testcontainers MySQL necessary here.
  */
 @SpringBootTest
@@ -171,7 +170,7 @@ class AdminUserApiIT {
     // ---------------------------------------------------------------- the one row that differs
 
     /**
-     * <b>The whole difference between the two ranks in F3</b>: who may hand out the rank. An admin
+     * <b>The whole difference between the two ranks</b>: who may hand out the rank. An admin
      * reaching for Admin or Owner is a 403 and not a 400 - the request is well formed and what makes
      * it fail is who sent it. (Granting Owner answers {@code OWNER_NOT_GRANTABLE} to everybody.)
      */
@@ -240,7 +239,7 @@ class AdminUserApiIT {
 
     // ---------------------------------------------------------------- the owner invariant
 
-    /** The `Se prueba:` of F3.1, over HTTP: the owner cannot step down. */
+    /** The owner invariant over HTTP: the owner cannot step down. */
     @Test
     void anOwnerRevokingTheirOwnRoleGetsTheConflict() throws Exception {
         revokeRole(owner, owner, "Owner", "stepping down")
@@ -257,7 +256,7 @@ class AdminUserApiIT {
     }
 
     /**
-     * The demotion takes effect on the very next request, which is the eviction of ADR-05 §3 seen from
+     * The demotion takes effect on the very next request, which is the eviction of the cached roles seen from
      * outside: the owner who was just demoted comes back holding nothing, and the
      * {@code @PreAuthorize} - not the service - is what turns them away. A cache that had not been
      * dropped would have let them through for the rest of the TTL.
@@ -356,7 +355,7 @@ class AdminUserApiIT {
                 .andExpect(status().isNotFound());
     }
 
-    /** {@code @PageableDefault}: twenty per page, ordered by Discord handle with a tie-break by id (ADR-07 §9, ADR-04 §6). */
+    /** {@code @PageableDefault}: twenty per page, ordered by Discord handle with a tie-break by id. */
     @Test
     void theListingDefaultsToTwentyPerPageSortedByHandle() throws Exception {
         for (int i = 0; i < 25; i++) {

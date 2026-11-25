@@ -9,15 +9,15 @@ import java.util.Optional;
  * Which table an item of the shared tray came from, and the {@code {type}} segment of the two
  * reservation routes.
  *
- * <p><b>The spelling is not invented here.</b> It is the vocabulary {@code approval_requests
- * .entity_type} already uses (ADR-16 §2) and that {@code Notification.relatedEntityType} publishes: the
+ * <p><b>The spelling is not invented here.</b> It is the vocabulary {@code approval_requests.entity_type}
+ * already uses and that {@code Notification.relatedEntityType} publishes: the
  * singular of the table, in snake case - {@code game_table}, never {@code gameTable} or
  * {@code table}. A second vocabulary for the same things is how a frontend ends up with two maps
  * saying the same thing and a bug living between them.
  *
  * <p>Coarse on purpose, and different from {@link QueueItemKind}: this one says <em>where the
  * row lives</em>, which is what decides how to lock it and where its reservation columns are. The
- * kind says what the reader is looking at. Today they happen to be one-to-one; F5 breaks that as soon
+ * kind says what the reader is looking at. Today they happen to be one-to-one; that breaks as soon
  * as {@code comments} contributes more than one kind of item, so the two are separate from the start.
  */
 public enum QueueSource {

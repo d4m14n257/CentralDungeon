@@ -35,14 +35,14 @@ function dropzoneInput(): HTMLInputElement {
 
 describe('FilePicker', () => {
   beforeEach(() => {
-    // The mutation answers with the file *and* whether it was recognised rather than written (ADR-13 §4).
+    // The mutation answers with the file *and* whether it was recognised rather than written.
     upload.mockReset().mockResolvedValue({ file: { id: 'file-new', name: 'ficha.pdf' }, deduplicated: false })
     listMine.mockReset().mockResolvedValue(emptyPage)
     listPublic.mockReset().mockResolvedValue(emptyPage)
   })
 
   /**
-   * ADR-13 §2 and ADR-13 §3's whole strategy: reuse only reduces anything if it is as reachable as uploading.
+   * The whole storage-cost strategy: reuse only reduces anything if it is as reachable as uploading.
    * If it were a link tucked under an upload box, everybody would upload.
    */
   it('offers uploading and reusing as peers', () => {
@@ -52,14 +52,14 @@ describe('FilePicker', () => {
     expect(screen.getByRole('tab', { name: 'Mis archivos' })).toBeInTheDocument()
   })
 
-  /** A limit somebody only meets by breaking it reads as a bug (principle 2). */
+  /** A limit somebody only meets by breaking it reads as a bug. */
   it('states the per-file limit before anything is uploaded', () => {
     render(wrap(<FilePicker onPick={vi.fn()} />))
 
     expect(screen.getByText(/2 MB/)).toBeInTheDocument()
   })
 
-  /** The published tab is what makes ADR-14 §1 reachable — and it is absent when nothing offers it. */
+  /** The published tab is what makes shared files reachable — and it is absent when nothing offers it. */
   it('offers the published files only when the caller asks for them', () => {
     const { rerender } = render(wrap(<FilePicker onPick={vi.fn()} />))
     expect(screen.queryByRole('tab', { name: 'Publicados' })).not.toBeInTheDocument()
@@ -69,22 +69,22 @@ describe('FilePicker', () => {
   })
 
   /**
-   * ADR-14 §4: the published tab is asked for the cajón the picker stands in, and never for an audience.
+   * The published tab is asked for the category the picker stands in, and never for an audience.
    * A master attaching to their table wants what the community published for tables; the same master
    * writing a request wants what it published for requests. One control, two answers.
    */
-  it('asks the published tab for the cajón it is standing in', async () => {
-    render(wrap(<FilePicker onPick={vi.fn()} offerPublished cajon="TableMaterial" />))
+  it('asks the published tab for the category it is standing in', async () => {
+    render(wrap(<FilePicker onPick={vi.fn()} offerPublished category="TableMaterial" />))
 
     await userEvent.click(screen.getByRole('tab', { name: 'Publicados' }))
 
-    // The cajón is the flow, so a master attaching to their table gets the blanks published *for*
-    // that moment - which is what the audience of ADR-13 §2 could never express (ADR-14 §4).
+    // The category is the flow, so a master attaching to their table gets the blanks published *for*
+    // that moment - which is what an audience could never express.
     await waitFor(() => expect(listPublic).toHaveBeenCalledWith('TableMaterial'))
   })
 
   /**
-   * **Picking stages, it does not upload** (ADR-13 §5). The confirm that creates the table or sends the
+   * **Picking stages, it does not upload**. The confirm that creates the table or sends the
    * answer is what puts bytes on the server, so abandoning the flow leaves nothing behind.
    */
   it('stages what was picked and uploads nothing', async () => {
@@ -124,7 +124,7 @@ describe('FilePicker', () => {
     // The name travels with the id: a caller that gathers several files before sending them shows
     // them back by name, and looking that up again for something the picker just had is a round trip
     // for nothing.
-    // Something reused arrives already carrying its id: there is nothing to upload for it (ADR-13 §2).
+    // Something reused arrives already carrying its id: there is nothing to upload for it.
     expect(onPick).toHaveBeenCalledWith({ kind: 'existing', fileId: 'file-old', name: 'ficha-vieja.pdf' })
     expect(upload).not.toHaveBeenCalled()
   })

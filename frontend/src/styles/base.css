@@ -2,7 +2,7 @@
 
 /* The app's base styles, not tokens.
    They live here and not in globals.css because that file is overwritten whole every time the
-   theme is transcribed from the design system (ADR-21 §1) - anything written there is lost.
+   theme is transcribed from the design system - anything written there is lost.
    No loose values: everything comes from the @theme. */
 
 @layer base {
@@ -12,7 +12,7 @@
     font-family: var(--font-sans);
   }
 
-  /* The serif is for headings only (the "sober fantasy" visual direction, ADR-21 §2). */
+  /* The serif is for headings only (the "sober fantasy" visual direction). */
   h1,
   h2,
   h3 {
@@ -29,25 +29,25 @@
 }
 
 @layer components {
-  /* The community's own gradient (ADR-21 §2). The only place it appears whole: inside the app the
+  /* The community's own gradient. The only place it appears whole: inside the app the
      fourteen status colours need a background that does not compete with them. */
   .bg-brand-gradient {
     background-image: var(--gradient-brand);
   }
 
-  /* Pattern classes (ADR-21 §5, skill `diseno` §5.c). A combination of utilities that plays one design
+  /* Pattern classes. A combination of utilities that plays one design
      role is named once, here, and never spelled out in a screen - so changing the role changes
      every screen that has it. Utilities written next to one of these still win (the utilities
      layer comes later), which is how a one-off adjustment stays one-off. Each class has its entry
-     in the catalogue of the skill and its drawing in design/build.py. */
+     in the design catalogue and its drawing in design/build.py. */
 
-  /* The icon actions of a row or a card (ADR-21 §11): one line, right-aligned, never wrapping - a
+  /* The icon actions of a row or a card: one line, right-aligned, never wrapping - a
      second line of icons reads as a second row. DataTable applies it itself. */
   .row-actions {
     @apply flex flex-row flex-nowrap items-center justify-end gap-1;
   }
 
-  /* The h1 of a screen. Serif, like every heading (ADR-21 §2). */
+  /* The h1 of a screen. Serif, like every heading. */
   .page-title {
     @apply font-serif text-2xl font-semibold wrap-anywhere;
   }
@@ -64,7 +64,7 @@
 
   /* The content column of a context's shell: centred, bounded to `max-w-5xl`, with a side
      gutter at every width. The bottom is longer on a phone so the last line of a page clears the
-     «En línea» pill fixed in the corner. The four layouts apply it. */
+     "online" pill fixed in the corner. The four layouts apply it. */
   .page-content {
     @apply mx-auto max-w-5xl px-4 pt-6 pb-14 sm:pb-6;
   }
@@ -125,7 +125,7 @@
     @apply bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm;
   }
 
-  /* The node canvas (ADR-12 §7): the frame of a React Flow graph, and every one of the library's
+  /* The node canvas: the frame of a React Flow graph, and every one of the library's
      --xy-* colours pointed at a token, so the canvas follows the light and dark themes and brings
      no colour of its own. GraphCanvas applies it itself. */
   .graph-canvas {
@@ -154,7 +154,7 @@
   }
 
   /* A node of the canvas. Its role changes the frame, never the colour - the state's colour is
-     the StatusBadge inside it (ADR-21 §6). */
+     the StatusBadge inside it. */
   .graph-node {
     @apply bg-surface text-fg border-border-strong flex w-56 items-center gap-2 rounded-lg border px-3 py-2 shadow-sm;
   }

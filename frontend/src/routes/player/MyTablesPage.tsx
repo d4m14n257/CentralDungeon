@@ -17,7 +17,7 @@ import { GameTableCard, useMyTables } from '@/features/tables'
 export function MyTablesPage() {
   const { t } = useTranslation('tables')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (ADR-19 §4).
+  // loaded.
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useMyTables()
   const tables = data?.pages.flatMap((page) => page.content) ?? []
   const total = data?.pages[0]?.totalElements ?? 0

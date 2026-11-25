@@ -24,15 +24,15 @@ export interface ReassignCatalogValueDialogProps {
 }
 
 /**
- * Moving an alias to another group, without dragging (ADR-12 §6).
+ * Moving an alias to another group, without dragging.
  *
- * On the catalog canvas this is a gesture - drop the alias on the other group's head (ADR-12 §7) - and
+ * On the catalog canvas this is a gesture - drop the alias on the other group's head - and
  * this dialog is the same operation for whoever cannot or would rather not drag: a keyboard, a
  * screen reader, a phone. Every gesture of the canvas has one of these, or it is a capability only
  * some admins have.
  *
  * The picker offers group heads only and leaves out the group the alias is already in: both would
- * be refused, and a choice that is going to be refused is not offered (principle 2).
+ * be refused, and a choice that is going to be refused is not offered.
  *
  * @param props.kind         which catalog
  * @param props.value        the alias that moves
@@ -47,7 +47,7 @@ export function ReassignCatalogValueDialog({ kind, value, open, onOpenChange }: 
 
   async function handleReassign() {
     if (!target) return
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('admin.reassignConfirmTitle', { name: value.name, target: target.name }),
       description: t('admin.reassignConfirmDescription'),

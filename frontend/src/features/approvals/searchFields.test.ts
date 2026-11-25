@@ -9,12 +9,12 @@ import { approvalRequestSearchFields } from './searchFields'
 const t = i18n.getFixedT('es', 'admin')
 
 describe('approvalRequestSearchFields', () => {
-  it('offers the three commands of F3.2, in order', () => {
+  it('offers the three original commands, in order', () => {
     expect(approvalRequestSearchFields(t).map((field) => field.name)).toEqual(['request_type', 'status', 'requested_by'])
   })
 
   /**
-   * ADR-22 §3: a command whose values are a closed set declares them, and that is what turns it into a
+   * A command whose values are a closed set declares them, and that is what turns it into a
    * list the box offers instead of something somebody has to guess the spelling of.
    */
   it('declares fixed choices for the two closed sets and free text for the name', () => {
@@ -32,23 +32,23 @@ describe('approvalRequestSearchFields', () => {
   })
 
   /**
-   * The two kinds F3.4 added **are** offered, and this assertion used to say the opposite.
+   * The two later kinds **are** offered, and this assertion used to say the opposite.
    *
    * It was right when it was written: nothing produced a `TablePause` or a `PlayerBan`, and a command
-   * offering a value no row can have is a filter that always answers nothing. F3.4 built both
-   * producers — `POST /game-tables/{id}/request-pause` and `.../registrations/{id}/request-block` —
+   * offering a value no row can have is a filter that always answers nothing. Both
+   * producers now exist — `POST /game-tables/{id}/request-pause` and `.../registrations/{id}/request-block` —
    * so the condition the old test encoded is what changed, not the rule behind it. Leaving it
    * inverted would now hide the two kinds an admin most wants to find behind a filter that refuses
    * to name them.
    */
-  it('offers the two kinds F3.4 gave a producer to', () => {
+  it('offers the two kinds that later gained a producer', () => {
     const values = approvalRequestSearchFields(t).find((field) => field.name === 'request_type')?.values
 
     expect(values).toContainEqual({ value: 'TablePause', label: 'Pausa de mesa' })
     expect(values).toContainEqual({ value: 'PlayerBan', label: 'Veto de jugador' })
   })
 
-  /** The value is what travels to the backend; the label is what is typed and read (ADR-22 §3). */
+  /** The value is what travels to the backend; the label is what is typed and read. */
   it('sends the API spelling and shows the translated label', () => {
     const status = approvalRequestSearchFields(t).find((field) => field.name === 'status')
 
@@ -74,7 +74,7 @@ describe('PENDING_REQUESTS_QUERY', () => {
   })
 
   /**
-   * It travels in the API's spelling, not in the reader's: the chip shows «Pendiente», the string
+   * It travels in the API's spelling, not in the reader's: the chip shows the translated status label, the string
    * says `Pending`. Built by `serializeSearchQuery` rather than hand-written, so this is the
    * serializer's own output and not a literal that could drift away from it.
    */

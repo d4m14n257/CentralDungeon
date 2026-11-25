@@ -38,20 +38,19 @@ import org.springframework.web.multipart.MultipartFile;
  * A person's own files: uploading them, finding them again, and downloading one.
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role. Whether somebody may reach a
- * concrete file is <b>pertenencia</b> - they own it, or they belong to a table it is attached to -
- * which a {@code @PreAuthorize} cannot see, so the service settles it before reading anything (hard rule 17,
- * ADR-05 §5, ADR-06 §4). The annotation is still written out on each method and never inherited (regla dura 4,
- * CVE-2025-41248).
+ * concrete file is <b>membership</b> - they own it, or they belong to a table it is attached to -
+ * which a {@code @PreAuthorize} cannot see, so the service settles it before reading anything. The annotation
+ * is still written out on each method and never inherited (CVE-2025-41248).
  *
  * <p>No endpoint takes a user id. The actor comes from the token, always, which is the hole the Node
  * backend had: its upload path was {@code UPLOAD_FILES/<user_id>/...} with the id read straight out
- * of the URL (M21.5).
+ * of the URL.
  */
 @RestController
 @RequestMapping("/api/v1/files")
 public class FileController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final FileService fileService;
 
     /**
@@ -69,19 +68,19 @@ public class FileController {
      * {@code Content-Type: application/json} for Spring to bind it to a record - the frontend sends
      * it as a {@code Blob} for exactly that reason.
      *
-     * <p><b>Uploading content this person already has answers 200, not 201</b> (ADR-13 §4). That is the
-     * deduplication of ADR-13 §3 and never an error - but it is also not a creation, and until now it said
+     * <p><b>Uploading content this person already has answers 200, not 201</b>. That is the
+     * deduplication and never an error - but it is also not a creation, and until now it said
      * it was: the same 201 as a fresh write, which left the frontend unable to tell the person that
      * their file was recognised rather than stored again. The lever only changes behaviour if
      * somebody can see it working.
      *
      * @param file        the content and the name the browser sent
-     * @param request     which lifecycle the uploader wants for it (ADR-13 §2) and what it is (ADR-14 §4)
+     * @param request     which lifecycle the uploader wants for it and what it is
      * @param currentUser the uploader, from the token
      * @return 201 with the file and its {@code Location} when the content was written; <b>200 with
-     *         the file they already had</b> when it was recognised (ADR-13 §4). 400 when the part is
+     *         the file they already had</b> when it was recognised. 400 when the part is
      *         empty, its type is not on the whitelist, it is over the cap, or the request asks for
-     *         {@code Public} - which is an admin's to grant (ADR-13 §2)
+     *         {@code Public} - which is an admin's to grant
      */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -97,22 +96,22 @@ public class FileController {
     }
 
     /**
-     * The reuse history of ADR-13 §2 - everything this person uploaded and still keeps.
+     * The reuse history - everything this person uploaded and still keeps.
      *
-     * <p>This is what makes reuse cheaper than re-uploading, which is the whole cost strategy of ADR-13 §3.
+     * <p>This is what makes reuse cheaper than re-uploading, which is the whole cost strategy.
      * If finding an old file were harder than dragging in a new one, everybody would drag in a new one.
      *
      * @param currentUser whose files, from the token. There is no parameter that could name anybody
-     *                    else (ADR-05 §5)
+     *                    else
      * @param query       the search box over their own filenames, or null for everything. <b>The
      *                    frontend has always sent this</b>; until now nothing here received it, so the
      *                    picker's search input filtered nothing
-     * @param category    the cajón to narrow to (ADR-14 §4), or null for all of them
-     * @param pageable    page, size and sort; <b>most recently used first</b>, with a tie-break by id
-     *                    (ADR-07 §9). The direction is spelled out because the default is ascending, and
+     * @param category    the category to narrow to, or null for all of them
+     * @param pageable    page, size and sort; <b>most recently used first</b>, with a tie-break by id.
+     *                    The direction is spelled out because the default is ascending, and
      *                    ascending here would open the picker on whatever this person has not touched
-     *                    in the longest time - the exact opposite of what reuse needs (ADR-13 §2)
-     * @return 200 with one page of their files, each with where it is used (ADR-14 §3)
+     *                    in the longest time - the exact opposite of what reuse needs
+     * @return 200 with one page of their files, each with where it is used
      */
     @GetMapping("/mine")
     @PreAuthorize("isAuthenticated()")
@@ -147,11 +146,11 @@ public class FileController {
     }
 
     /**
-     * What the platform published, for whoever is choosing one to attach (ADR-13 §2, ADR-14 §1).
+     * What the platform published, for whoever is choosing one to attach.
      *
-     * @param category the cajón to narrow to (ADR-14 §4), or null for everything published. It replaced
-     *                 the audience of ADR-13 §2 outright: a flow already says who a document is for
-     * @param pageable page, size and sort; by name, with a tie-break by id (ADR-07 §9)
+     * @param category the category to narrow to, or null for everything published. It replaced
+     *                 the old audience filter outright: a flow already says who a document is for
+     * @param pageable page, size and sort; by name, with a tie-break by id
      * @return 200 with one page of published files
      */
     @GetMapping("/public")
@@ -165,14 +164,14 @@ public class FileController {
     /**
      * Downloading the content.
      *
-     * <p><b>{@code ResponseEntity<Resource>} is not the open type regla dura 3 forbids.</b> That rule
+     * <p><b>{@code ResponseEntity<Resource>} is not the kind of open type the API contract forbids.</b> That rule
      * is about {@code Map<String, Object>}, {@code Object} and {@code ResponseEntity<?>} - types that
      * leave the contract unwritten. A stream of bytes has no {@code record} to be, and {@code Resource}
      * is closed and named. What is typed here is the metadata, in {@link FileResponse}.
      *
      * <p>The filename goes into {@code Content-Disposition} through Spring's builder, which encodes
      * it. That is the only place the name the user typed is used at all, and it is a header - never a
-     * path (ADR-13 §6).
+     * path.
      *
      * @param fileId      the file
      * @param currentUser the reader, from the token
@@ -193,7 +192,7 @@ public class FileController {
     }
 
     /**
-     * Renaming a file, and deciding whether to keep it in the reuse history (ADR-13 §2).
+     * Renaming a file, and deciding whether to keep it in the reuse history.
      *
      * @param fileId      the file
      * @param request     the name it should end up with, and whether to keep it
@@ -211,7 +210,7 @@ public class FileController {
     }
 
     /**
-     * Letting go of a file. Marks it gone; the bytes wait for the platform owner (ADR-03 §7, ADR-13 §8).
+     * Letting go of a file. Marks it gone; the bytes wait for the platform owner.
      *
      * @param fileId      the file
      * @param currentUser the owner, from the token

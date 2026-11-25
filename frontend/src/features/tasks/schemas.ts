@@ -21,7 +21,7 @@ export const taskFormSchema = z
     acceptsText: z.boolean(),
     acceptsFiles: z.boolean(),
     isMandatory: z.boolean(),
-    /** `datetime-local`, in the reader's own zone. Converted to UTC on submit (ADR-03 §6, ADR-19 §7). */
+    /** `datetime-local`, in the reader's own zone. Converted to UTC on submit. */
     dueAtLocal: z.string().optional(),
   })
   .refine((values) => values.acceptsText || values.acceptsFiles, {

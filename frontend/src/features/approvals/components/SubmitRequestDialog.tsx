@@ -20,7 +20,7 @@ interface SubmitRequestDialogProps {
   /**
    * What is being asked for. Fixed by the screen that raised the dialog, never chosen here.
    *
-   * **The submittable three and not all five** (F3.4): `TablePause` and `PlayerBan` are raised from
+   * **The submittable three and not all five**: `TablePause` and `PlayerBan` are raised from
    * their own entity's route, because `POST /requests` carries no `entityId` on purpose. Narrowing
    * it here means a screen that tried to raise one of those from this dialog would not compile.
    */
@@ -31,19 +31,18 @@ interface SubmitRequestDialogProps {
    * The explanation of how a request works, shown above the field.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura §3.1.5). The screen composes the two, which is how F3.1
-   * resolved the same problem.
+   * never imports one. The screen composes the two.
    */
   help?: ReactNode
 }
 
 /**
- * Asking an admin for something (ADR-16 §1).
+ * Asking an admin for something.
  *
  * **The kind of request is a prop and not a field.** The form lives on the screen that prompted the
  * question — the master role on your own profile, an open table in the explorer, anything else from
- * the help — so by the time this dialog is open, what is being asked for is already decided
- * (roles-y-alcance.md §4, F3.2). A dropdown here would turn three specific acts into one generic
+ * the help — so by the time this dialog is open, what is being asked for is already decided.
+ * A dropdown here would turn three specific acts into one generic
  * "make a request" screen, which is exactly what that decision refused.
  *
  * **The justification is required, not offered.** It is the whole of what an admin will read: the
@@ -83,7 +82,7 @@ export function SubmitRequestDialog({ type, open, onOpenChange, help }: SubmitRe
   }
 
   async function onSubmit(values: SubmitApprovalRequestForm) {
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('requests.submit.confirmTitle'),
       description: t('requests.submit.confirmDescription'),

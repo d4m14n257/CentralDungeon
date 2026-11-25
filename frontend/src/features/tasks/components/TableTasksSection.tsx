@@ -18,31 +18,31 @@ import { useConfirm } from '@/hooks/useConfirm'
 
 export interface TableTasksSectionProps {
   /**
-   * The table. **An id and nothing else** (§3.1.5): this block knows no `GameTable` type, which is
+   * The table. **An id and nothing else**: this block knows no `GameTable` type, which is
    * what keeps `features/tasks` from depending on `features/tables`.
    */
   tableId: string
   /**
-   * The section's «Cómo funciona», rendered by the screen and placed at the right end of the
-   * section's header, where every section puts it (ADR-21 §5).
+   * The section's "how it works" help button, rendered by the screen and placed at the right end of the
+   * section's header, where every section puts it.
    *
    * A render prop for the same reason `renderFiles` is one: the help lives in `features/help` and a
-   * feature never imports from another (regla dura 16, §3.1.5). The screen names the section.
+   * feature never imports from another. The screen names the section.
    */
   renderHelp: () => ReactNode
   /**
    * How to render the files of an answer, and how to render the file picker.
    *
    * Render props because both belong to `features/files` and a feature never imports from another.
-   * The screens in `src/routes/` are the one place domains are composed (regla dura 16, §3.1.5).
+   * The screens in `src/routes/` are the one place domains are composed.
    */
   renderFiles: (files: SubmittedFile[]) => ReactNode
   renderFilePicker: (onPick: (file: StagedFile) => void) => ReactNode
   /**
-   * Uploads what was staged and hands back the ids (ADR-13 §5).
+   * Uploads what was staged and hands back the ids.
    *
    * A prop and not an import, for the same reason `renderFilePicker` is one: this feature may never
-   * import `features/files` (regla dura 16), and the screen that composes both is the one that wires
+   * import `features/files`, and the screen that composes both is the one that wires
    * them. Nothing has reached the server until this runs.
    */
   commitFiles: CommitStagedFiles
@@ -52,23 +52,23 @@ export interface TableTasksSectionProps {
  * What this table asks of the person reading it — the block `/player/tables/:id` and `/player/my-tables/:id` both
  * mount.
  *
- * It runs its own query and owns its own dialog, taking only a `tableId` from the screen around it
- * (§3.1.5). That is also why it is one component and not two copies of the same JSX in two routes:
+ * It runs its own query and owns its own dialog, taking only a `tableId` from the screen around it.
+ * That is also why it is one component and not two copies of the same JSX in two routes:
  * the two screens ask the same question, and the answer differs by who is asking, not by where they
  * are asking from.
  *
- * A candidate on the public detail sees what will be asked of them before they apply (ADR-14 §2); a
- * player sees what is asked of players and whatever was addressed to them in particular (ADR-15 §2).
+ * A candidate on the public detail sees what will be asked of them before they apply; a
+ * player sees what is asked of players and whatever was addressed to them in particular.
  *
  * @param props.tableId          the table
- * @param props.renderHelp       the section's «Cómo funciona», for the right end of its header
+ * @param props.renderHelp       the section's "how it works" help button, for the right end of its header
  * @param props.renderFiles      how to render the files of an answer
  * @param props.renderFilePicker how to render the file picker inside the answer dialog
  */
 export function TableTasksSection({ tableId, renderHelp, renderFiles, renderFilePicker, commitFiles }: TableTasksSectionProps) {
   const { t } = useTranslation('tasks')
   const confirm = useConfirm()
-  // isLoadingError, not isError: see ADR-19 §4.
+  // isLoadingError, not isError: a failed background refetch must not replace data already on screen with an error.
   const { data: tasks, isPending, isLoadingError, refetch } = useApplicableTasks(tableId)
   const submit = useSubmitTask(tableId)
   const [answering, setAnswering] = useState<ApplicableTask | null>(null)
@@ -95,15 +95,15 @@ export function TableTasksSection({ tableId, renderHelp, renderFiles, renderFile
           isBusy={submit.isPending}
           renderFilePicker={renderFilePicker}
           onSubmit={async (draft) => {
-            // A review before anything is written or uploaded (ADR-21 §9).
+            // A review before anything is written or uploaded.
             const confirmed = await confirm({
               title: t('submit.confirmTitle'),
               description: t('submit.confirmDescription'),
               confirmLabel: t('submit.confirmLabel'),
             })
             if (!confirmed) return
-            // Upload first, send second (ADR-13 §5). A file that failed does not hold the answer back:
-            // answers accumulate (ADR-15 §2), so completing it is sending another one - and the person is
+            // Upload first, send second. A file that failed does not hold the answer back:
+            // answers accumulate, so completing it is sending another one - and the person is
             // told which file to try again with.
             const { fileIds, failed } = await commitFiles(draft.staged)
             if (failed.length > 0) {

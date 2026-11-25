@@ -26,30 +26,30 @@ interface SettingValueDialogProps {
    * The explanation of what settings are, rendered under the field.
    *
    * **A node instead of the dialog raising it itself**, because `HelpLink` lives in `features/help`
-   * and a feature never imports another one (arquitectura §3.1.5). The screen owns the
+   * and a feature never imports another one. The screen owns the
    * composition, so the link still sits where the question is born.
    */
   help?: ReactNode
 }
 
 /**
- * Changes one setting's value, with a reason (ADR-17 §3).
+ * Changes one setting's value, with a reason.
  *
  * **The three things it says before the value is saved**, which is the difference between a
  * configuration screen and a box of numbers:
  *
  * - **The range**, as a hint and as validation built from that setting's own bounds. A cap somebody
- *   only discovers by hitting it reads as a bug rather than a rule (principle 2 of
- *   diseno §1), and every setting here has a different range — so one shared "must be a
+ *   only discovers by hitting it reads as a bug rather than a rule (a hidden rule
+ *   is a bug to the person who hits it), and every setting here has a different range — so one shared "must be a
  *   number" would be exactly that bug.
  * - **The default**, beside the current value, so putting something back never means finding the
- *   number in the source (ADR-17 §3 asks for both on screen).
- * - **The warning, for a setting whose change is retroactive** (ADR-10 §2). Lowering the visibility window
+ *   number in the source (both are shown on screen).
+ * - **The warning, for a setting whose change is retroactive**. Lowering the visibility window
  *   takes visibility away from people who have it at this instant; raising it hands it back to people
- *   who had already lost it. ADR-17 §3 says in so many words that «ninguno de los dos es un ajuste
- *   cosmético y la pantalla tiene que decirlo», and after the fact is not saying it.
+ *   who had already lost it. Neither change is
+ *   cosmetic and the screen has to say so, and after the fact is not saying it.
  *
- * It owns the mutation, as every `…Dialog` does (arquitectura §3.3, ADR-19 §6), and renders its
+ * It owns the mutation, as every `…Dialog` does, and renders its
  * refusal inline above the button rather than as a toast that disappears while the form is still
  * open.
  *
@@ -89,7 +89,7 @@ export function SettingValueDialog({ setting, open, onOpenChange, help }: Settin
 
   async function onSubmit(values: UpdateSettingForm) {
     if (!setting) return
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('settings.confirmTitle', { label: t(`settings.keys.${setting.key}.label`), value: values.value.trim() }),
       description: t(setting.retroactive ? 'settings.confirmRetroactiveDescription' : 'settings.confirmDescription'),
@@ -117,7 +117,7 @@ export function SettingValueDialog({ setting, open, onOpenChange, help }: Settin
       <Form {...form}>
         <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-4">
           {/* Said before the value is saved, never after: this is the one setting whose change
-              re-answers questions the platform already answered (ADR-10 §2, ADR-17 §3). */}
+              re-answers questions the platform already answered. */}
           {setting?.retroactive && (
             <p role="note" className="bg-state-paused-bg text-state-paused-fg rounded-md px-3 py-2 text-sm">
               {t(`settings.keys.${setting.key}.retroactiveWarning`)}
@@ -158,7 +158,7 @@ export function SettingValueDialog({ setting, open, onOpenChange, help }: Settin
                   <Textarea rows={3} placeholder={t('settings.justificationPlaceholder')} {...field} />
                 </FormControl>
                 {/* Why it is required, said where it is asked for: a platform-wide change leaves no
-                    other trace, so the reason is the whole audit (ADR-17 §3). */}
+                    other trace, so the reason is the whole audit. */}
                 <FormDescription>{t('settings.justificationHint')}</FormDescription>
                 <FormMessage />
               </FormItem>

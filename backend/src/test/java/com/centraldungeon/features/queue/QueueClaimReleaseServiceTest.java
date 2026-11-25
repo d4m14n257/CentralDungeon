@@ -30,7 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The job that hands back the reservations nobody finished (ADR-16 §5).
+ * The job that hands back the reservations nobody finished.
  *
  * <p>Asserted through {@link QueueClaimReleaseService#releaseExpiredClaims()} and not through the
  * scheduled method, for the reason {@code FileRetentionServiceTest} and
@@ -60,7 +60,7 @@ class QueueClaimReleaseServiceTest {
 
     /** What the job does, in one sentence: what was claimed becomes free, in both sources. */
     @Test
-    void devuelveLasReservasVencidasDeLasDosFuentes() {
+    void returnsTheExpiredReservationsOfBothSources() {
         ApprovalRequest request = claimedRequest();
         GameTable table = claimedTable();
         expired(List.of(request), List.of(table));
@@ -75,9 +75,9 @@ class QueueClaimReleaseServiceTest {
     }
 
     /**
-     * El corte sale del timeout configurable (contrato §2, {@code app.queue.claim-timeout}), y
-     * is what the query is given: it is the difference between a value that can be adjusted without a
-     * constante escondida. F3.5 lo muda a {@code system_settings} (ADR-17 §3) y este test no cambia.
+     * The cutoff comes from the configurable timeout ({@code app.queue.claim-timeout}), and that
+     * is what the query is given: it is the difference between a value that can be adjusted and a
+     * hidden constant. The setting moving to {@code system_settings} does not change this test.
      */
     @Test
     void theCutoffComesFromTheConfiguredTimeout() {
@@ -93,16 +93,16 @@ class QueueClaimReleaseServiceTest {
     }
 
     /**
-     * And with nothing configured, the value ADR-16 §5 says it starts at: fifteen minutes.
+     * And with nothing configured, the value it starts at: fifteen minutes.
      *
-     * <p>The default moved with the setting in F3.5 - it is {@code SettingKey}'s now, not a
+     * <p>The default moved with the setting - it is {@code SettingKey}'s now, not a
      * {@code @ConfigurationProperties} record's - so the assertion moved to where the default lives.
      * {@code SettingsServiceTest} is what proves an unset setting answers with it; this one keeps the
-     * number written down beside the job that uses it, because fifteen minutes is ADR-16 §5's number and
+     * number written down beside the job that uses it, because fifteen minutes is a product decision and
      * not an implementation detail of the settings table.
      */
     @Test
-    void sinConfiguracionElTimeoutArrancaEnQuinceMinutos() {
+    void withoutConfigurationTheTimeoutStartsAtFifteenMinutes() {
         assertThat(Duration.ofMinutes(SettingKey.ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES.defaultValue()))
                 .isEqualTo(Duration.ofMinutes(15));
     }
@@ -137,17 +137,17 @@ class QueueClaimReleaseServiceTest {
 
     /** Zero is the ordinary answer on a platform where people finish what they start. */
     @Test
-    void sinReservasVencidasNoDevuelveNada() {
+    void withoutExpiredReservationsItReturnsNothing() {
         expired(List.of(), List.of());
 
         assertThat(service(Duration.ofMinutes(15)).releaseExpiredClaims()).isZero();
     }
 
     /**
-     * The door the scheduler will call runs the same pass. There is no assertion beyond «it completes and
-     * returns the same»: what is being guarded is that the entry point does not drift away from the work,
+     * The door the scheduler will call runs the same pass. There is no assertion beyond "it completes and
+     * returns the same": what is being guarded is that the entry point does not drift away from the work,
      * which is exactly what happens when somebody moves the logic and leaves the {@code @Scheduled}
-     * llamando a otra cosa.
+     * calling something else.
      */
     @Test
     void theSchedulersEntryPointRunsTheSamePass() {

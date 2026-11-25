@@ -9,7 +9,7 @@ import { UserMenu } from './UserMenu'
 
 const setTheme = vi.fn()
 let resolvedTheme: string | undefined = 'dark'
-/** Whether this account holds `Player` or `Master`, which is what decides the library entry (ADR-14 §5). */
+/** Whether this account holds `Player` or `Master`, which is what decides the library entry. */
 let hasPersonalLibrary = true
 
 vi.mock('next-themes', () => ({
@@ -77,8 +77,8 @@ describe('UserMenu', () => {
   })
 
   /**
-   * ADR-23 §2: each language names itself. Somebody hunting for their own language does not necessarily
-   * read the one currently on screen, so "English" is never offered as "Inglés".
+   * Each language names itself. Somebody hunting for their own language does not necessarily
+   * read the one currently on screen, so "English" is never offered in the active language's translation.
    */
   it('names every language in itself, not in the one currently active', async () => {
     renderMenu()
@@ -90,7 +90,7 @@ describe('UserMenu', () => {
   })
 
   /**
-   * ADR-14 §5: a personal library is filled by the player and master flows, so an account holding neither
+   * A personal library is filled by the player and master flows, so an account holding neither
    * role — a pure admin, the owner — has none, and an entry leading to a screen that can do nothing
    * is worse than no entry.
    */
@@ -111,7 +111,7 @@ describe('UserMenu', () => {
     expect(screen.queryByRole('menuitem', { name: 'Mis archivos' })).not.toBeInTheDocument()
   })
 
-  /** The week is not the library: it is transversal to everybody, and stays where it was (ADR-08 §6). */
+  /** The week is not the library: it is transversal to everybody, and stays where it was. */
   it('keeps offering the reader their own week either way', async () => {
     hasPersonalLibrary = false
     renderMenu()

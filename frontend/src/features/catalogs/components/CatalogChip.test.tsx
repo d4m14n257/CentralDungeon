@@ -17,13 +17,13 @@ function value(overrides: Partial<CatalogValue> = {}): CatalogValue {
 }
 
 describe('CatalogChip', () => {
-  it('shows the alias its master chose, not the group it belongs to (ADR-12 §4)', () => {
+  it('shows the alias its master chose, not the group it belongs to', () => {
     render(<CatalogChip value={value({ name: 'DANDD' })} />)
 
     expect(screen.getByText('DANDD')).toBeInTheDocument()
   })
 
-  it('says out loud that a proposed value is still pending (ADR-12 §3)', () => {
+  it('says out loud that a proposed value is still pending', () => {
     render(<CatalogChip value={value({ status: 'Created' })} />)
 
     expect(screen.getByText('· pendiente')).toBeInTheDocument()
@@ -37,7 +37,7 @@ describe('CatalogChip', () => {
 
   /**
    * Being pending is carried by the label, not only by the styling - the same rule the state badges
-   * follow (skill `diseno` §3). The dimming is a second signal, never the only one.
+   * follow. The dimming is a second signal, never the only one.
    */
   it('pairs the dimming with a readable label', () => {
     const { container } = render(<CatalogChip value={value({ status: 'Created' })} />)

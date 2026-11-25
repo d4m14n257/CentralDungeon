@@ -69,7 +69,7 @@ beforeEach(() => {
 })
 
 describe('MasterTableStatusNotice · requesting a pause', () => {
-  /** ADR-07 §2: there is nothing to pause before the table is running, so the act is absent (principle 2). */
+  /** There is nothing to pause before the table is running, so the act is absent. */
   it('offers the pause request only on a table that is running', () => {
     const { unmount } = render(<span />)
     unmount()
@@ -111,7 +111,7 @@ describe('MasterTableStatusNotice · requesting a pause', () => {
     expect(screen.queryByRole('button', { name: 'Cancelar mesa' })).not.toBeInTheDocument()
   })
 
-  /** ADR-07 §2 asks for a reason on a pause, and it is what the admin reads to decide. */
+  /** A pause asks for a reason, and it is what the admin reads to decide. */
   it('sends the reason that was written', async () => {
     const user = userEvent.setup()
     renderNotice('InProgress')
@@ -139,7 +139,7 @@ describe('MasterTableStatusNotice · requesting a pause', () => {
   })
 
   /**
-   * ADR-21 §10: the notice says where the table stands in every status, and cancelling sits apart at the
+   * The notice says where the table stands in every status, and cancelling sits apart at the
    * right when there are other decisions to keep it away from.
    */
   it('names the situation and keeps cancelling apart from the other decisions', () => {

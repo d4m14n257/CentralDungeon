@@ -15,22 +15,22 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * One change to one setting: what it was, what it became, who did it and why. Table
- * {@code system_setting_changes} (ADR-17 §3).
+ * {@code system_setting_changes}.
  *
  * <p><b>Why a table and not the two columns next door.</b> {@link SystemSetting} already carries
  * {@code updated_by} and {@code updated_at}, and they answer a different question: who has it like
- * this <em>now</em>. ADR-17 §3 asks that «cada cambio se audita», and a pair of columns that the next
+ * this <em>now</em>. Every change must be audited, and a pair of columns that the next
  * edit overwrites cannot say a value was raised on Tuesday and put back on Wednesday - which is
  * exactly the pattern worth seeing. Same distinction {@code user_status_changes} makes against
  * {@code users.status}, and the row is copied from it.
  *
  * <p><b>The reason is required</b>, as it is in {@code user_role_changes} and
- * {@code user_status_changes} (F3.1). Two of these settings change what people can see and what they
+ * {@code user_status_changes}. Two of these settings change what people can see and what they
  * may upload, with no notification and no visible event: without the reason, the only trace of a
  * platform-wide change is a number that used to be different.
  *
- * <p><b>{@code setting_key} has no foreign key</b>, and this is not ADR-16 §2's polymorphic reference
- * coming back. What it points at is a constant of {@link SettingKey}, checked at compile time and
+ * <p><b>{@code setting_key} has no foreign key</b>, and this is not the polymorphic reference of
+ * approval requests coming back. What it points at is a constant of {@link SettingKey}, checked at compile time and
  * resolved before anything is written - it cannot be deleted, renamed behind the code's back or left
  * dangling. The reason there is no constraint is the opposite one: {@code system_settings} holds
  * overrides only, so the row a change points at may legitimately not exist yet when the change is
@@ -65,12 +65,12 @@ public class SystemSettingChange {
     @Column(name = "to_value", nullable = false, length = 512)
     private String toValue;
 
-    /** Who made the change - always the actor from the token (ADR-05 §5). */
+    /** Who made the change - always the actor from the token. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "changed_by", nullable = false)
     private User changedBy;
 
-    /** Why. Required: a platform-wide change nobody explained is one nobody can review (ADR-17 §3). */
+    /** Why. Required: a platform-wide change nobody explained is one nobody can review. */
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String justification;
 
@@ -88,7 +88,7 @@ public class SystemSettingChange {
      * @param key           which setting changed
      * @param fromValue     what it was, or null when it had never been overridden
      * @param toValue       what it became
-     * @param changedBy     who made the change, always the actor from the token (ADR-05 §5)
+     * @param changedBy     who made the change, always the actor from the token
      * @param justification why, never blank
      */
     public SystemSettingChange(

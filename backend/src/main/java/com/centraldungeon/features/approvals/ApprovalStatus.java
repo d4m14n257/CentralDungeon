@@ -21,7 +21,7 @@ public enum ApprovalStatus {
     /** An admin said yes, with a reason. Whatever effect the type has already happened. */
     Approved,
 
-    /** An admin said no, with a reason. Rejecting without saying why is half the mechanism (ADR-16 §1). */
+    /** An admin said no, with a reason. Rejecting without saying why is half the mechanism. */
     Rejected;
 
     /**
@@ -29,7 +29,7 @@ public enum ApprovalStatus {
      *
      * @param name a status name, in any case
      * @return the matching constant, or empty. Empty is a normal answer: {@code ?q=/status Maybe}
-     *         matches nothing rather than answering 400 (arquitectura §2.5)
+     *         matches nothing rather than answering 400
      */
     public static Optional<ApprovalStatus> fromName(String name) {
         String normalized = name.toLowerCase(Locale.ROOT);

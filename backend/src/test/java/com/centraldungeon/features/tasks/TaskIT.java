@@ -53,8 +53,8 @@ import org.testcontainers.mysql.MySQLContainer;
  * The half of the task story only a real database can answer.
  *
  * <p>Three things a mock structurally cannot check are here. <b>Publishing writes one notification
- * row per recipient</b> (ADR-15 §5) - a unit test can assert the service was called, this counts what is in
- * the table. <b>Two answers from one person are two rows</b> (ADR-15 §2), which is the accumulation rule
+ * row per recipient</b> - a unit test can assert the service was called, this counts what is in
+ * the table. <b>Two answers from one person are two rows</b>, which is the accumulation rule
  * against a real primary key rather than against a stubbed {@code save}. And <b>the fifth way a file
  * becomes readable</b>: the query behind it joins three tables, so it only means anything against
  * SQL that actually runs.
@@ -122,7 +122,7 @@ class TaskIT {
         firstPlayer = userRepository.save(new User(randomDiscordId(), "Primera jugadora"));
         secondPlayer = userRepository.save(new User(randomDiscordId(), "Segundo jugador"));
         GameTable newTable = new GameTable("Mesa de las peticiones", master);
-        // Opened, where a table has players at all: a Draft is a 404 to anybody outside it (ADR-07 §1).
+        // Opened, where a table has players at all: a Draft is a 404 to anybody outside it.
         newTable.setStatus(GameTableStatus.Opened);
         table = gameTableRepository.save(newTable);
         masterService.createPrimary(table, master);
@@ -130,7 +130,7 @@ class TaskIT {
         enroll(secondPlayer, TableRegistrationStatus.Player);
     }
 
-    /** ADR-15 §5 against the table it writes to: one row per recipient, and none for anybody else. */
+    /** Publishing against the table it writes to: one row per recipient, and none for anybody else. */
     @Test
     void publishingWritesOneNotificationPerRecipient() {
         TaskResponse task = publish(TaskAudience.Players, null);
@@ -141,7 +141,7 @@ class TaskIT {
         assertThat(taskNotificationsOf(master)).isEmpty();
     }
 
-    /** The title travels as a parameter so the bell can name the request (ADR-23 §3). */
+    /** The title travels as a parameter so the bell can name the request. */
     @Test
     void theNotificationCarriesTheTaskTitleRatherThanASentence() {
         publish(TaskAudience.Players, null);
@@ -155,7 +155,7 @@ class TaskIT {
     }
 
     /**
-     * <b>The rule of ADR-15 §2 against a real primary key.</b> Two answers from one person are two rows;
+     * <b>Accumulating answers against a real primary key.</b> Two answers from one person are two rows;
      * neither overwrites the other, and the person leaves the roster of who is missing exactly once.
      */
     @Test
@@ -195,9 +195,9 @@ class TaskIT {
     }
 
     /**
-     * <b>The fifth way a file is reachable</b> (ADR-15 §1, §2, ADR-14 §2): the master opens what their player
+     * <b>The fifth way a file is reachable</b>: the master opens what their player
      * handed in, and somebody with no business there gets a 404 rather than a 403 - confirming a file
-     * exists is itself a leak (ADR-03 §4, ADR-09 §4).
+     * exists is itself a leak.
      */
     @Test
     void theMasterCanOpenAFileTheirPlayerHandedInAndAStrangerCannot() {
@@ -215,7 +215,7 @@ class TaskIT {
                 .isInstanceOf(NotFoundException.class);
     }
 
-    /** Handing in a file links it and never stores it again (ADR-13 §2, ADR-14 §1). */
+    /** Handing in a file links it and never stores it again. */
     @Test
     void aSubmittedFileTravelsWithTheAnswerAndIsNotCopied() {
         TaskResponse task = publish(TaskAudience.Players, null);
@@ -238,7 +238,7 @@ class TaskIT {
 
     /**
      * The audience against real rows: a candidate sees what is asked of candidates and not what is
-     * asked of players, and can answer only the first (ADR-15 §1, ADR-14 §2).
+     * asked of players, and can answer only the first.
      */
     @Test
     void aCandidateSeesTheCandidatesTaskAndNotThePlayersOne() {
@@ -255,7 +255,7 @@ class TaskIT {
         });
     }
 
-    /** A Single task is only ever seen by its target, even by the table's other players (ADR-15 §2). */
+    /** A Single task is only ever seen by its target, even by the table's other players. */
     @Test
     void aSingleTaskReachesOnlyItsTarget() {
         publish(TaskAudience.Single, firstPlayer.getId());
@@ -266,7 +266,7 @@ class TaskIT {
         assertThat(taskNotificationsOf(secondPlayer)).isEmpty();
     }
 
-    /** Closing ends the intake and leaves what came in exactly where it was (ADR-15 §2). */
+    /** Closing ends the intake and leaves what came in exactly where it was. */
     @Test
     void closingKeepsWhatWasAlreadyHandedIn() {
         TaskResponse task = publish(TaskAudience.Players, null);
@@ -296,13 +296,13 @@ class TaskIT {
     // ---------------------------------------------------------------- fixtures
 
     /**
-     * The master's half of a request, end to end (ADR-15 §1, ADR-14 §4).
+     * The master's half of a request, end to end.
      *
      * <p>Three things only a real round trip proves. The master can attach a blank at all - which the
      * model simply could not express before, since {@code accepts_files} only ever said whether an
      * <em>answer</em> could carry one. The blank reaches the people the request reaches, which is the
      * sixth way a file becomes readable and the whole point: "fill in this form" is useless if the
-     * form 404s. And attaching it is what puts the file in the {@code MasterRequest} cajón, without
+     * form 404s. And attaching it is what puts the file in the {@code MasterRequest} category, without
      * anybody declaring anything.
      */
     @Test
@@ -338,13 +338,13 @@ class TaskIT {
                 .containsExactly(blank.id());
         assertThat(fileService.download(blank.id(), firstPlayer.getId()).name()).isEqualTo("formulario.pdf");
 
-        // Somebody with no registration on the table still gets nothing (ADR-03 §4, ADR-09 §4).
+        // Somebody with no registration on the table still gets nothing.
         User stranger = userRepository.save(new User(randomDiscordId(), "Nadie"));
         assertThatThrownBy(() -> fileService.download(blank.id(), stranger.getId()))
                 .isInstanceOf(NotFoundException.class);
     }
 
-    /** Taking a blank off the ask marks the link and leaves the file, and its cajón, alone (ADR-14 §1, §4). */
+    /** Taking a blank off the ask marks the link and leaves the file, and its category, alone. */
     @Test
     void takingABlankOffTheRequestNeverTouchesTheFile() {
         FileResponse blank = fileService

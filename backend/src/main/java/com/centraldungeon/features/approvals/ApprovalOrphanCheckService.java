@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Finds the requests that point at something which is no longer there (ADR-16 §2).
+ * Finds the requests that point at something which is no longer there.
  *
  * <p><b>The third of the three things the polymorphic reference costs, and the one that is easiest to
- * skip.</b> {@code roles-y-alcance.md} §7 says it outright: «dos cosas van con ella o no va: la
- * validación en el service antes de insertar, y el chequeo periódico de huérfanas. Sin la segunda, el
- * problema aparece meses después y sin forma de reconstruir qué apuntaba a qué». The validation in
+ * skip.</b> The polymorphic reference only works with both
+ * halves: validating in the service before inserting, and a periodic check for orphans. Without the
+ * second, the problem appears months later with no way to reconstruct what pointed at what. The validation in
  * {@link ApprovalService#submit} only covers the moment of writing; what it cannot cover is the
  * months afterwards, during which the thing the row points at can be deleted by some other feature
  * with no foreign key to stop it. This project already lived that with {@code table_files} pointing
@@ -49,7 +49,7 @@ public class ApprovalOrphanCheckService {
     /** The {@code approval_requests} rows, read oldest first. */
     private final ApprovalRequestRepository approvalRequestRepository;
 
-    /** Answers "does this still exist?" for each entity type (ADR-16 §2). */
+    /** Answers "does this still exist?" for each entity type. */
     private final ApprovalEntityResolver entityResolver;
 
     /**
@@ -66,7 +66,7 @@ public class ApprovalOrphanCheckService {
      * Sweeps once a day, in the small hours.
      *
      * <p>05:30 UTC, half an hour after {@code FileRetentionService}: the community plays at night in
-     * the Americas, which is early morning of the next day in UTC (ADR-03 §6), and staggering the two keeps
+     * the Americas, which is early morning of the next day in UTC, and staggering the two keeps
      * them from competing for the same quiet window.
      *
      * <p>⚠️ <b>{@code @Transactional} has to be on <em>this</em> method too</b>, not only on the one
@@ -112,7 +112,7 @@ public class ApprovalOrphanCheckService {
                 orphans++;
                 // Everything needed to go and look, on one line: which request, who asked, what they
                 // asked for, and what it pointed at. Reconstructing that after the fact is exactly
-                // what ADR-16 §2 warns is impossible once the reference is gone and nothing wrote it down -
+                // what becomes impossible once the reference is gone and nothing wrote it down -
                 // and the requester is the half that makes the line actionable without a query.
                 log.warn(
                         "Orphaned approval request {}: type={} requested by {} points at {}:{} which no longer exists",

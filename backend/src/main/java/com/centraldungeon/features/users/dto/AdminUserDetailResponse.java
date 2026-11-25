@@ -9,13 +9,13 @@ import org.jspecify.annotations.Nullable;
  * endpoints answer with - so the screen never has to re-fetch after acting.
  *
  * <p>Not {@link UserDetailResponse}: that one is the caller's own view of themselves and carries
- * karma and {@code needsOnboarding}, which are answers to questions only the person themselves asks
- * (arquitectura §2.3). This one describes somebody else, and says only what administering them
+ * karma and {@code needsOnboarding}, which are answers to questions only the person themselves asks.
+ * This one describes somebody else, and says only what administering them
  * needs.
  *
  * @param id              the person's identifier
  * @param discordUsername their Discord handle, as of their last login
- * @param name            their display name, or null while onboarding is incomplete (ADR-10 §4)
+ * @param name            their display name, or null while onboarding is incomplete
  * @param country         ISO 3166-1 alpha-2, or null while onboarding is incomplete
  * @param status          {@code Allowed} or {@code Blocked}, as a string
  * @param roles           the roles they hold right now, in the declaration order of

@@ -3,7 +3,7 @@ import { api } from '@/api/client'
 import type { SettingKey, SystemSetting, SystemSettingChange, UpdateSettingInput } from '../types'
 
 /**
- * The three calls of `/admin/settings` (F3.5, ADR-17 §3). Under their own prefix like every other
+ * The three calls of `/admin/settings`. Under their own prefix like every other
  * administrative surface, because all three answer to `hasAnyRole('ADMIN','OWNER')`.
  *
  * **None of them is paginated**, and that is the backend's shape rather than an omission here: there
@@ -11,7 +11,7 @@ import type { SettingKey, SystemSetting, SystemSettingChange, UpdateSettingInput
  * around a list nobody scrolls.
  *
  * **The actor is never a parameter.** Who is changing a setting comes from the token, and an id in
- * the body would be a claim the caller makes about themselves (arquitectura §2.6) — which would
+ * the body would be a claim the caller makes about themselves — which would
  * make the audit row worth nothing.
  */
 export const settingsApi = {
@@ -24,7 +24,7 @@ export const settingsApi = {
   list: () => api.get<SystemSetting[]>('/api/v1/admin/settings'),
 
   /**
-   * Changes one setting. A `PUT` and not a `POST` with a verb, unlike the rest of F3: this really is
+   * Changes one setting. A `PUT` and not a `POST` with a verb, unlike the other mutations: this really is
    * an assignment — the same call twice leaves the platform in the same state.
    *
    * Refused with `SETTING_OUT_OF_RANGE`, carrying `minValue` and `maxValue`, when the number is

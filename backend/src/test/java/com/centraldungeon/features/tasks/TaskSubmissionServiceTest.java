@@ -41,7 +41,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * What handing in an answer does, and - just as much - what it deliberately does not do.
  *
  * <p>The two properties worth defending here are both refusals to be clever: answers <b>accumulate
- * and never overwrite</b> (ADR-15 §2), and a missing one <b>changes nothing</b> (ADR-15 §2). Both are easy to
+ * and never overwrite</b>, and a missing one <b>changes nothing</b>. Both are easy to
  * "improve" into a bug by somebody reading only the code.
  */
 @ExtendWith(MockitoExtension.class)
@@ -99,7 +99,7 @@ class TaskSubmissionServiceTest {
 
     /**
      * Closing ends the intake, and the refusal carries its own code: "could not save" is the wrong
-     * thing to tell somebody who just wrote an answer, because retrying will not help (ADR-04 §4, ADR-23 §3).
+     * thing to tell somebody who just wrote an answer, because retrying will not help.
      */
     @Test
     void refusesAnAnswerToAClosedTaskWithACodeOfItsOwn() {
@@ -149,7 +149,7 @@ class TaskSubmissionServiceTest {
         verify(submissionRepository, never()).save(any());
     }
 
-    /** The same XSS surface as everything else written in the editor (ADR-03 §8). */
+    /** The same XSS surface as everything else written in the editor. */
     @Test
     void sanitizesTheWrittenAnswer() {
         TableTask task = givenOpenTask("task-1", true, true);
@@ -163,12 +163,12 @@ class TaskSubmissionServiceTest {
         assertThat(response.content()).isEqualTo("<p>Elfa</p>");
     }
 
-    // ---------------------------------------------------------------- ADR-15 §2: answers accumulate
+    // ---------------------------------------------------------------- Answers accumulate
 
     /**
      * <b>The rule this whole class exists for.</b> A second answer is a second row: nothing is
      * updated, nothing is marked superseded, and the first one stays exactly where it was. Deciding
-     * which of two character sheets counts is a judgement the system does not have (ADR-15 §2).
+     * which of two character sheets counts is a judgement the system does not have.
      */
     @Test
     void asecondAnswerInsertsARowAndOverwritesNothing() {
@@ -187,7 +187,7 @@ class TaskSubmissionServiceTest {
 
     // ---------------------------------------------------------------- files
 
-    /** The same gate as attaching to a table: the actor's own, or one the platform published (ADR-14 §1). */
+    /** The same gate as attaching to a table: the actor's own, or one the platform published. */
     @Test
     void refusesAFileThatBelongsToSomebodyElse() {
         TableTask task = givenOpenTask("task-1", true, true);
@@ -203,7 +203,7 @@ class TaskSubmissionServiceTest {
         verify(submissionFileRepository, never()).save(any());
     }
 
-    /** The file is linked, never stored again - the reuse ADR-13 §2 exists for. */
+    /** The file is linked, never stored again - the reuse the file library exists for. */
     @Test
     void linksTheFileWithoutCopyingIt() {
         TableTask task = givenOpenTask("task-1", true, true);
@@ -222,7 +222,7 @@ class TaskSubmissionServiceTest {
 
     // ---------------------------------------------------------------- what the master reads
 
-    /** Reading everything that came in is a question about running the table (hard rule 17, ADR-05 §5, ADR-06 §4). */
+    /** Reading everything that came in is a question about running the table. */
     @Test
     void refusesTheFullListToSomebodyWhoDoesNotRunTheTable() {
         givenOpenTask("task-1", true, true);
@@ -234,7 +234,7 @@ class TaskSubmissionServiceTest {
 
     /**
      * The roster and the answers are one thought - "one of three" - and the people who did not answer
-     * are a list to talk to, not a list to act on (ADR-15 §2).
+     * are a list to talk to, not a list to act on.
      */
     @Test
     void tellsTheMasterWhoAnsweredAndWhoHasNot() {
@@ -271,7 +271,7 @@ class TaskSubmissionServiceTest {
         assertThat(response.missing()).isEmpty();
     }
 
-    /** Nobody needs a membership check to read their own answers: the query is keyed on the token (ADR-05 §5). */
+    /** Nobody needs a membership check to read their own answers: the query is keyed on the token. */
     @Test
     void anybodyCanReadTheirOwnAnswersWithoutRunningTheTable() {
         TableTask task = givenOpenTask("task-1", true, true);

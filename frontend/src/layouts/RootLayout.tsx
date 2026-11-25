@@ -15,12 +15,12 @@ const PUBLIC_PATHS: string[] = [paths.login, paths.authCallback]
 const NOT_A_DESTINATION: string[] = [paths.root, paths.onboarding]
 
 /**
- * Session guard. Besides requiring a session, it is where the onboarding blocks (ADR-10 §4): whoever
+ * Session guard. Besides requiring a session, it is where the onboarding blocks: whoever
  * has not completed it is sent to `/onboarding` from any path, and whoever has is sent out of it to
  * the root dispatcher. Whoever has a session is also sent away from `/login`, to the root dispatcher.
  * A visitor without one who followed a deep link is sent to `/login` and the link is remembered, so the
- * dispatcher can take them there once they are in (`lib/postLoginDestination.ts`). Which context an account may enter is each context layout's guard (ADR-20 §2);
- * authorization stays the backend's (ADR-20 §1).
+ * dispatcher can take them there once they are in (`lib/postLoginDestination.ts`). Which context an account may enter is each context layout's guard;
+ * authorization stays the backend's.
  *
  * If `/users/me` fails the guard lets the request through: each screen shows its own error, and a
  * failed read is not proof that onboarding is pending.

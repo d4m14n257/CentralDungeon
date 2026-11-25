@@ -7,7 +7,7 @@ import type { FileType } from '../types'
 /**
  * Which tone each state wears. **The map stays here and not in `StatusBadge`**: which of this
  * feature's states counts as "open" is a decision about this domain, and a shared component that knew
- * it would be the wrong kind of shared (`arquitectura` §3.1.2).
+ * it would be the wrong kind of shared.
  */
 const STATE_TONES: Record<FileType, StatusTone> = {
   Public: 'open',
@@ -17,11 +17,11 @@ const STATE_TONES: Record<FileType, StatusTone> = {
 }
 
 /**
- * Which lifecycle a file has (ADR-13 §2), as a badge.
+ * Which lifecycle a file has, as a badge.
  *
  * It answers a question people actually ask of a row: is this mine and kept, is it the platform's, or
- * is it something that will be reclaimed once nobody uses it (ADR-13 §3)? Its variants come from a `Record`
- * over `FileType`, so a fourth kind cannot be added without deciding how it looks (arquitectura §3.2, rule 9).
+ * is it something that will be reclaimed once nobody uses it? Its variants come from a `Record`
+ * over `FileType`, so a fourth kind cannot be added without deciding how it looks.
  *
  * @param props.fileType which lifecycle the file has
  */

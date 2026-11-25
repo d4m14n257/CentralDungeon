@@ -21,7 +21,7 @@ describe('tableActionErrorMessage', () => {
   })
 
   /**
-   * ADR-08 §2, the whole reason this exists: the refusal carries the name of the table the agenda now
+   * The whole reason this exists: the refusal carries the name of the table the agenda now
    * collides with, and that name is the one fact that makes the problem solvable.
    */
   it('carries the other table’s name out of the refusal', () => {
@@ -31,7 +31,7 @@ describe('tableActionErrorMessage', () => {
     })
   })
 
-  /** Every master is measured now (ADR-08 §2), so the clash an admin sees is always a master's. */
+  /** Every master is measured now, so the clash an admin sees is always a master's. */
   it('explains a clash in some master’s week the same way', () => {
     expect(tableActionErrorMessage(conflict({ otherTableName: 'La cripta', masterName: 'Ana' }, 'MASTER_SCHEDULE_CONFLICT'))).toEqual({
       key: 'tables.errors.SCHEDULE_CONFLICT',
@@ -40,7 +40,7 @@ describe('tableActionErrorMessage', () => {
   })
 
   /**
-   * And without the parameter it falls back, rather than rendering «se pisa con «»».
+   * And without the parameter it falls back, rather than rendering a clash message with an empty table name.
    *
    * A sentence with a hole where the answer should be says less than an honest generic one — and the
    * specific sentence only earns its place *because* of the name it carries.
@@ -52,7 +52,7 @@ describe('tableActionErrorMessage', () => {
 
   /**
    * Everything else is generic on purpose. Guessing at a message for a code nobody committed to is
-   * how an interface ends up asserting something the server never said (ADR-23 §3).
+   * how an interface ends up asserting something the server never said.
    */
   it('answers generically to any other refusal, and to no answer at all', () => {
     const other = new ApiError(409, { title: 'Conflict', status: 409, detail: 'nope', errorCode: 'INVALID_STATUS_TRANSITION' })

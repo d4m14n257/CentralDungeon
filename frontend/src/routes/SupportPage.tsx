@@ -6,22 +6,21 @@ import { HelpLink } from '@/features/help'
 
 /**
  * `/help` — where somebody who read the explanations and did not find their answer asks an admin
- * directly (F3.2, ADR-16 §1).
+ * directly.
  *
- * **It is not the old help route coming back.** ADR-20 §5 replaced `/help` with dialogs raised from the
+ * **It is not the old help route coming back.** The decision to replace `/help` with dialogs raised from the
  * screen that prompts the question, and that stands: the explanations still live there, next to the
  * thing being explained. What that decision left behind was a path reserved in so many words for the
  * support screen — "asking for assistance, reporting a bug" — with nothing behind it. The `General`
  * request is that backend, so the screen the reservation described can finally exist.
  *
- * It is deliberately short. A page of links to every help section would be the index ADR-20 §5 removed,
+ * It is deliberately short. A page of links to every help section would be the index that decision removed,
  * and an index nobody opens is worse than no index: it teaches people to look for answers in a place
  * that is not where the answers are. What it offers is the two things it is for — a way to ask, and
  * an explanation of what asking does.
  *
  * Transversal, like `/notifications` and `/my/schedule`: it belongs to whoever is reading it and to
- * none of the three contexts, which is why the header keeps the chip on wherever they came from
- * (ADR-20 §2).
+ * none of the three contexts, which is why the header keeps the chip on wherever they came from.
  */
 export function SupportPage() {
   const { t } = useTranslation('admin')
@@ -33,7 +32,7 @@ export function SupportPage() {
       <div className="border-border space-y-3 rounded-lg border p-4">
         <p className="text-sm font-medium">{t('requests.generalPitchTitle')}</p>
         <p className="text-fg-muted text-sm">{t('requests.generalPitchDescription')}</p>
-        {/* The help arrives as a node, because a feature never imports another one (§3.1.5). */}
+        {/* The help arrives as a node, because a feature never imports another one. */}
         <SubmitRequestSection
           type="General"
           help={
@@ -45,7 +44,7 @@ export function SupportPage() {
       </div>
 
       {/* Where the rest of the explanations are, said once: they are dialogs on the screens that
-          prompt them (ADR-20 §5), and somebody who came here looking for an index deserves to be told
+          prompt them, and somebody who came here looking for an index deserves to be told
           that rather than left to conclude the help is missing. */}
       <p className="text-fg-muted text-sm">
         {t('requests.supportWhereHelpLives')} <HelpLink section="basics.requests">{t('requests.supportHelpLink')}</HelpLink>

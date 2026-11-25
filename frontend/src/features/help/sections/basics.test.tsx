@@ -23,7 +23,7 @@ const FILE_FIELDS: SearchField[] = [
 ]
 
 /**
- * ADR-22 §3: the rules of the search are the same everywhere, but the examples are not.
+ * The rules of the search are the same everywhere, but the examples are not.
  *
  * They used to be five fixed rows about `/user_name` and `/discord_name`, shown from every box — so
  * the help of `/my/files` taught two commands that screen does not have and none of the ones it does.
@@ -72,12 +72,12 @@ describe('SearchHelp', () => {
   })
 
   /**
-   * A command declared with no choices behind it — a person with no cajón of their own (ADR-14 §5) — is
-   * not the pick-from-a-list kind. Saying «eliges entre:» with nothing after the colon promises a
+   * A command declared with no choices behind it — a person with no category of their own — is
+   * not the pick-from-a-list kind. Saying "you pick from:" with nothing after the colon promises a
    * list that is not there.
    */
   it('does not present a command with an empty list as one you pick from', () => {
-    render(<SearchHelp searchFields={[{ name: 'file_categories', label: 'cajón', values: [] }]} />)
+    render(<SearchHelp searchFields={[{ name: 'file_categories', label: 'category', values: [] }]} />)
 
     expect(screen.queryByText(/eliges entre/)).not.toBeInTheDocument()
   })
@@ -91,7 +91,7 @@ describe('SearchHelp', () => {
 })
 
 /**
- * The help F3.2 owes from the side of whoever asks (plan-desarrollo.md §6 point 8, ADR-20 §5).
+ * The help owed from the side of whoever asks for something.
  *
  * These assert on the **substance** of the section rather than on whole sentences: the wording is
  * free to improve, but a section that stopped saying the reason is required, or stopped explaining
@@ -119,7 +119,7 @@ describe('RequestsHelp', () => {
     expect(body).toMatch(/en lugar del botón/i)
   })
 
-  /** ADR-16 §1: the justification is required at **both** ends, and the second half is the one people miss. */
+  /** The justification is required at **both** ends, and the second half is the one people miss. */
   it('says the answer carries a required reason too', () => {
     render(<RequestsHelp />)
 
@@ -137,7 +137,7 @@ describe('RequestsHelp', () => {
     expect(body).toMatch(/se crea un borrador con ese nombre que diriges tú, sin recibir el rol/i)
   })
 
-  /** ADR-20 §6: the help teaches the doing and not only the rule. */
+  /** The help teaches the doing and not only the rule. */
   it('walks through making a request, step by step', () => {
     const { container } = render(<RequestsHelp />)
 
@@ -148,7 +148,7 @@ describe('RequestsHelp', () => {
 })
 
 /**
- * ADR-21 §5: the two screens of the account menu got their «Cómo funciona». A key missing from the JSON
+ * The two screens of the account menu got their "how it works" help. A key missing from the JSON
  * would print itself raw, so every line is checked to be real text.
  */
 describe('MyFilesHelp and MyScheduleHelp', () => {

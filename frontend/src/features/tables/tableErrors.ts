@@ -6,7 +6,7 @@ import { ApiError } from '@/types/api'
  * **The parameters are the reason this is a pair and not a bare key.** Every other error helper in
  * the project (`approvalErrors`, `adminErrors`) answers with a key alone, because their sentences
  * are fixed. The clash is not: its whole value is the name of the table it collides with, and a key
- * with nowhere to put that name would render "se pisa con «»".
+ * with nowhere to put that name would render a clash message with an empty table name in it.
  */
 export interface TableErrorMessage {
   /** The key to render, in the `admin` namespace. */
@@ -19,16 +19,16 @@ export interface TableErrorMessage {
 const GENERIC: TableErrorMessage = { key: 'tables.errors.generic', params: {} }
 
 /**
- * The sentence to show over a refused pause or resume (ADR-08 §2, ADR-23 §3).
+ * The sentence to show over a refused pause or resume.
  *
  * **`SCHEDULE_CONFLICT` is why this exists.** Resuming re-checks the clash before moving anything,
  * because the master may have committed to another table while this one was frozen — and the backend
- * answers naming that table in `errorParams.otherTableName`. A generic "no pudimos completar la
- * acción" would throw away the single fact that makes the problem solvable: the admin has to know
- * *which* table to look at before they can do anything about it (principle 2).
+ * answers naming that table in `errorParams.otherTableName`. The generic failure message would throw
+ * away the single fact that makes the problem solvable: the admin has to know
+ * *which* table to look at before they can do anything about it.
  *
  * **It is not the sentence `config/query.ts` already has for that code**, deliberately. The global
- * one is written for the person whose own week clashed — *"donde ya estás comprometido"* — and the
+ * one is written for the person whose own week clashed — (it says the person is already committed elsewhere) — and the
  * admin resuming a table is not that person: what collided is the **master's** agenda, and a
  * sentence that tells an admin they are committed to a table they have never heard of is worse than
  * a vague one. Same reasoning that gave `CANDIDATE_SCHEDULE_CONFLICT` a code of its own.
@@ -43,18 +43,18 @@ const GENERIC: TableErrorMessage = { key: 'tables.errors.generic', params: {} }
 export function tableActionErrorMessage(error: unknown): TableErrorMessage | null {
   if (error === null || error === undefined) return null
   if (!(error instanceof ApiError)) return GENERIC
-  // MASTER_SCHEDULE_CONFLICT is what an admin gets since every master is measured (ADR-08 §2): the
+  // MASTER_SCHEDULE_CONFLICT is what an admin gets since every master is measured: the
   // week that collides is never the admin's, and this sentence already says it is the master's.
   if (error.problem.errorCode !== 'SCHEDULE_CONFLICT' && error.problem.errorCode !== 'MASTER_SCHEDULE_CONFLICT') return GENERIC
   const otherTableName = error.problem.errorParams?.['otherTableName']
   // The code without its parameter is the one case where the specific sentence cannot be written:
-  // it is "se pisa con «»", which says less than the generic one.
+  // it is a clash message with an empty table name, which says less than the generic one.
   if (otherTableName === undefined || otherTableName === '') return GENERIC
   return { key: 'tables.errors.SCHEDULE_CONFLICT', params: { otherTableName } }
 }
 
 /**
- * The sentence to show over a refused **request** for a pause (ADR-07 §2, ADR-23 §3).
+ * The sentence to show over a refused **request** for a pause.
  *
  * **Its own function, in the `master` namespace**, because it answers a different person on a
  * different screen: `tableActionErrorMessage` above speaks to the admin pausing from `/admin/tables`
@@ -64,7 +64,7 @@ export function tableActionErrorMessage(error: unknown): TableErrorMessage | nul
  * **The screen prevents this and still has to explain it**, which is the shape every refusal of this
  * kind has: the button is gone once the table sits in `PauseRequested`, so the only way to arrive
  * here is a tab left open from before somebody else asked — a co-master, or the same master in a
- * second window. "No pudimos completar la acción" sends that person to press again; saying the pause
+ * second window. The generic failure message sends that person to press again; saying the pause
  * is already waiting sends them to reload and see it.
  *
  * @param error what the mutation rejected with, or null while it has not failed

@@ -51,20 +51,20 @@ export function createGameTableSchema(maxPlayersCap: number) {
 
 /**
  * The create-table form's values, inferred from its schema and tied to `CreateGameTableRequest` by a
- * compile-time assertion (arquitectura §3.2, rule 7).
+ * compile-time assertion.
  */
 export type CreateGameTableForm = z.infer<ReturnType<typeof createGameTableSchema>>
 
 /**
  * The wizard's five steps, in order: identity → catalogs → agenda → files → capacity and review.
- * One decision per step (the rule F1.2 was built on), and the summary before sending.
+ * One decision per step, and the summary before sending.
  *
- * **Files earn a step of their own** (ADR-08 §1) rather than a section inside another: what the master
+ * **Files earn a step of their own** rather than a section inside another: what the master
  * hands the players is its own decision, and folded into the review step it would be the thing
  * nobody notices — which is exactly how it went missing until somebody tried to create a table.
  *
  * A tuple of literals and not a `number`: `Record<WizardStep, …>` forces every case to be covered
- * when mapping to a title, which is the same reason the table statuses are a union (§3.2 regla 9).
+ * when mapping to a title, which is the same reason the table statuses are a union.
  */
 export const WIZARD_STEPS = ['identity', 'catalogs', 'schedule', 'files', 'capacity'] as const
 

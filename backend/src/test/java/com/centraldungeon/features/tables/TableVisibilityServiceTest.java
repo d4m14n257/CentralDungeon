@@ -18,12 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * The single point of F3.4, which is what the whole slice hangs off.
+ * The single lookup behind every read of a table, which is what the veto hangs off.
  *
- * <p>§7 of {@code roles-y-alcance.md} named the failure mode in advance: «el veto toca seis vías
- * de lectura y <b>es fácil cerrar cinco</b>». It was easy because there were <b>three copies</b> of
- * the same lookup - {@code GameTableService.getEntityById}, whose Javadoc claimed to be «the single
- * lookup every read goes through» and was not, {@code TableSessionService.getTable} and
+ * <p>The failure mode to avoid: a veto touches six read paths and <b>it is easy to close five</b>.
+ * It was easy because there were <b>three copies</b> of
+ * the same lookup - {@code GameTableService.getEntityById}, whose Javadoc claimed to be "the single
+ * lookup every read goes through" and was not, {@code TableSessionService.getTable} and
  * {@code TableTaskService.requireLiveTable}. A rule with three homes is a rule that gets added to
  * two. This class is the one home, and what is pinned here is that the answer is <b>the same</b> for
  * all three ways of not being there: it does not exist, it was deleted, you were vetoed.
@@ -45,7 +45,7 @@ class TableVisibilityServiceTest {
     }
 
     /**
-     * A table nobody was shown yet is the same 404 as a deleted one for whoever is outside it (ADR-07 §1):
+     * A table nobody was shown yet is the same 404 as a deleted one for whoever is outside it:
      * having its id is not being let in.
      */
     @ParameterizedTest
@@ -78,7 +78,7 @@ class TableVisibilityServiceTest {
         assertThat(service().requireVisible("t1", "player-1")).isNotNull();
     }
 
-    /** A table that is not there is a 404, which is what the three copies already did (ADR-03 §7). */
+    /** A table that is not there is a 404, which is what the three copies already did. */
     @Test
     void aTableThatDoesNotExistIs404() {
         when(gameTableRepository.findById("ghost")).thenReturn(Optional.empty());
@@ -87,7 +87,7 @@ class TableVisibilityServiceTest {
                 .isInstanceOf(NotFoundException.class);
     }
 
-    /** A soft-deleted table does not exist for any read either (ADR-03 §7, ADR-07 §6). */
+    /** A soft-deleted table does not exist for any read either. */
     @Test
     void aDeletedTableIs404() {
         when(gameTableRepository.findById("t2")).thenReturn(Optional.of(table(GameTableStatus.Deleted)));
@@ -97,7 +97,7 @@ class TableVisibilityServiceTest {
     }
 
     /**
-     * <b>The veto is a 404 and never a 403</b> (ADR-09 §4). It is the decision everything else rests on: a
+     * <b>The veto is a 404 and never a 403</b>. It is the decision everything else rests on: a
      * 403 confirms exactly what the 404 denies - that the table is there, and that the reader had
      * something to do with it.
      */
@@ -114,7 +114,7 @@ class TableVisibilityServiceTest {
 
     /**
      * And the three ways of not being there say <b>the same thing</b>. If the veto's message could be
-     * told apart from «it does not exist», the 404 would be a 403 with a different number: whoever
+     * told apart from "it does not exist", the 404 would be a 403 with a different number: whoever
      * read the answer would know the table is still there.
      */
     @Test
@@ -138,7 +138,7 @@ class TableVisibilityServiceTest {
     /**
      * {@code requireExisting} does <b>not</b> ask about the veto, and that is exactly what it is: the
      * door for the reads with no reader to veto - a master on their own table, where pertenencia and
-     * having applied are disjoint sets (ADR-18 §4). It does not ask the registrations repository once.
+     * having applied are disjoint sets. It does not ask the registrations repository once.
      */
     @Test
     void requireExistingDoesNotAskAboutTheVeto() {
@@ -147,7 +147,7 @@ class TableVisibilityServiceTest {
         assertThatCode(() -> service().requireExisting("t4")).doesNotThrowAnyException();
     }
 
-    /** But it still decides what every read shares: a deleted table is there for nobody (ADR-03 §7). */
+    /** But it still decides what every read shares: a deleted table is there for nobody. */
     @Test
     void requireExistingStillHidesTheDeletedTable() {
         when(gameTableRepository.findById("t5")).thenReturn(Optional.of(table(GameTableStatus.Deleted)));

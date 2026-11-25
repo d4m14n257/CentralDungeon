@@ -9,23 +9,21 @@ import { HelpButton, HelpLink } from '@/features/help'
 import { EditProfileDialog, ProfileCard, useMyProfile } from '@/features/users'
 
 /**
- * `/profile` — the reader's own profile: name, country, roles and aggregate attendance
- * (ADR-10 §5).
+ * `/profile` — the reader's own profile: name, country, roles and aggregate attendance.
  *
  * There is no "sin permiso" state here: nobody can be locked out of their own profile, which is
  * exactly what tells this screen apart from {@link import('./UserProfilePage').UserProfilePage}.
- * **Name and country are edited from here** (ADR-10 §4), in a dialog that reuses the onboarding
+ * **Name and country are edited from here**, in a dialog that reuses the onboarding
  * fields; the first fill-in is the blocking `/onboarding` step, not this.
- * The lower half of the wireframe, "Comentarios recibidos", is F5 and this screen never draws it
- * (§ ProfileCard).
+ * The lower half of the wireframe, "Received comments", is not built yet and this screen never draws it.
  *
- * **Asking to run tables happens here** and not on a screen for making requests
- * (roles-y-alcance.md §4, F3.2): this is where somebody sees which roles they have, so it is where the
+ * **Asking to run tables happens here** and not on a screen for making requests:
+ * this is where somebody sees which roles they have, so it is where the
  * absence of one is noticed. Two requests are offered side by side: the master role, to create tables
  * of one's own, and a single table, whose approval creates a draft the reader runs without the role.
  * Both are offered only to somebody who does not already hold the role — the backend refuses the
  * rest with `MASTER_ROLE_ALREADY_HELD`, and a button whose only outcome is a `409` is a button that
- * should not be there (principle 2 of diseno §1). The same rule hides each one while a request of
+ * should not be there. The same rule hides each one while a request of
  * that kind is still pending, which the section resolves itself.
  */
 export function ProfilePage() {
@@ -48,7 +46,7 @@ export function ProfilePage() {
   }
 
   const isMaster = data.roles.includes('Master')
-  // The help arrives as a node, because a feature never imports another one (§3.1.5).
+  // The help arrives as a node, because a feature never imports another one.
   const requestHelp = (
     <p className="text-fg-subtle text-xs">
       {tAdmin('requests.submitHelpHint')} <HelpLink section="basics.requests">{tAdmin('requests.submitHelpLink')}</HelpLink>
@@ -57,8 +55,8 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-3">
-      {/* «Quién ve esto» is the question the screen raises and cannot answer alone (ADR-20 §5): the expiry
-          of ADR-10 §2 is not something anybody guesses by looking at a profile they can see today. */}
+      {/* «Who sees this» is the question the screen raises and cannot answer alone: the expiry
+          of visibility after a table closes is not something anybody guesses by looking at a profile they can see today. */}
       <ProfileCard
         profile={data}
         isOwn

@@ -4,7 +4,7 @@ import { useClientLimits } from '@/hooks/useClientLimits'
 
 import { HelpList, HelpSteps } from '../components/HelpBlocks'
 
-/** The help of somebody running a table. Bodies only - the heading lives in the registry (ADR-20 §5). */
+/** The help of somebody running a table. Bodies only - the heading lives in the registry. */
 
 /** A section that is a list of facts plus its numbered steps, which most of these are. */
 function ListAndSteps({
@@ -120,7 +120,7 @@ export function DeletingHelp() {
   return <ListAndSteps block="deleting" keys={['draft', 'public', 'gone']} stepCount={3} />
 }
 
-/** What a co-master is, and how it differs from the Primary (ADR-06 §1, §3). */
+/** What a co-master is, and how it differs from the Primary. */
 export function CoMastersHelp() {
   return (
     <ListAndSteps
@@ -131,7 +131,7 @@ export function CoMastersHelp() {
   )
 }
 
-/** How to read the tray of what is waiting on you (ADR-20 §4). */
+/** How to read the tray of what is waiting on you. */
 export function DashboardHelp() {
   return <ListAndSteps block="dashboard" keys={['what', 'order', 'kinds', 'noReservation', 'empty', 'notMetrics']} stepCount={3} />
 }
@@ -142,7 +142,7 @@ export function EditTableHelp() {
 }
 
 /**
- * Asking for a pause, and what asking is not (ADR-07 §2, F3.4).
+ * Asking for a pause, and what asking is not.
  *
  * **`notYet` is the reason this section exists.** The table moves to "Pausa solicitada" the moment
  * the button is pressed, and a status that reads like a pause is exactly what a master will act on:
@@ -155,7 +155,7 @@ export function PauseRequestHelp() {
 }
 
 /**
- * The veto: asking for somebody to be thrown out of one table, and taking that back (ADR-09 §4, §5, ADR-06 §3).
+ * The veto: asking for somebody to be thrown out of one table, and taking that back.
  *
  * **`perTable` and `reversible` are the two halves nobody would guess.** "Vetar" reads as a platform
  * ban, and it is not one: the person keeps their account, their karma and every other table they

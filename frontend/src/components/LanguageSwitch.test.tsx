@@ -16,7 +16,7 @@ describe('LanguageSwitch', () => {
   /**
    * The whole reason this exists next to the login form: on a screen with no `UserMenu`, somebody
    * who cannot read what is on screen has to see that the language can be changed without opening
-   * anything first (ADR-23 §2).
+   * anything first.
    */
   it('shows every language at once, without a menu to open', () => {
     render(<LanguageSwitch />)

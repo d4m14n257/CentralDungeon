@@ -31,10 +31,10 @@ import org.springframework.test.util.ReflectionTestUtils;
  * The six rules of {@code grantRole} and the six of {@code revokeRole}.
  *
  * <p>Unit and not integration because every one of them is a decision the service makes before it
- * touches anything: who may move which rank, what the exclusion of ADR-06 §1 drags along, and when the
+ * touches anything: who may move which rank, what the Admin/Owner exclusion drags along, and when the
  * last owner makes the whole operation impossible. The only rule that genuinely needs a database is
  * the global "there is always an owner" invariant under concurrency, and that one is
- * {@code UserRoleIT}'s - the same treatment ADR-06 §3 gives the single Primary.
+ * {@code UserRoleIT}'s - the same treatment the single Primary master gets.
  *
  * <p>The mapper is the real one: the order of the roles in the response is part of the contract, and
  * a mocked mapper would assert nothing about it.
@@ -143,10 +143,10 @@ class UserRoleServiceTest {
         assertThat(response.roles()).containsExactly("Player", "Admin");
     }
 
-    // ---------------------------------------------------------------- rule 2: the ADR-06 §1 exclusion
+    // ---------------------------------------------------------------- rule 2: the Admin/Owner exclusion
 
     @Test
-    void otorgarAdminAUnOwnerLeQuitaOwnerYDejaSuPropiaFilaDeAuditoria() {
+    void grantingAdminToAnOwnerRemovesOwnerAndLeavesItsOwnAuditRow() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
@@ -184,7 +184,7 @@ class UserRoleServiceTest {
         verify(userService, never()).evictAuthCache(any());
     }
 
-    /** Owner is given from the database only (ADR-06 §1): not even an owner grants it, and nothing is read or written. */
+    /** Owner is given from the database only: not even an owner grants it, and nothing is read or written. */
     @Test
     void anOwnerCannotGrantTheOwnerRoleEither() {
         assertThatThrownBy(() -> userRoleService.grantRole("target", PlatformRole.OWNER, "sucesion", OWNER_ACTOR))
@@ -200,9 +200,9 @@ class UserRoleServiceTest {
 
     // ---------------------------------------------------------------- rule 3: the last owner
 
-    /** The back door: nobody asked to remove Owner, but ADR-06 §1 would, and it is still the last one. */
+    /** The back door: nobody asked to remove Owner, but the exclusion would, and it is still the last one. */
     @Test
-    void otorgarAdminAlUltimoOwnerSeRechazaEnteroSinEscribirNada() {
+    void grantingAdminToTheLastOwnerIsRejectedWholeWithoutWritingAnything() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.OWNER));
@@ -221,7 +221,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void quitarOwnerAlUltimoOwnerSeRechaza() {
+    void revokingOwnerFromTheLastOwnerIsRejected() {
         User target = persistedUser("last-owner");
         when(userService.getById("last-owner")).thenReturn(target);
         when(userRoleRepository.findAllGrants("last-owner")).thenReturn(grants(target, PlatformRole.OWNER));
@@ -237,7 +237,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void quitarOwnerCuandoQuedaOtroOwnerSiFunciona() {
+    void revokingOwnerWhenAnotherOwnerRemainsWorks() {
         User target = persistedUser("other-owner");
         List<UserRole> grants = grants(target, PlatformRole.OWNER);
         when(userService.getById("other-owner")).thenReturn(target);
@@ -249,7 +249,7 @@ class UserRoleServiceTest {
 
         assertThat(response.roles()).isEmpty();
         assertThat(grants.getFirst().getStatus()).isEqualTo(UserRoleStatus.Deleted);
-        // La fila se marca, no se borra (ADR-03 §7) - y deleted_at deja de nacer muerta.
+        // La fila se marca, no se borra - y deleted_at deja de nacer muerta.
         assertThat(grants.getFirst().getDeletedAt()).isNotNull();
         assertThat(savedRoleChanges()).singleElement().satisfies(change -> {
             assertThat(change.getAction()).isEqualTo(UserRoleChangeAction.Revoked);
@@ -282,7 +282,7 @@ class UserRoleServiceTest {
      * in to grant the role to anybody, so revoking it leaves the platform without nothing.
      */
     @Test
-    void quitarOwnerAUnaCuentaNoActivaNoCuentaComoElUltimoOwner() {
+    void revokingOwnerFromANonActiveAccountDoesNotCountAsTheLastOwner() {
         User target = persistedUser("deleted-owner");
         target.setStatus(UserStatus.Blocked);
         List<UserRole> grants = grants(target, PlatformRole.OWNER);
@@ -299,7 +299,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void restaurarUnRolLimpiaLaMarcaDeRevocacion() {
+    void restoringARoleClearsTheRevocationMark() {
         User target = persistedUser("target");
         List<UserRole> grants = grants(target, PlatformRole.MASTER);
         UserRole revoked = grants.getFirst();
@@ -334,7 +334,7 @@ class UserRoleServiceTest {
     // ---------------------------------------------------------------- rule 4: idempotence
 
     @Test
-    void otorgarUnRolQueYaTieneNoEscribeFilaDeAuditoria() {
+    void grantingARoleAlreadyHeldWritesNoAuditRow() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
@@ -348,7 +348,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void quitarUnRolYaRevocadoNoEscribeFilaDeAuditoria() {
+    void revokingAnAlreadyRevokedRoleWritesNoAuditRow() {
         User target = persistedUser("target");
         List<UserRole> grants = grants(target, PlatformRole.MASTER);
         grants.getFirst().revoke();
@@ -363,7 +363,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void quitarUnRolQueNuncaTuvoNoEscribeFilaDeAuditoria() {
+    void revokingARoleNeverHeldWritesNoAuditRow() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
@@ -376,7 +376,7 @@ class UserRoleServiceTest {
     // ---------------------------------------------------------------- rule 5: restore, never insert
 
     @Test
-    void restaurarUnRolRevocadoFlipeaElStatusEnVezDeInsertarOtraFila() {
+    void restoringARevokedRoleFlipsTheStatusInsteadOfInsertingAnotherRow() {
         User target = persistedUser("target");
         List<UserRole> grants = grants(target, PlatformRole.MASTER);
         UserRole revoked = grants.getFirst();
@@ -399,7 +399,7 @@ class UserRoleServiceTest {
     // ---------------------------------------------------------------- rule 6: the cache lever
 
     @Test
-    void otorgarUnRolInvalidaLaCacheDeAutorizacionDelObjetivo() {
+    void grantingARoleInvalidatesTheTargetsAuthorizationCache() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
@@ -412,7 +412,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void quitarUnRolInvalidaLaCacheDeAutorizacionDelObjetivo() {
+    void revokingARoleInvalidatesTheTargetsAuthorizationCache() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
@@ -426,7 +426,7 @@ class UserRoleServiceTest {
     // ---------------------------------------------------------------- the target has to exist
 
     @Test
-    void otorgarUnRolAUnUsuarioInexistenteEs404() {
+    void grantingARoleToANonexistentUserIs404() {
         when(userService.getById("missing")).thenThrow(new NotFoundException("User not found: missing"));
 
         assertThatThrownBy(() -> userRoleService.grantRole("missing", PlatformRole.MASTER, "x", ADMIN_ACTOR))

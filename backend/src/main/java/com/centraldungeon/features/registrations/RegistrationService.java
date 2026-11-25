@@ -52,20 +52,20 @@ import org.springframework.transaction.annotation.Transactional;
  * Applying to a table, and what a master does about it.
  *
  * <p>Two invariants MySQL cannot express live here, and both are held by taking a pessimistic lock
- * on the <b>table</b> row: only one active registration per (table, person) pair (ADR-09 §1), and the
- * player cap (ADR-09 §3). The table is the thing to lock because "no registration exists yet" has no row
+ * on the <b>table</b> row: only one active registration per (table, person) pair, and the
+ * player cap. The table is the thing to lock because "no registration exists yet" has no row
  * of its own to lock, and because the cap is a property of the table rather than of any one
  * application.
  *
- * <p>Filling the last seat auto-rejects the candidates still queued, in FIFO order (ADR-09 §3). Nobody is
+ * <p>Filling the last seat auto-rejects the candidates still queued, in FIFO order. Nobody is
  * left waiting on a table that can no longer take them.
  *
- * <p><b>An application may carry files</b> (ADR-13 §1 uso 2): the character sheet a candidate applies
- * with, linked rather than copied (ADR-14 §1). There is no endpoint of its own for them - they travel
- * inside {@link RegistrationResponse}, the same criterion F1.3 used for a table's sessions and F1.4
- * for its shared files, because this class already decides who may see an application.
+ * <p><b>An application may carry files</b>: the character sheet a candidate applies
+ * with, linked rather than copied. There is no endpoint of its own for them - they travel
+ * inside {@link RegistrationResponse}, the same criterion a table's sessions and shared files follow,
+ * because this class already decides who may see an application.
  *
- * <p><b>Withdrawing never touches {@code registration_files}</b> (ADR-09 §2, deliberate): the row is the
+ * <p><b>Withdrawing never touches {@code registration_files}</b> (deliberately): the row is the
  * record that a sheet was sent, and withdrawing does not undo that it was. What stops counting a
  * withdrawn application's file as in use is the read side of {@link RegistrationFileRepository},
  * never a cascade here - see {@link #withdraw}.
@@ -73,22 +73,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RegistrationService {
 
-    /** The statuses that make a registration count as alive for the one-per-pair rule (ADR-09 §1). */
+    /** The statuses that make a registration count as alive for the one-per-pair rule. */
     private static final List<TableRegistrationStatus> ACTIVE_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
     /**
-     * The only status a veto can be applied to (ADR-09 §5): somebody who is <em>currently seated</em>.
+     * The only status a veto can be applied to: somebody who is <em>currently seated</em>.
      *
      * <p>A {@code Candidate} is not here on purpose: somebody who is not wanted yet is turned down, not
-     * vetoed. Rejected and Deleted are not here either - there is nothing to veto, and «no ve esa
-     * mesa» is already true of somebody who never got in. Vetoing them would put a row in the trail
+     * vetoed. Rejected and Deleted are not here either - there is nothing to veto, and «does not see that
+     * table» is already true of somebody who never got in. Vetoing them would put a row in the trail
      * that denies nothing.
      */
     private static final TableRegistrationStatus BLOCKABLE_STATUS = TableRegistrationStatus.Player;
 
     /**
-     * What {@code /my/applications} never shows (ADR-03 §7, ADR-09 §4).
+     * What {@code /my/applications} never shows.
      *
      * <p>{@code Blocked} sits beside {@code Deleted} because the row carries {@code gameTableName}:
      * leaving it in would be the single crack through which a vetoed person keeps seeing the table
@@ -98,9 +98,9 @@ public class RegistrationService {
             List.of(TableRegistrationStatus.Deleted, TableRegistrationStatus.Blocked);
 
     /**
-     * The reason the application itself writes when a table fills up (ADR-09 §3).
+     * The reason the application itself writes when a table fills up.
      *
-     * <p>A <b>code</b> and not a sentence (ADR-23 §3): every other justification on this table is a
+     * <p>A <b>code</b> and not a sentence: every other justification on this table is a
      * master writing to a person and is shown verbatim, but this one is the system speaking, so it
      * has to come out in the reader's language. {@code rejected_by IS NULL} is what already tells
      * the two apart, so no column was needed - only the value.
@@ -113,34 +113,34 @@ public class RegistrationService {
     /** The reasons attached to turned-down applications. */
     private final RegistrationRejectionRepository rejectionRepository;
 
-    /** The files attached to an application - linked, never copied (ADR-13 §2, §1, ADR-14 §1 uso 2). */
+    /** The files attached to an application - linked, never copied. */
     private final RegistrationFileRepository registrationFileRepository;
 
-    /** Resolves and authorizes each file being attached, and puts it in its cajón (ADR-14 §4). */
+    /** Resolves and authorizes each file being attached, and puts it in its file category. */
     private final FileService fileService;
 
     /** Used to lock the table row, which is what serializes the two invariants above. */
     private final GameTableRepository gameTableRepository;
 
-    /** Answers pertenencia: only a master of the table may accept or reject (hard rule 17, ADR-05 §5). */
+    /** Answers membership: only a master of the table may accept or reject. */
     private final MasterService masterService;
 
     /** Resolves the applicant and the acting master. */
     private final UserService userService;
 
-    /** Emits what the applicant and the masters have to be told (ADR-15 §5). */
+    /** Emits what the applicant and the masters have to be told. */
     private final NotificationService notificationService;
 
-    /** Answers the three clash questions of ADR-08 §2 this service asks: R2, R3 and R4. */
+    /** Answers the three schedule clash questions this service asks. */
     private final ScheduleConflictService scheduleConflictService;
 
-    /** The veto's trail: every block and every lifting, with its reason (ADR-09 §5). */
+    /** The veto's trail: every block and every lifting, with its reason. */
     private final RegistrationStatusChangeRepository statusChangeRepository;
 
     /**
-     * The one gate every read of a concrete table goes through (ADR-03 §7, ADR-09 §4).
+     * The one gate every read of a concrete table goes through.
      *
-     * <p>Applying goes through it too, which is what makes «volver a postularse a la misma mesa»
+     * <p>Applying goes through it too, which is what makes «applying again to the same table»
      * impossible without a rule of its own: the vetoed person gets the same 404 the explorer and the
      * detail already give them. That is the proof the single point works - nobody had to remember
      * this endpoint.
@@ -161,15 +161,15 @@ public class RegistrationService {
     /**
      * @param registrationRepository     the {@code table_registrations} table
      * @param rejectionRepository        the reasons behind turned-down applications
-     * @param registrationFileRepository the files attached to an application (ADR-13 §1 uso 2)
-     * @param fileService                resolves and authorizes each file being attached (ADR-14 §1)
+     * @param registrationFileRepository the files attached to an application
+     * @param fileService                resolves and authorizes each file being attached
      * @param gameTableRepository         used to lock the table row the invariants serialize on
-     * @param masterService               answers pertenencia
+     * @param masterService               answers membership
      * @param userService                 resolves the people involved
      * @param notificationService        tells the applicant and the masters what happened
-     * @param scheduleConflictService answers whether the applicant is already busy at that hour (ADR-08 §2)
-     * @param statusChangeRepository the veto's trail (ADR-09 §5)
-     * @param tableVisibilityService the one gate of ADR-03 §7 and ADR-09 §4, so applying cannot walk around it
+     * @param scheduleConflictService answers whether the applicant is already busy at that hour
+     * @param statusChangeRepository the veto's trail
+     * @param tableVisibilityService the one visibility gate, so applying cannot walk around it
      * @param registrationMapper     entity to DTO
      * @param approvalRequestRepository the veto requests the roster names next to each veto
      */
@@ -249,7 +249,7 @@ public class RegistrationService {
         }
         requireSeatLeft(table);
 
-        // R2 (ADR-08 §2): a table where they already play is a real commitment, so this blocks rather
+        // A table where they already play is a real commitment, so this blocks rather
         // than warns. Running and playing weigh the same - it is one person and one Tuesday night.
         CommittedTable clash = scheduleConflictService.findClashWith(actorId, table);
         if (clash != null) {
@@ -272,11 +272,11 @@ public class RegistrationService {
     }
 
     /**
-     * Links whatever the applicant attached to their application (ADR-13 §1 uso 2), and puts each file in
-     * the {@code PlayerApplication} cajón (ADR-14 §4).
+     * Links whatever the applicant attached to their application, and puts each file in
+     * the {@code PlayerApplication} category.
      *
      * <p>The same gate attaching a file to a table or an answer goes through: the applicant's own, or
-     * one the platform published (ADR-14 §1). Somebody else's private upload never gets here.
+     * one the platform published. Somebody else's private upload never gets here.
      *
      * @param registration the application just saved, so the links have a row to point at
      * @param fileIds      the files to attach, by id. Never null in practice - the request field is
@@ -293,7 +293,7 @@ public class RegistrationService {
         List<RegistrationFileResponse> files = new ArrayList<>();
         for (String fileId : ids) {
             StoredFile file = fileService.requireAttachable(fileId, actorId);
-            // The cajón is a consequence of the link, not of the upload (ADR-14 §4): add-only and
+            // The category is a consequence of the link, not of the upload: add-only and
             // idempotent, so attaching the same sheet to a third table costs nothing extra here.
             fileService.classify(fileId, FileCategory.PlayerApplication);
             registrationFileRepository.save(new RegistrationFile(registration.getId(), file.getId()));
@@ -311,11 +311,11 @@ public class RegistrationService {
     }
 
     /**
-     * The attached files of a whole page of applications, in one query (ADR-14 §3).
+     * The attached files of a whole page of applications, in one query.
      *
      * <p>A file its owner has since deleted is left out rather than shown as a broken row - the same
      * thing {@code TaskSubmissionService} does for a task's answers, and for the same reason: an
-     * owner removing a file removes it from what shows it (ADR-03 §7).
+     * owner removing a file removes it from what shows it.
      *
      * @param registrationIds the applications to resolve files for
      * @return the files per application id; an application with nothing attached is absent
@@ -367,7 +367,7 @@ public class RegistrationService {
         }
         requireSeatLeft(table);
 
-        // R3 (ADR-08 §2): asked again here and not only at apply time, because the candidate may have
+        // Asked again here and not only at apply time, because the candidate may have
         // been accepted somewhere else in between - the answer is a different one now than it was.
         String candidateId = registration.getUser().getId();
         CommittedTable clash = scheduleConflictService.findClashWith(candidateId, table);
@@ -427,13 +427,13 @@ public class RegistrationService {
     /**
      * The applicant taking their own application back, while it is still pending.
      *
-     * <p>It exists because R4 needs it to (ADR-08 §2). When accepting somebody makes their other pending
+     * <p>It exists because the clash notice needs it. When accepting somebody makes their other pending
      * applications clash, they get told - and a notification that asks for an action nobody can take
-     * is the dead end E1 already documented with /my/tables. This is the action.
+     * is a dead end. This is the action.
      *
      * <p>Only a {@code Candidate}, and only their own: once accepted there is a table full of people
      * counting on them, and leaving it is a conversation with a master rather than a button. The
-     * registration is marked, never dropped (ADR-03 §7, ADR-07 §6) - that somebody applied and thought better
+     * registration is marked, never dropped - that somebody applied and thought better
      * of it is part of the record.
      *
      * <p><b>Deliberately does not touch {@code registration_files}</b>: whatever the
@@ -482,7 +482,7 @@ public class RegistrationService {
      */
     @Transactional(readOnly = true)
     public PageResponse<RegistrationResponse> listCandidatesForTable(String gameTableId, String actorId, Pageable pageable) {
-        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        // Read by the table's masters and by any admin; its writes stay the masters' own.
         tableVisibilityService.requireExisting(gameTableId);
         if (!masterService.canOversee(gameTableId, actorId)) {
             // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
@@ -498,11 +498,11 @@ public class RegistrationService {
     }
 
     /**
-     * The rejection the actor is still living under at a table, for the notice on that table's detail
-     * (ADR-09 §7): present only when their <b>latest</b> application there was rejected, so applying
-     * again - or withdrawing the new one - clears it. Two small reads for one table, nothing per row.
+     * The rejection the actor is still living under at a table, for the notice on that table's detail:
+     * present only when their <b>latest</b> application there was rejected, so applying again - or
+     * withdrawing the new one - clears it. Two small reads for one table, nothing per row.
      *
-     * <p>The lookup is keyed by the actor, who comes from the token (ADR-05 §5): it can only ever
+     * <p>The lookup is keyed by the actor, who comes from the token: it can only ever
      * return their own rejection, never another applicant's.
      *
      * @param gameTableId the table whose detail is being read
@@ -531,9 +531,9 @@ public class RegistrationService {
      * Everything the actor applied to, whatever came of it. Backs /my/applications.
      *
      * <p>It is the one place a rejection's justification is loaded, because it is the only screen
-     * where the applicant themselves reads it (ADR-09 §7) - the master's queue has no use for it.
+     * where the applicant themselves reads it - the master's queue has no use for it.
      *
-     * @param actorId  the actor, from the token (ADR-05 §5)
+     * @param actorId  the actor, from the token
      * @param pageable page, size and sort
      * @return one page of their applications, each with its rejection reason when there is one
      */
@@ -553,7 +553,7 @@ public class RegistrationService {
             }
             // A rejection the application wrote itself is a code to translate; one a master wrote is
             // their own words and is shown exactly as typed. `rejected_by IS NULL` is what tells the
-            // two apart, and it always has (ADR-09 §3, ADR-23 §3).
+            // two apart, and it always has.
             boolean automatic = rejection.getRejectedBy() == null;
             return new RegistrationResponse(
                     response.id(), response.gameTableId(), response.gameTableName(), response.userId(), response.userName(),
@@ -562,7 +562,7 @@ public class RegistrationService {
                     automatic ? rejection.getDescription() : null,
                     response.attachedFiles(),
                     // No veto ever travels here: this is the applicant's own list, and it never
-                    // contains a Blocked row - `HIDDEN_FROM_MINE` takes those out (ADR-09 §4).
+                    // contains a Blocked row - `HIDDEN_FROM_MINE` takes those out.
                     null, null, null);
         }));
     }
@@ -572,11 +572,11 @@ public class RegistrationService {
      * from it</b>.
      *
      * <p>A different question from {@link #listCandidatesForTable}, which answers with the queue
-     * waiting to get in (ADR-09 §1). Nothing could ask this one until F1.5 needed it: addressing a task to
-     * one player (ADR-15 §2) means being able to choose among them, and offering the platform's whole user
+     * waiting to get in. Nothing else needed this one until a task could be addressed to a single player:
+     * that means being able to choose among them, and offering the platform's whole user
      * directory there would be offering people who cannot be chosen.
      *
-     * <p><b>A vetoed row stays here</b> (ADR-09 §5, F3.4). It is the one screen where the veto can be
+     * <p><b>A vetoed row stays here</b>. It is the one screen where the veto can be
      * lifted, and a veto that vanishes from the interface is not reversible in practice however
      * reversible the backend makes it. Each such row carries who decided it, when, and why - because
      * the master reading it six months later is deciding whether that still stands.
@@ -602,7 +602,7 @@ public class RegistrationService {
      */
     @Transactional(readOnly = true)
     public List<TablePlayerResponse> listPlayersForTable(String gameTableId, String actorId) {
-        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        // Read by the table's masters and by any admin; its writes stay the masters' own.
         tableVisibilityService.requireExisting(gameTableId);
         if (!masterService.canOversee(gameTableId, actorId)) {
             // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
@@ -995,13 +995,13 @@ public class RegistrationService {
     }
 
     /**
-     * R4 (ADR-08 §2): now that this person plays here, tell them which of their other pending
+     * Now that this person plays here, tell them which of their other pending
      * applications fall at the same hour.
      *
      * <p><b>Told, not rejected.</b> Somebody sends three applications to see which one comes
      * through, and until one does there is no commitment to defend; deciding for them which to drop
-     * would be the system making a choice that is theirs, the same reasoning as ADR-15 §2. A table where
-     * they already play is different, and that is why R2 and R3 block for real.
+     * would be the system making a choice that is theirs, the same reasoning as for task submissions. A table where
+     * they already play is different, and that is why those clashes block for real.
      */
     private void warnAboutNowClashingApplications(String userId, GameTable acceptedTable) {
         for (TableRegistration other : registrationRepository.findByUser_IdAndStatus(userId, TableRegistrationStatus.Candidate)) {

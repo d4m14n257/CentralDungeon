@@ -10,7 +10,7 @@ import type {
 } from '../types'
 
 /**
- * The six calls of the request mechanism (ADR-16 §1), as one module.
+ * The six calls of the request mechanism, as one module.
  *
  * **They answer to two audiences and that is visible in the paths**: `/api/v1/requests` is the side
  * of whoever asks, authenticated and with no role behind it, while `/api/v1/admin/requests` is the
@@ -19,8 +19,8 @@ import type {
  * same row the tray shows.
  *
  * **The actor is never a parameter.** Who is asking and who is resolving both come from the token,
- * and an id in the body would be a claim the caller makes about themselves (arquitectura §2.6).
- * It is also why {@link submit} sends no `entityId`: the three kinds of F3.2 are about the person
+ * and an id in the body would be a claim the caller makes about themselves.
+ * It is also why {@link submit} sends no `entityId`: the three submittable kinds are about the person
  * who asked.
  *
  * **The two resolvers answer with the updated detail** rather than `204`, which is what lets a caller
@@ -30,7 +30,7 @@ import type {
  */
 export const approvalsApi = {
   /**
-   * Asks for something (ADR-16 §1). Refused with `REQUEST_ALREADY_PENDING` when one of the same kind is
+   * Asks for something. Refused with `REQUEST_ALREADY_PENDING` when one of the same kind is
    * still waiting, and with `MASTER_ROLE_ALREADY_HELD` when the master role is asked for by somebody
    * who has it — neither of which the screens offer, so both only surface for another route in.
    *
@@ -66,7 +66,7 @@ export const approvalsApi = {
    *
    * @param query the search box, already debounced, in the language of `lib/searchQuery.ts`
    * @param page  zero-based page number
-   * @param size  rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
+   * @param size  rows per page, one of `adminPageSizeOptions`
    */
   list: (query: string | undefined, page = 0, size: number = pageSize.admin) =>
     api.getPage<ApprovalRequestSummary>('/api/v1/admin/requests', { q: query, page, size }),
@@ -92,7 +92,7 @@ export const approvalsApi = {
     api.post<ApprovalRequestDetail, ResolveApprovalRequestInput>(`/api/v1/admin/requests/${id}/approve`, input),
 
   /**
-   * Rejects a request. The note is required here too (ADR-16 §1): a refusal nobody explained is the half
+   * Rejects a request. The note is required here too: a refusal nobody explained is the half
    * that makes the mechanism worthless to whoever asked.
    *
    * @param id    the request to reject

@@ -1,6 +1,6 @@
 /**
  * Mirror of the backend's pagination envelope. Instantiated per item type
- * (`PageResponse<GameTableSummary>`), never re-declared per feature (arquitectura §3.2, rule 8).
+ * (`PageResponse<GameTableSummary>`), never re-declared per feature.
  */
 export interface PageResponse<T> {
   content: T[]
@@ -10,12 +10,12 @@ export interface PageResponse<T> {
   totalPages: number
 }
 
-/** Mirrors the backend's RFC 9457 body (arquitectura §2.5) - never a bare string, never a 418. */
+/** Mirrors the backend's RFC 9457 body - never a bare string, never a 418. */
 export interface ProblemDetail {
   title: string
   status: number
   /**
-   * The backend's own words, in English and for a log (ADR-23 §3). **Never shown to a person**: what they
+   * The backend's own words, in English and for a log. **Never shown to a person**: what they
    * read is rendered here from `errorCode` and `errorParams`, in the language they chose.
    */
   detail: string
@@ -28,12 +28,12 @@ export interface ProblemDetail {
 }
 
 /**
- * Mirror of the backend's `AttendanceSummaryResponse` (ADR-08 §5): somebody's historical attendance,
+ * Mirror of the backend's `AttendanceSummaryResponse`: somebody's historical attendance,
  * as three counts and the denominator that goes with them.
  *
  * Lives here and not in `features/tables/types.ts` because a second feature needs the exact same
  * shape unchanged: `features/tables` uses it for one table's sessions, `features/users` for a
- * profile's aggregate across every table (arquitectura §3.1.2 - it moves up the moment a second
+ * profile's aggregate across every table (it moves up the moment a second
  * real consumer needs it, and moving it up is what lets `AttendanceSummaryView` stay the one place
  * that renders it instead of being copied into a second feature).
  */
@@ -63,21 +63,20 @@ export class ApiError extends Error {
 }
 
 /**
- * The platform limits the interface mirrors, so a rule is stated before it is broken (principle 2 of
- * diseno §1). Mirror of `ClientLimitsResponse`.
+ * The platform limits the interface mirrors, so a rule is stated before it is broken. Mirror of `ClientLimitsResponse`.
  *
- * **Here and not in `features/settings`** (regla dura 16): `features/files` is what reads it and
+ * **Here and not in `features/settings`**: `features/files` is what reads it and
  * `features/settings` is what edits it, so the shared shape cannot live in either. It is not a domain
  * entity at all — it is platform configuration, which is what this layer is for.
  *
  * **Never the authority.** The server applies the same cap on upload and answers `FILE_TOO_LARGE`
- * with the real number (ADR-23 §3), and the release job is what actually hands a stale reservation back.
+ * with the real number, and the release job is what actually hands a stale reservation back.
  * These only make the rule sayable before it is met.
  */
 export interface ClientLimits {
   /** The per-file cap in bytes, so no client has to know which unit the setting is stored in. */
   maxFileSizeBytes: number
-  /** How long a reservation of the shared admin tray lasts, in minutes (ADR-16 §5). */
+  /** How long a reservation of the shared admin tray lasts, in minutes. */
   claimTimeoutMinutes: number
   /** The largest `maxPlayers` a table may declare, stated beside the seat field before it is broken. */
   maxPlayersCap: number

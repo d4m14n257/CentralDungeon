@@ -19,7 +19,7 @@ export interface MySubmissionsProps {
 /**
  * What **I** already handed in for one request, oldest first.
  *
- * A list and not "the latest one": answers accumulate and none replaces another (ADR-15 §2), so showing
+ * A list and not "the latest one": answers accumulate and none replaces another, so showing
  * only the last would quietly claim the earlier ones stopped counting. Reading them in order is also
  * how somebody remembers what they already said.
  *
@@ -31,7 +31,7 @@ export interface MySubmissionsProps {
  */
 export function MySubmissions({ taskId, renderFiles }: MySubmissionsProps) {
   const { t, i18n } = useTranslation('tasks')
-  // isLoadingError, not isError: see ADR-19 §4.
+  // isLoadingError, not isError: a failed background refetch must not replace data already on screen with an error.
   const { data, isPending, isLoadingError, refetch } = useMySubmissions(taskId)
   const timeZone = browserTimeZone()
 

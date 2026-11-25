@@ -22,8 +22,8 @@ export interface RunnableTableBody {
 /**
  * The body of a `POST /game-tables` that the backend will accept.
  *
- * A table cannot be created without saying what is played, how it is labelled, where and when
- * (ADR-07 §3), so a spec that only cares about what happens *after* the table exists still has to
+ * A table cannot be created without saying what is played, how it is labelled, where and when,
+ * so a spec that only cares about what happens *after* the table exists still has to
  * carry all of it. This is that minimum, in one place, so the next required field is one edit
  * instead of one per spec.
  *

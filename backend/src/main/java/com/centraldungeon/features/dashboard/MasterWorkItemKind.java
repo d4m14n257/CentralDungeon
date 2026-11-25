@@ -1,33 +1,33 @@
 package com.centraldungeon.features.dashboard;
 
 /**
- * What kind of work a table is waiting on. The vocabulary of the master's tray (ADR-20 §4).
+ * What kind of work a table is waiting on. The vocabulary of the master's tray.
  *
- * <p>It is a code and not a sentence on purpose (ADR-23 §3): the backend says <em>what</em> is waiting
+ * <p>It is a code and not a sentence on purpose: the backend says <em>what</em> is waiting
  * and hands over the numbers, and the frontend writes the phrase in the reader's language.
  *
- * <p>Every value here is something the master can act on today. That is the line ADR-20 §4 draws
- * between a tray and a dashboard of metrics: "twelve candidates across three tables" changes
+ * <p>Every value here is something the master can act on today. That is the line between a tray and a
+ * dashboard of metrics: "twelve candidates across three tables" changes
  * nothing about what to do next, "this table has somebody waiting since Tuesday" does.
  */
 public enum MasterWorkItemKind {
 
-    /** People applied and nobody answered them yet. Answered oldest first, which is the rule (ADR-09 §1). */
+    /** People applied and nobody answered them yet. Answered oldest first, which is the rule. */
     CandidatesWaiting,
 
     /**
      * A task's deadline went by and some of the people it was addressed to did not hand anything in.
      *
-     * <p>It is not the system judging the answers, which ADR-15 §2 forbids, and it does not expel anybody,
-     * which it also forbids: it is the failure being <em>visible to the master</em>, which is what that
-     * section asks for. There is no "reviewed" marker anywhere in the model, so "submissions I have not
+     * <p>It is not the system judging the answers, which the system must never do, and it does not expel
+     * anybody, which it also must not do: it is the failure being <em>visible to the master</em>, nothing
+     * more. There is no "reviewed" marker anywhere in the model, so "submissions I have not
      * looked at" is not a thing that could be reported here.
      */
     OverdueTaskMissing,
 
     /**
-     * A session's date went by and it is still open. Marking a session held is an explicit act
-     * (ADR-08 §4), so time passing closes nothing on its own.
+     * A session's date went by and it is still open. Marking a session held is an explicit act,
+     * so time passing closes nothing on its own.
      */
     SessionToRecord,
 

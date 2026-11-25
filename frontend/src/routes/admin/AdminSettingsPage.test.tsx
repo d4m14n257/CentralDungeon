@@ -69,7 +69,7 @@ beforeEach(() => {
 })
 
 describe('AdminSettingsPage', () => {
-  /** Grouped by category, which is what keeps this from being a flat list of numbers (ADR-17 §3). */
+  /** Grouped by category, which is what keeps this from being a flat list of numbers. */
   it('groups the settings by category', async () => {
     list.mockResolvedValue([setting(), VISIBILITY])
     renderPage()
@@ -119,8 +119,7 @@ describe('AdminSettingsPage', () => {
 
   /**
    * The retroactive warning is on the card and not only inside the dialog: somebody scanning the
-   * screen for something to adjust has to see which one is not cosmetic before deciding to open it
-   * (ADR-10 §2, ADR-17 §3).
+   * screen for something to adjust has to see which one is not cosmetic before deciding to open it.
    */
   it('marks the retroactive setting on the card itself', async () => {
     list.mockResolvedValue([setting(), VISIBILITY])
@@ -186,7 +185,7 @@ describe('AdminSettingsPage', () => {
   })
 
   /**
-   * No role guard in front of the route (ADR-20 §1): somebody who forces it without the rank gets the
+   * No role guard in front of the route: somebody who forces it without the rank gets the
    * backend's 403 and an explanation rather than a blank page.
    */
   it('explains the refusal when the reader holds neither rank', async () => {

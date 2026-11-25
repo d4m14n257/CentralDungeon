@@ -61,7 +61,7 @@ class TableScheduleServiceTest {
         verify(scheduleRepository, org.mockito.Mockito.times(2)).save(any(TableSchedule.class));
     }
 
-    /** Two slots of the same table that overlap each other: malformed input, not a conflict (ADR-08 §2). */
+    /** Two slots of the same table that overlap each other: malformed input, not a conflict. */
     @Test
     void refusesAnAgendaThatOverlapsItself() {
         GameTable table = table("table-2");
@@ -89,7 +89,7 @@ class TableScheduleServiceTest {
     }
 
     /**
-     * ADR-23 §3: the refusal travels as a code plus the name, not as a finished sentence. The message is
+     * The refusal travels as a code plus the name, not as a finished sentence. The message is
      * for a log; what the master reads is rendered by the frontend in their language.
      */
     @Test
@@ -106,7 +106,7 @@ class TableScheduleServiceTest {
                 });
     }
 
-    /** An Unassigned table has no master yet, so R1 has nobody to compare against (ADR-06 §7, ADR-08 §2). */
+    /** An Unassigned table has no master yet, so R1 has nobody to compare against. */
     @Test
     void skipsTheOwnerCheckWhenTheTableHasNoMasterYet() {
         GameTable table = table("table-4");
@@ -119,7 +119,7 @@ class TableScheduleServiceTest {
     }
 
     /**
-     * The masters run the table together (ADR-08 §2): a co-master's week is measured as well, and the
+     * The masters run the table together: a co-master's week is measured as well, and the
      * refusal names them, because "where you are already committed" is false for the one editing.
      */
     @Test
@@ -193,7 +193,7 @@ class TableScheduleServiceTest {
         assertThat(dropped.getDeletedAt()).isNotNull();
     }
 
-    /** Moving an agenda under candidates warns them; it never expels anybody (ADR-15 §2, ADR-08 §2). */
+    /** Moving an agenda under candidates warns them; it never expels anybody. */
     @Test
     void warnsTheCandidatesTheNewAgendaNowClashesFor() {
         GameTable table = table("table-7");
@@ -311,7 +311,7 @@ class TableScheduleServiceTest {
     }
 
     /**
-     * A slot with the length it is meant to claim (ADR-08 §1). The duration belongs to the slot now, so
+     * A slot with the length it is meant to claim. The duration belongs to the slot now, so
      * it is here and no longer on the table.
      */
     private static TableScheduleEntry entry(Weekday weekday, String hourtime, String duration) {

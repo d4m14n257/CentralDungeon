@@ -1,6 +1,6 @@
 /**
- * Public surface of the catalogs feature (ADR-19 §1): systems, tags and platforms, the synonym groups
- * that hold them together, and the eight operations that make those groups an admin's job, and the canvas they are done on (ADR-12 §7).
+ * Public surface of the catalogs feature: systems, tags and platforms, the synonym groups
+ * that hold them together, and the eight operations that make those groups an admin's job, and the canvas they are done on.
  *
  * Anything not listed here is private to the feature - from outside, the import is always
  * `@/features/catalogs`, never a path inside it.
@@ -27,7 +27,7 @@ export { useProposeCatalogValue } from './api/useProposeCatalogValue'
 export { useRejectCatalogValue } from './api/useRejectCatalogValue'
 export { useRestoreCatalogValue } from './api/useRestoreCatalogValue'
 
-/** The feature's domain types. Each is written once in `types.ts` and derived from there (arquitectura §3.2). */
+/** The feature's domain types. Each is written once in `types.ts` and derived from there. */
 export type {
   AcceptCatalogValueInput,
   AdminCatalogValue,

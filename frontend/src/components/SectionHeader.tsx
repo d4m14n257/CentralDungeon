@@ -6,7 +6,7 @@ import { HelpButton, type HelpSectionId } from '@/features/help'
 interface SectionHeaderProps {
   /** The section's name, already translated. Rendered as an `h2` with `.section-label`. */
   title: ReactNode
-  /** The help section that explains this part of the screen, opened by «Cómo funciona». */
+  /** The help section that explains this part of the screen, opened by "How it works". */
   help?: HelpSectionId
   /** Whatever acts on the whole section, after the help — a small button, a count. */
   actions?: ReactNode
@@ -14,7 +14,7 @@ interface SectionHeaderProps {
 
 /**
  * The top of a section inside a screen — a tab of a table, a block of a detail — with its
- * «Cómo funciona» at the right end, the same place `PageHeader` puts it for a whole screen (ADR-21 §5).
+ * "How it works" at the right end, the same place `PageHeader` puts it for a whole screen.
  *
  * On a phone the label keeps a line of its own width and the help and the actions go under it, right-aligned,
  * rather than squeezing it to a few letters.
@@ -23,7 +23,7 @@ interface SectionHeaderProps {
  * files tab, under the tasks board, next to a title on one tab and below the list on the next.
  *
  * @param props.title   the section's name
- * @param props.help    optional help section for «Cómo funciona»
+ * @param props.help    optional help section for "How it works"
  * @param props.actions optional controls for the whole section, after the help
  */
 export function SectionHeader({ title, help, actions }: SectionHeaderProps) {

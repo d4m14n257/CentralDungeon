@@ -20,12 +20,12 @@ interface AssignMastersDialogProps {
 
 /**
  * It lives in `routes/` and not in `features/tables/` because it composes two domains — the people
- * search belongs to `users`, the assignment to `tables` — and a feature never imports from another
- * (arquitectura §3.1.5). It is the same reason `MasterTableStatusTab` sits next to it.
+ * search belongs to `users`, the assignment to `tables` — and a feature never imports from another.
+ * It is the same reason `MasterTableStatusTab` sits next to it.
  *
  * **The order is the role**: the first one added is the Primary and the rest are Secondary, and
- * tapping a chip promotes it (ADR-07 §8). A table has exactly one Primary
- * (arquitectura §4, ADR-06 §3), so promoting somebody demotes whoever held it — which is precisely what
+ * tapping a chip promotes it. A table has exactly one Primary,
+ * so promoting somebody demotes whoever held it — which is precisely what
  * moving the chip to the front does. No form and no zod: there is no field to validate, only a list
  * with an order.
  */
@@ -59,7 +59,7 @@ export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: 
 
   async function submit() {
     if (!primary) return
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('tables.assignConfirmTitle', { name: tableName }),
       description: t('tables.assignConfirmDescription', { primary: primary.name ?? primary.discordUsername }),
@@ -109,7 +109,7 @@ export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: 
           )}
           <p className="text-fg-subtle text-xs">
             {t('tables.mastersOrderHint')}{' '}
-            {/* Al #ref exacto, no a la ayuda entera: es lo que hace que valga la pena abrirla (ADR-20 §6). */}
+            {/* Links to the exact anchor, not to the whole help: that is what makes opening it worthwhile. */}
             <HelpLink section="admins.assign-masters">{t('tables.mastersHelpLink')}</HelpLink>
           </p>
         </div>

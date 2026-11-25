@@ -11,16 +11,16 @@ import { useSettingHistory } from '../api/useSettingHistory'
 import type { SettingKey } from '../types'
 
 /**
- * Everything that was ever done to one setting: from what to what, by whom, and why (ADR-17 §3).
+ * Everything that was ever done to one setting: from what to what, by whom, and why.
  *
  * **It is what keeps `system_setting_changes` from being write-only.** A platform-wide change
  * produces no notification and no visible event, so the row is the only trace it leaves — and a
- * record nothing reads back is born orphaned, which is the failure `roles-y-alcance.md` §7 names.
+ * record nothing reads back is born orphaned, which is the classic failure of audit tables.
  *
- * It takes a **key** and asks for its own data (arquitectura §3.1.5), so the row that opens it
+ * It takes a **key** and asks for its own data, so the row that opens it
  * passes an address rather than a whole setting.
  *
- * The four states are its own (ADR-19 §4): the listing around it has loaded by definition, and this is a
+ * The four states are its own: the listing around it has loaded by definition, and this is a
  * second question to the server that can fail, come back empty, or be refused on its own.
  *
  * @param props.settingKey the setting whose record to show
@@ -35,7 +35,7 @@ export function SettingHistory({ settingKey }: { settingKey: SettingKey }) {
   }
 
   // isLoadingError, not isError: a failed background refetch must not blank a panel that is already
-  // showing rows (ADR-19 §4).
+  // showing rows.
   if (history.isLoadingError) {
     return <ErrorState onRetry={() => void history.refetch()} />
   }

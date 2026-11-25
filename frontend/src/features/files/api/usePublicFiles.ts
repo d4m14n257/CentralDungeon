@@ -7,16 +7,16 @@ import { filesApi } from './filesApi'
 import type { FileCategory } from '../types'
 
 /**
- * What the platform published (ADR-13 §2) — the list a master picks the community's default sheet from.
+ * What the platform published — the list a master picks the community's default sheet from.
  *
- * It is the whole point of ADR-14 §1: attaching one of these links it instead of copying it, so correcting
+ * It is the whole point of the published library: attaching one of these links it instead of copying it, so correcting
  * the document corrects every table that uses it.
  *
- * **Narrowed by cajón and no longer by audience** (ADR-14 §4, which derogated ADR-13 §2): the flow already says
- * who a document is for, so a picker asks for the cajón it is standing in and gets the community's
+ * **Narrowed by category and no longer by audience** (it replaced the audience): the flow already says
+ * who a document is for, so a picker asks for the category it is standing in and gets the community's
  * blanks for exactly that moment.
  *
- * @param category the cajón to narrow to, or undefined for everything published
+ * @param category the category to narrow to, or undefined for everything published
  * @param enabled  false to hold the request back until the picker is actually open
  * @returns the query for the published files
  */

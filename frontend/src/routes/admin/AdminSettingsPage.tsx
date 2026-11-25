@@ -20,19 +20,19 @@ import { ApiError } from '@/types/api'
  *
  * `Business` first because it is the half that changes what the platform does *to people*, and
  * `Limits` second because caps and quotas are the operational half. Two groups and not three: the
- * `Texts` of ADR-17 §3 does not exist, and `SettingCategory` says why.
+ * `Texts` group does not exist, and `SettingCategory` says why.
  */
 const CATEGORY_ORDER: readonly SettingCategory[] = ['Business', 'Limits']
 
 /**
- * `/admin/settings` — the values the community changes without a deploy (ADR-17 §3).
+ * `/admin/settings` — the values the community changes without a deploy.
  *
  * **Grouped by category, with the current value and the default side by side**, which is what the
  * slice was asked for. The default beside the value is not decoration: an admin looking at `15` has
  * no other way to tell whether somebody set it there or whether it has always been that, and no way
  * to put it back without finding the number in the source.
  *
- * **Cards and not a `DataTable`.** The wide-table pattern of skill `diseno` §5.b is for listings
+ * **Cards and not a `DataTable`.** The wide-table pattern is for listings
  * that are read a row at a time and searched; this is four rows that are *read whole* — each one is a
  * label, an explanation, a number, its default, its range and who last touched it. A table would put
  * the explanation in a column nobody sizes correctly and turn into cards below `md` anyway.
@@ -41,10 +41,10 @@ const CATEGORY_ORDER: readonly SettingCategory[] = ['Business', 'Limits']
  * of an enum in the backend. A box over four rows solves a problem this screen does not have
  * (`/admin/tables` is the screen that searches).
  *
- * **Behind the admin context's guard** (ADR-20 §2), like every other admin screen: an account without
+ * **Behind the admin context's guard**, like every other admin screen: an account without
  * the rank is sent home by `AdminLayout`, and `ForbiddenState` stays for a `403` the backend still
- * answers on its own (ADR-20 §1). Editing settings is a row of the matrix where `Admin` and
- * `Owner` are the same (roles-y-alcance.md §3), so there is no capability question here at all —
+ * answers on its own. Editing settings is a row of the matrix where `Admin` and
+ * `Owner` are the same, so there is no capability question here at all —
  * which is why, unlike `/admin/users`, no button is ever conditionally absent.
  */
 export function AdminSettingsPage() {
@@ -66,7 +66,7 @@ export function AdminSettingsPage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a screen that is
-          already showing the values (ADR-19 §4). */}
+          already showing the values. */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {/* Only reachable if the backend ever published an empty catalogue, which would mean every
           setting had been removed - a real thing to say rather than a blank page. */}
@@ -124,7 +124,7 @@ export function AdminSettingsPage() {
 
                     {/* On the card and not only inside the dialog: somebody scanning this screen for
                         something to adjust should see which one is not a cosmetic adjustment before
-                        they decide to open it (ADR-10 §2, ADR-17 §3). */}
+                        they decide to open it. */}
                     {setting.retroactive && (
                       <p className="bg-state-paused-bg text-state-paused-fg rounded-md px-3 py-2 text-xs">
                         {t(`settings.keys.${setting.key}.retroactiveWarning`)}
@@ -138,7 +138,7 @@ export function AdminSettingsPage() {
         })}
 
       {/* The dialog gets its help as a node rather than raising it itself: `HelpLink` lives in
-          `features/help`, and a feature never imports another one (§3.1.5). */}
+          `features/help`, and a feature never imports another one. */}
       <SettingValueDialog
         setting={editDialog.item ?? null}
         open={editDialog.isOpen}
@@ -160,7 +160,7 @@ export function AdminSettingsPage() {
             </DialogTitle>
             <DialogDescription>{t('settings.historyDialogDescription')}</DialogDescription>
           </DialogHeader>
-          {/* A key and not the row (§3.1.5): the panel asks for its own data, so what it draws is the
+          {/* A key and not the row: the panel asks for its own data, so what it draws is the
               record as it is now rather than as the page last saw it. */}
           {historyDialog.item && <SettingHistory settingKey={historyDialog.item.key} />}
         </DialogContent>

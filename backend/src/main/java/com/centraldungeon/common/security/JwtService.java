@@ -47,7 +47,7 @@ public class JwtService {
      * Issues the token sent as {@code Authorization: Bearer} on every call.
      *
      * <p>It carries the subject and the token type, and <b>no roles</b>: the JWT asserts identity,
-     * not authorization, so what the person may do is read from the database on each request (ADR-05 §3).
+     * not authorization, so what the person may do is read from the database on each request.
      *
      * @param userId who the token identifies
      * @return the signed token
@@ -77,7 +77,7 @@ public class JwtService {
      * How long an access token lasts.
      *
      * @return the configured lifetime. Short on purpose: it is the window a stolen bearer token is
-     *         worth anything in (ADR-05 §2)
+     *         worth anything in
      */
     public Duration accessTokenTtl() {
         return properties.accessTokenTtl();

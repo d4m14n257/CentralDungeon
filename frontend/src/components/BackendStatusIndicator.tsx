@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 /**
  * The global backend-connectivity indicator. It lives in RootLayout so it shows on every screen,
  * including /login, which has no header. It reuses the state tokens already measured for AA
- * (open=verde, canceled=rojo, skill `diseno` §3) rather than inventing a new colour.
+ * (open=green, canceled=red) rather than inventing a new colour.
  */
 export function BackendStatusIndicator() {
   const { t } = useTranslation('common')
@@ -22,7 +22,7 @@ export function BackendStatusIndicator() {
       )}
     >
       <span className={cn('size-1.5 rounded-full', isOnline ? 'bg-state-open-dot' : 'bg-state-canceled-dot')} />
-      {/* Below `sm` it is only the dot: the whole pill sat over the text and the «Anterior» button at the
+      {/* Below `sm` it is only the dot: the whole pill sat over the text and the "Previous" button at the
           foot of a page, and the dot says the same with the label still read aloud. */}
       <span className="max-sm:sr-only">{isOnline ? t('connection.online') : t('connection.offline')}</span>
     </div>

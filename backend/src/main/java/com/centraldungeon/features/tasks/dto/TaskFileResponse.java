@@ -1,7 +1,7 @@
 package com.centraldungeon.features.tasks.dto;
 
 /**
- * A blank the master attached to their request - the form the ask is about (ADR-15 §1, ADR-14 §4).
+ * A blank the master attached to their request - the form the ask is about.
  *
  * <p>The same shape as {@link SubmittedFileResponse} and deliberately not the same record: they are
  * the two halves of one exchange and travel in opposite directions. One is what the master is asking
@@ -9,9 +9,9 @@ package com.centraldungeon.features.tasks.dto;
  * download to the wrong person.
  *
  * @param fileId    the file, which is what the download endpoint takes
- * @param name      the original filename. Metadata only (ADR-13 §6)
+ * @param name      the original filename. Metadata only
  * @param mimeType  the declared MIME type
- * @param sizeBytes the size as it was uploaded, before compression (ADR-13 §3)
+ * @param sizeBytes the size as it was uploaded, before compression
  */
 public record TaskFileResponse(String fileId, String name, String mimeType, long sizeBytes) {
 }

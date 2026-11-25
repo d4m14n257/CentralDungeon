@@ -6,12 +6,12 @@ import { approveTableFromQueue } from './helpers/queue'
 import { acceptReview } from './helpers/review'
 
 /**
- * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
+ * Table sessions end to end, against the real backend: the calendar that gets materialized when the table
  * opens, the four things a master does with it, and what the player sees on `/player/my-tables/:id`.
  *
  * What no unit test proves and this does: that approving a table **really creates the sessions** out
- * of its agenda, that cancelling one adds a replacement at the end (ADR-08 §3), and that the attendance a
- * master records is the one the player reads, as the three numbers of ADR-08 §5 and not as a percentage.
+ * of its agenda, that cancelling one adds a replacement at the end, and that the attendance a
+ * master records is the one the player reads, as three separate numbers and not as a percentage.
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -40,7 +40,7 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 
 /**
  * Builds a complete table: name, start date, duration, one weekly slot and the session count. The
- * last three are what materialization needs (ADR-08 §3).
+ * last three are what materialization needs.
  *
  * @param page the tab, already authenticated as a master
  * @param name the table's name
@@ -54,12 +54,12 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
   await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // A day and no hour since ADR-07 §4: the sessions take their hour from the agenda slot below.
+  // A day and no hour: the sessions take their hour from the agenda slot below.
   await page.getByLabel('Comienza a partir de').fill('2026-09-11')
   await addScheduleSlot(page, FRIDAY_EVENING)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
+  // The files step: nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Sesiones planeadas').fill(TOTAL_SESSIONS)
@@ -69,12 +69,12 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
-  // Born in Draft since ADR-07 §1: nothing an admin can approve until it is sent.
+  // Born in Draft: nothing an admin can approve until it is sent.
   await submitForReview(page, id as string)
   return id as string
 }
 
-/** Approves the table from the shared admin tray (ADR-16 §7), which is what triggers materialization. */
+/** Approves the table from the shared admin tray, which is what triggers materialization. */
 async function approve(page: Page, name: string) {
   await approveTableFromQueue(page, name)
 }
@@ -98,7 +98,7 @@ test('opening a table materializes its calendar, and the master can run it', asy
     await expect(master.page.getByRole('button', { name: /^Sesión 1/ })).toBeVisible()
     await expect(master.page.getByRole('button', { name: /^Sesión 4/ })).toBeVisible()
 
-    // Marking a session played is its own action, separate from attendance (ADR-08 §4).
+    // Marking a session played is its own action, separate from attendance.
     await master.page.getByRole('button', { name: 'Marcar como jugada' }).first().click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
     // `exact`: the confirmation toast also contains the word, inside a longer sentence.
@@ -110,7 +110,7 @@ test('opening a table materializes its calendar, and the master can run it', asy
 })
 
 /**
- * ADR-08 §3 with the warning up front: cancelling a session adds a replacement at the end, and the UI says
+ * The warning comes up front: cancelling a session adds a replacement at the end, and the UI says
  * so **before** the master commits, not after an unexpected session shows up.
  */
 test('cancelling a session warns about the replacement first, then adds it at the end', async ({ browser }) => {
@@ -140,7 +140,7 @@ test('cancelling a session warns about the replacement first, then adds it at th
 
 /**
  * The other side: the master records the attendance and the player reads it on `/player/my-tables/:id`, as
- * the three numbers of ADR-08 §5 — never a percentage, which would hide the distinction that matters.
+ * three separate numbers — never a percentage, which would hide the distinction that matters.
  */
 test('a player sees their own calendar and their attendance as three numbers', async ({ browser }) => {
   const tableName = `Mesa Asistencia E2E ${runId}`
@@ -175,7 +175,7 @@ test('a player sees their own calendar and their attendance as three numbers', a
     await expect(player.page.getByText('Mis sesiones')).toBeVisible()
     // The summary, not the session row: both say "Presente" and they are different things.
     await expect(player.page.getByRole('term').filter({ hasText: 'Presente' })).toBeVisible()
-    // Three numbers and their denominator; never a "1 of 4" and never a percentage (ADR-08 §5).
+    // Three numbers and their denominator; never a "1 of 4" and never a percentage.
     await expect(player.page.getByText('Sesiones registradas')).toBeVisible()
     await expect(player.page.getByText('%')).toBeHidden()
   } finally {

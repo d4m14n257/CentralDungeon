@@ -35,19 +35,19 @@ function withIdsFrom(raw: string | null, id: string): string[] {
 }
 
 /**
- * /admin/catalogs/:kind/:id - one synonym group as a canvas of nodes (ADR-12 §7).
+ * /admin/catalogs/:kind/:id - one synonym group as a canvas of nodes.
  *
  * The group the admin opened from the table is the first star; the proposals nobody classified yet
  * float to its left until somebody connects them to a group. Moving an alias or merging needs a
  * second group on the canvas, and the tray brings one: **the groups open are in the URL**
- * (`?with=`), like the rest of the admin screens' state (ADR-12 §7), so a canvas is something one admin
+ * (`?with=`), like the rest of the admin screens' state, so a canvas is something one admin
  * can send another.
  *
  * A value that becomes a group of its own - accepted as new, or split out - is added to `?with=`
  * too, so it lands on the canvas as a star instead of vanishing from the screen.
  *
  * The screen composes and owns nothing: the canvas, its data and its mutations are the catalogs
- * feature's, and this page hands it ids (arquitectura §3.1.5).
+ * feature's, and this page hands it ids.
  */
 export function AdminCatalogGroupPage() {
   const { t } = useTranslation('catalogs')

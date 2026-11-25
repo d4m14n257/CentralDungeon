@@ -21,8 +21,8 @@ interface EditProfileDialogProps {
 }
 
 /**
- * Edits the reader's own display name and country (ADR-10 §4), with the same fields the onboarding
- * step asks for. The dialog owns its form and its mutation (ADR-19 §6).
+ * Edits the reader's own display name and country, with the same fields the onboarding
+ * step asks for. The dialog owns its form and its mutation.
  *
  * @param props.profile      the current name and country
  * @param props.open         whether the dialog is showing
@@ -43,7 +43,7 @@ export function EditProfileDialog({ profile, open, onOpenChange }: EditProfileDi
   }
 
   async function onSubmit(values: CompleteOnboardingForm) {
-    // A review before anything is written (ADR-21 §9).
+    // A review before anything is written.
     const confirmed = await confirm({
       title: t('profile.confirmTitle', { name: values.name }),
       description: t('profile.confirmDescription'),

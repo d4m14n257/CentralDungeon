@@ -58,7 +58,7 @@ describe('notificationText', () => {
   })
 
   /**
-   * ADR-23 §3: the same row reads in whichever language is active. A stored sentence could not do this —
+   * The same row reads in whichever language is active. A stored sentence could not do this —
    * it would be frozen in the language of the day it was written.
    */
   it('renders the same row in the language that is active', async () => {
@@ -67,7 +67,7 @@ describe('notificationText', () => {
     expect(notificationText(row, i18n.getFixedT('en', 'notifications')).title).toBe('You were accepted into La Cripta')
   })
 
-  /** Rows written before ADR-23 §3 have no parameters; their frozen text is all there is to show. */
+  /** Rows written before notifications carried parameters have none; their frozen text is all there is to show. */
   it('falls back to the frozen text of a row written before the change', () => {
     const legacy = notification({ params: null, title: 'Te aceptaron en La Cripta', message: 'Un mensaje viejo' })
 

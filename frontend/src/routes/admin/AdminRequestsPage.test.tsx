@@ -81,7 +81,7 @@ beforeEach(() => {
 
 describe('AdminRequestsPage', () => {
   /**
-   * The decision of §2 of the contract: a tray that opens showing what is already resolved is a log,
+   * A tray that opens showing what is already resolved is a log,
    * not something anybody can work from. The filter is the screen's and not the endpoint's — `GET
    * /admin/requests` with no `q` answers with everything, like every other listing.
    */
@@ -93,7 +93,7 @@ describe('AdminRequestsPage', () => {
     await waitFor(() => expect(list).toHaveBeenCalledWith('/status Pending', 0, 25))
   })
 
-  /** ADR-22 §6: the default is in the URL, so the link carries what the screen shows. */
+  /** The default is in the URL, so the link carries what the screen shows. */
   it('redirects an entry without a query to the default one', async () => {
     list.mockResolvedValue(page([]))
 
@@ -108,14 +108,14 @@ describe('AdminRequestsPage', () => {
 
     renderPage()
 
-    // With no rows on screen there is exactly one «Pendiente» in the document, and it is the chip:
+    // With no rows on screen there is exactly one "Pending" label in the document, and it is the chip:
     // the status badge only ever appears inside a row.
     await screen.findByRole('combobox', { name: 'Buscar pedidos' })
     expect(screen.getByText('Pendiente')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Quitar/ })).toBeInTheDocument()
   })
 
-  /** A `?q=` in the URL wins over the default: a filtered tray is something one admin sends another (ADR-12 §7). */
+  /** A `?q=` in the URL wins over the default: a filtered tray is something one admin sends another. */
   it('respects a query restored from the URL instead of forcing its own', async () => {
     list.mockResolvedValue(page([]))
 
@@ -125,7 +125,7 @@ describe('AdminRequestsPage', () => {
   })
 
   /**
-   * ADR-20 §4: the empty tray is good news. "Nothing is waiting for an answer" is a fact about the
+   * The empty tray is good news. "Nothing is waiting for an answer" is a fact about the
    * platform; "nothing matched" is a fact about what was typed, and telling somebody who just
    * filtered by `Rejected` that everything is caught up would answer a question they did not ask.
    */
@@ -146,7 +146,7 @@ describe('AdminRequestsPage', () => {
     await waitFor(() => expect(screen.getByText('Ningún pedido coincide con esa búsqueda')).toBeInTheDocument())
   })
 
-  /** ADR-20 §1: no guard in the router, so the 403 has to land somewhere that explains itself. */
+  /** No guard in the router, so the 403 has to land somewhere that explains itself. */
   it('paints the forbidden state when the backend refuses the listing', async () => {
     list.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
 
@@ -259,7 +259,7 @@ describe('AdminRequestsPage', () => {
     expect(row.getByText('Pendiente')).toBeInTheDocument()
   })
 
-  /** ADR-16 §1: the note is required on both acts, and the form refuses an empty one without a round trip. */
+  /** The note is required on both acts, and the form refuses an empty one without a round trip. */
   it('refuses to resolve without a note', async () => {
     list.mockResolvedValue(page([request()]))
 
@@ -337,7 +337,7 @@ describe('AdminRequestsPage', () => {
   })
 
   /**
-   * ADR-23 §3: each of the four refusals is answered with a sentence of its own, rendered **over the
+   * Each of the four refusals is answered with a sentence of its own, rendered **over the
    * button that was just pressed** and not in a toast that disappears in four seconds — the form is
    * still open and the answer belongs where the reader is looking.
    *
@@ -361,7 +361,7 @@ describe('AdminRequestsPage', () => {
     expect(alert.textContent?.length ?? 0).toBeGreaterThan(10)
   })
 
-  /** Point 8 of plan-desarrollo.md §6 (ADR-20 §5): the help is raised from the screen that prompts it. */
+  /** The help is raised from the screen that prompts it. */
   it('offers the help of the tray from the screen itself', async () => {
     list.mockResolvedValue(page([request()]))
 
@@ -372,7 +372,7 @@ describe('AdminRequestsPage', () => {
     expect(dialog.getByText(/crea un borrador con el nombre propuesto/i)).toBeInTheDocument()
   })
 
-  /** ADR-22 §3: the search help documents **this** box's commands rather than a fixed list. */
+  /** The search help documents **this** box's commands rather than a fixed list. */
   it('documents its own search commands', async () => {
     list.mockResolvedValue(page([request()]))
 
@@ -441,7 +441,7 @@ describe('AdminRequestsPage default filter', () => {
     expect(screen.getByTestId('search')).toHaveTextContent('?q=/status Pending /and /requested_by ana')
   })
 
-  /** «Limpiar filtros» goes back to the default, not to the empty search. */
+  /** The "clear filters" button goes back to the default, not to the empty search. */
   it('returns to the default query when the filters are cleared', async () => {
     list.mockResolvedValue(page([]))
     renderPage('/admin/requests?q=')

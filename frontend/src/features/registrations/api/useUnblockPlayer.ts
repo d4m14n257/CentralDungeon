@@ -9,14 +9,14 @@ interface UnblockVariables {
 }
 
 /**
- * Lifting a veto (ADR-09 §5).
+ * Lifting a veto.
  *
  * **This is the half that makes the veto acceptable**, and the reason the vetoed row keeps its place
  * in the roster: an action that only exists on a row nobody renders is an action nobody can take.
  *
  * The reason is required here too, because what the platform records is not the veto but the
  * **change** — a `blocked` flag could never say that it was lifted, by whom, or how many times, and
- * ADR-09 §5 asks for exactly that so a pattern of impulsive vetoes is visible.
+ * the veto rule asks for exactly that so a pattern of impulsive vetoes is visible.
  *
  * Allowed to the table's `Primary` and to an admin. Refused with `NOT_PRIMARY_MASTER` (403) to a co-master and `REGISTRATION_NOT_BLOCKED` (409) on a
  * row somebody else already restored.

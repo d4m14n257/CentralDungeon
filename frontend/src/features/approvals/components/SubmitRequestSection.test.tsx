@@ -57,7 +57,7 @@ beforeEach(() => {
 })
 
 /**
- * The whole of principle 2 of diseno §1, in one component: a second request of the
+ * The whole of "a button that cannot be used is not shown", in one component: a second request of the
  * same kind is refused with `409 REQUEST_ALREADY_PENDING`, so a button offered while one is waiting
  * is a button whose only possible outcome is a refusal.
  */

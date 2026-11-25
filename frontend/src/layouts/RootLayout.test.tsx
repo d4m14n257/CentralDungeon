@@ -34,7 +34,7 @@ function renderAt(path: string) {
   return render(tree(path))
 }
 
-/** ADR-10 §4: the first step blocks wherever the session enters, and does not repeat. */
+/** The first step blocks wherever the session enters, and does not repeat. */
 describe('RootLayout onboarding guard', () => {
   beforeEach(() => {
     auth = { isBootstrapping: false, isAuthenticated: true }

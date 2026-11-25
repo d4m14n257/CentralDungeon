@@ -26,12 +26,12 @@ public interface SubmissionFileRepository extends JpaRepository<SubmissionFile, 
      *
      * <p>This exists for one caller: the read rule in {@code FileService}. A master has to be able to
      * open what their own players handed in, and without this they would see the row in the answer
-     * and get a 404 opening it - exactly the mismatch ADR-14 §2 had to fix for the files a table shares.
+     * and get a 404 opening it - exactly the mismatch that had to be fixed for the files a table shares.
      *
      * <p>It answers with table ids and not with a yes/no, so the membership question stays where it
-     * belongs: a repository resolves reachability, a service decides authorization (hard rule 17, ADR-05 §5, ADR-06 §4).
+     * belongs: a repository resolves reachability, a service decides authorization.
      *
-     * <p>Named parameters only, never positional (ADR-03 §2).
+     * <p>Named parameters only, never positional.
      *
      * @param fileId the file somebody is trying to open
      * @return the ids of the tables whose tasks it was handed in to. Empty when it was never
@@ -50,16 +50,15 @@ public interface SubmissionFileRepository extends JpaRepository<SubmissionFile, 
 
     /**
      * The same reachability as {@link #findTableIdsBySubmittedFileId}, but for a whole page of files
-     * and carrying the table's name - the second source of the uses an owner sees on their own list
-     * (ADR-14 §3).
+     * and carrying the table's name - the second source of the uses an owner sees on their own list.
      *
      * <p>It answers with {@link FileUsage}, a type of the {@code files} feature, which is the one
      * import that direction. The alternative is a second projection here that {@code FileService}
      * would immediately convert into the first, and the read rule already crosses this way for the
-     * same reason (ADR-14 §2): whether a submitted file is reachable is a question about submissions, and
+     * same reason: whether a submitted file is reachable is a question about submissions, and
      * splitting it across two features is what let the two answers drift apart once already.
      *
-     * <p>Named parameters only, never positional (ADR-03 §2).
+     * <p>Named parameters only, never positional.
      *
      * @param fileIds the files to resolve uses for
      * @return one row per live attachment on a live answer, absent for a file never submitted

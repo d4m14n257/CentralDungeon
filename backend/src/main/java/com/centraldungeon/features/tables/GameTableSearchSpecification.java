@@ -30,12 +30,12 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns the parsed explorer search box into a predicate, the same shape
  * {@code FileSearchSpecification} has for the files. Criteria API because what the query looks like
- * is only known at runtime: how many criteria and joined by which connectors (arquitectura §2.2).
+ * is only known at runtime: how many criteria and joined by which connectors.
  *
  * <p><b>The catalog criteria arrive already resolved.</b> Expanding {@code D&D} into its synonym
  * group needs the catalog tables, and a specification is built inside the query it belongs to - it
  * has no repository and should not grow one. So {@code GameTableService} resolves each catalog term
- * to a set of ids first (ADR-12 §2, §4, §8) and hands the map in; what is left here is the question
+ * to a set of ids first and hands the map in; what is left here is the question
  * «does this table link to any of these», which is a subquery and nothing more.
  *
  * <p><b>A criterion that resolved to nothing matches nothing</b>, and that distinction is the one
@@ -64,7 +64,7 @@ final class GameTableSearchSpecification {
      *                         it came from. A term missing from the map, or mapped to an empty set,
      *                         matches no table
      * @param actorId          the actor, from the token. It goes into the WHERE so a master never
-     *                         sees their own table in the list meant for applying (ADR-05 §5, ADR-18 §4)
+     *                         sees their own table in the list meant for applying
      * @return the predicate
      */
     static Specification<GameTable> forExplorer(
@@ -86,7 +86,7 @@ final class GameTableSearchSpecification {
 
     /**
      * {@code /admin/tables}: every table in the statuses the listing allows, narrowed by what the
-     * admin typed (ADR-16 §7).
+     * admin typed.
      *
      * <p><b>The same builder as {@link #forExplorer}, and one difference that matters.</b>
      * {@link #notMasteredBy} is <em>not</em> applied here: it belongs to the explorer, where the
@@ -98,7 +98,7 @@ final class GameTableSearchSpecification {
      * <p>What it does share is the shape: the statuses the listing allows and the typed criteria are
      * joined with {@code and} and never folded into one expression, so a criterion can only ever
      * narrow what the listing already showed - a soft-deleted table cannot be reached with any
-     * {@code ?q=} (ADR-03 §7).
+     * {@code ?q=}.
      *
      * @param query            the parsed search box; an empty one matches every listable table
      * @param catalogIdsByTerm the catalog ids each catalog criterion resolved to, keyed by the term.
@@ -133,7 +133,7 @@ final class GameTableSearchSpecification {
     }
 
     /**
-     * «the actor does not run this table» (ADR-18 §4).
+     * «the actor does not run this table».
      *
      * <p>Live rows only ({@code MasterRowStatus.Created}): somebody who was removed as a co-master
      * stopped running the table, so for the explorer it is a table like any other, one they can find
@@ -159,18 +159,18 @@ final class GameTableSearchSpecification {
     }
 
     /**
-     * «the actor is not vetoed on this table» (ADR-09 §4, §5).
+     * «the actor is not vetoed on this table».
      *
      * <p><b>A {@code NOT EXISTS} in the {@code WHERE} and never a filter over the page that came
      * back.</b> Dropping rows in memory after the query is the shape that returns a page of
      * seventeen where twenty were asked for, with a {@code totalElements} counting the tables the
-     * reader is not allowed to know about - which is both a broken pager (ADR-07 §9, ADR-04 §6) and a leak of
+     * reader is not allowed to know about - which is both a broken pager and a leak of
      * the number the veto exists to hide. The same reasoning {@link #linkedToAny} gives for using a
      * subquery instead of a join, one step further.
      *
      * <p>Only {@code Blocked} counts. Every other status of a registration - including
      * {@code Rejected} and {@code Deleted} - leaves the table perfectly visible: being turned down
-     * once is not being vetoed, and ADR-09 §1 explicitly allows applying again.
+     * once is not being vetoed, and applying again is explicitly allowed.
      *
      * @param root          the table being queried
      * @param criteriaQuery the query being built, which owns the subquery
@@ -288,7 +288,7 @@ final class GameTableSearchSpecification {
 
     /**
      * {@code /table_status Preparation}: an equality over the closed list, and an unknown state
-     * matches nothing rather than answering 400 (arquitectura §2.5).
+     * matches nothing rather than answering 400.
      *
      * <p>The same shape {@code ApprovalSearchSpecification.hasStatus} has, and it has to be: two
      * status commands that disagreed about what an unrecognized value means would be two different
@@ -356,7 +356,7 @@ final class GameTableSearchSpecification {
      * of twenty rows would silently cover seventeen tables - and the total count would be wrong on
      * top of it. {@code exists} asks the same question without multiplying rows.
      *
-     * <p>Only live links count: a value the master took off the table is kept as a row (ADR-04 §7) and is
+     * <p>Only live links count: a value the master took off the table is kept as a row and is
      * not what the table is labelled with any more.
      *
      * @param root          the table being queried

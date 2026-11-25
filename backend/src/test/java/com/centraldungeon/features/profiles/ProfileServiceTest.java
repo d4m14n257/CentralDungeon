@@ -42,7 +42,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Assembling a profile once its visibility has already been decided: the three sources it reads, and
- * that neither {@code karma} nor {@code comments} is among them (ADR-10 §5).
+ * that neither {@code karma} nor {@code comments} is among them.
  */
 @ExtendWith(MockitoExtension.class)
 class ProfileServiceTest {
@@ -96,7 +96,7 @@ class ProfileServiceTest {
         assertThat(profile.attendance()).isEqualTo(attendance);
     }
 
-    /** What a master reads first on a candidate's card, in place of karma, which is F5 (ADR-10 §5, ADR-06 §8). */
+    /** What a master reads first on a candidate's card, in place of karma, which does not exist yet. */
     @Test
     void carriesTheDiscordHandleAndHowManyTablesTheyPlayedToTheEnd() {
         when(userService.getById("target-3")).thenReturn(user("target-3", "Cora", "CL"));
@@ -113,8 +113,8 @@ class ProfileServiceTest {
     }
 
     /**
-     * An admin's view of a person's tables (ADR-06 §8): the ones they run and the ones they applied to,
-     * newest table first, each saying what the person is to it - and nothing removed (ADR-03 §7).
+     * An admin's view of a person's tables: the ones they run and the ones they applied to,
+     * newest table first, each saying what the person is to it - and nothing removed.
      */
     @Test
     void listsTheTablesAPersonRunsAndPlaysAtNewestFirstWithoutRemovedOnes() {
@@ -139,7 +139,7 @@ class ProfileServiceTest {
         assertThat(page.totalElements()).isEqualTo(2);
     }
 
-    /** Paged in memory, like the shared tray (ADR-16 §5): the second page starts where the first ended. */
+    /** Paged in memory, like the shared tray: the second page starts where the first ended. */
     @Test
     void pagesThePersonsTablesInMemory() {
         User person = user("target-5", "Esme", "MX");
@@ -211,7 +211,7 @@ class ProfileServiceTest {
         assertThat(page.page()).isEqualTo(2);
     }
 
-    /** The target's existence is checked before its visibility - both answer identically either way (ADR-10 §3). */
+    /** The target's existence is checked before its visibility - both answer identically either way. */
     @Test
     void propagatesNotFoundWhenTheTargetDoesNotExist() {
         when(userService.getById("ghost")).thenThrow(new NotFoundException("User not found: ghost"));

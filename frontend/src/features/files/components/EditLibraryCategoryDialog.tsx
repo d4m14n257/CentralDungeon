@@ -13,18 +13,18 @@ import { useConfirm } from '@/hooks/useConfirm'
 
 /** What the dialog needs. */
 export interface EditLibraryCategoryDialogProps {
-  /** The file whose cajón is being changed, or null while the dialog is closed. */
+  /** The file whose category is being changed, or null while the dialog is closed. */
   file: AdminFile | null
   /** Called to close it. */
   onOpenChange: (open: boolean) => void
 }
 
 /**
- * Changing what an unpublished file of the platform's library is (ADR-14 §7).
+ * Changing what an unpublished file of the platform's library is.
  *
  * **Only while nobody is offered it**: /admin/files opens this for a file that waits unpublished or
- * is hidden, never for a published one — masters are choosing that one under the cajón it has, and
- * the server refuses too. The same select as the upload list, one cajón per file.
+ * is hidden, never for a published one — masters are choosing that one under the category it has, and
+ * the server refuses too. The same select as the upload list, one category per file.
  *
  * @param props.file         the file, or null while closed
  * @param props.onOpenChange called to close the dialog
@@ -33,14 +33,14 @@ export function EditLibraryCategoryDialog({ file, onOpenChange }: EditLibraryCat
   const { t } = useTranslation('files')
   const confirm = useConfirm()
   const change = useChangeLibraryCategory()
-  // Keyed by the file, so opening it on another row starts from that row's cajón.
+  // Keyed by the file, so opening it on another row starts from that row's category.
   const [chosen, setChosen] = useState<{ fileId: string; category: FileCategory } | null>(null)
   const current = (file?.categories[0] as FileCategory | undefined) ?? null
   const value = chosen !== null && chosen.fileId === file?.id ? chosen.category : current
 
   async function save() {
     if (!file || value === null) return
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('libraryEdit.confirmTitle', { name: file.name }),
       description: t('libraryEdit.confirmDescription', { category: t(`category.${value}`) }),

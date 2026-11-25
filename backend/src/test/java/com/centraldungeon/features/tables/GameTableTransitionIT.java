@@ -64,7 +64,7 @@ class GameTableTransitionIT {
     void setUp() {
         User master = userRepository.save(new User(randomDiscordId(), "Master"));
         GameTable newTable = new GameTable("Concurrency Review Table", master);
-        // Explicit since ADR-07 §1: a table is born in Draft, and an admin cannot approve one. What this
+        // Explicit because a table is born in Draft, and an admin cannot approve one. What this
         // test races is the review, so the table starts where the review starts.
         newTable.setStatus(GameTableStatus.Preparation);
         table = gameTableRepository.save(newTable);
@@ -105,7 +105,7 @@ class GameTableTransitionIT {
     }
 
     /**
-     * A table in review was never public (ADR-07 §1): the public detail is a 404 for somebody who
+     * A table in review was never public: the public detail is a 404 for somebody who
      * neither runs it nor is an admin, even holding its id - the full read path, against real MySQL.
      */
     @Test

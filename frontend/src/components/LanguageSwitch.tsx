@@ -6,7 +6,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { cn } from '@/lib/utils'
 
 /**
- * A compact language switch that shows every option at once (ADR-23 §2).
+ * A compact language switch that shows every option at once.
  *
  * **All the options are visible, not behind a menu.** This exists for the screens with no
  * `UserMenu` — `/login` above all — where somebody who cannot read the language on screen has to be

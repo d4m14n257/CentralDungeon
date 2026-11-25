@@ -130,7 +130,7 @@ class AdminUserServiceTest {
     // ---------------------------------------------------------------- rule 2 and 3: the transitions
 
     @Test
-    void bloquearUnaCuentaYaBloqueadaEs409() {
+    void blockingAnAlreadyBlockedAccountIs409() {
         User target = persistedUser("target", UserStatus.Blocked);
         when(userService.getById("target")).thenReturn(target);
         when(userRoleRepository.findActiveRoleNames("target")).thenReturn(Set.of("Player"));
@@ -145,7 +145,7 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void desbloquearUnaCuentaQueNoEstaBloqueadaEs409() {
+    void unblockingAnAccountThatIsNotBlockedIs409() {
         User target = persistedUser("target", UserStatus.Allowed);
         when(userService.getById("target")).thenReturn(target);
 
@@ -156,7 +156,7 @@ class AdminUserServiceTest {
                 .isEqualTo(ConflictException.USER_NOT_BLOCKED);
     }
 
-    // ---------------------------------------------------------------- the happy paths, with ADR-05 §7
+    // ---------------------------------------------------------------- the happy paths
 
     @Test
     void blockingKeepsTheDataAndLeavesARowWithTheReason() {
@@ -170,7 +170,7 @@ class AdminUserServiceTest {
         assertThat(target.getStatus()).isEqualTo(UserStatus.Blocked);
         assertThat(response.status()).isEqualTo("Blocked");
         assertThat(response.roles()).containsExactly("Player");
-        // ADR-05 §7: el bloqueo cierra la puerta, no borra nada.
+        // Blocking closes the door; it deletes nothing.
         verify(userRepository, never()).delete(any(User.class));
         verify(userRepository, never()).deleteById(any());
 
@@ -182,9 +182,9 @@ class AdminUserServiceTest {
         assertThat(saved.getValue().getChangedBy().getId()).isEqualTo("actor-admin");
     }
 
-    /** «Un bloqueo que tarda 60 s en aplicar es un bloqueo que no bloquea» (ADR-05 §3). */
+    /** "A block that takes 60 s to apply is a block that does not block". */
     @Test
-    void bloquearInvalidaLaCacheDeAutorizacionDelObjetivo() {
+    void blockingInvalidatesTheTargetsAuthorizationCache() {
         User target = persistedUser("target", UserStatus.Allowed);
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin", UserStatus.Allowed));
@@ -196,7 +196,7 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void desbloquearDevuelveLaCuentaAAllowedYDejaSuFila() {
+    void unblockingReturnsTheAccountToAllowedAndLeavesItsRow() {
         User target = persistedUser("target", UserStatus.Blocked);
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner", UserStatus.Allowed));

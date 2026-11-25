@@ -7,7 +7,7 @@ import type { TableSessionStatus } from '../types'
 /**
  * Which tone each state wears. **The map stays here and not in `StatusBadge`**: which of this
  * feature's states counts as "open" is a decision about this domain, and a shared component that knew
- * it would be the wrong kind of shared (`arquitectura` §3.1.2).
+ * it would be the wrong kind of shared.
  */
 const STATE_TONES: Record<TableSessionStatus, StatusTone> = {
   Scheduled: 'open',
@@ -17,7 +17,7 @@ const STATE_TONES: Record<TableSessionStatus, StatusTone> = {
 
 /**
  * A session's status, as a badge. Its variants come from a `Record` over `TableSessionStatus`, so a
- * new status cannot be added without deciding how it looks (§3.2 regla 9).
+ * new status cannot be added without deciding how it looks.
  *
  * @param props.status the session's status
  */

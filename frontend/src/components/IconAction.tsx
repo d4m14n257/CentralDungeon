@@ -14,7 +14,7 @@ interface IconActionProps extends Omit<ComponentProps<typeof Button>, 'children'
    * shown switched off and its tooltip says this instead of `label`.
    *
    * It exists because a row's action is either absent or explained, never silently greyed out
-   * (principle 2 of diseno §1). A native `disabled` cannot carry the explanation: the
+   * (a row's action is never silently greyed out). A native `disabled` cannot carry the explanation: the
    * button stops receiving the pointer and the tooltip never opens. So this one stays focusable and
    * hoverable, is marked `aria-disabled`, and ignores clicks.
    */
@@ -23,7 +23,7 @@ interface IconActionProps extends Omit<ComponentProps<typeof Button>, 'children'
 
 /**
  * An icon button with its tooltip, for the actions of a row or a card
- * (skill `diseno` §5) — the replacement for the legacy `ActionButtonDefault`.
+ * — the replacement for the legacy `ActionButtonDefault`.
  *
  * **The text is not decoration**: it travels as `aria-label` as well as a tooltip, because an icon
  * with no accessible name is a button that does not exist for anyone who cannot see it. And the

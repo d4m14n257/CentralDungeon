@@ -42,8 +42,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * The half of the character-sheet-on-an-application story (ADR-13 §1 uso 2) only a real database can
- * answer: the fourth usage source's join, and ADR-09 §2's read-side filter, against real SQL and a real
+ * The half of the character-sheet-on-an-application story only a real database can
+ * answer: the fourth usage source's join, and the read-side filter, against real SQL and a real
  * composite key over {@code registration_files}.
  *
  * <p>Wired with {@code @DynamicPropertySource}, not {@code @ServiceConnection} - see
@@ -121,7 +121,7 @@ class RegistrationFileIT {
     }
 
     /**
-     * The join of ADR-14 §3's fourth source against real SQL: an enum literal written into the JPQL
+     * The join of the fourth usage source against real SQL: an enum literal written into the JPQL
      * itself, over a composite key, is exactly what a stubbed repository has no opinion about.
      */
     @Test
@@ -140,7 +140,7 @@ class RegistrationFileIT {
     }
 
     /**
-     * ADR-09 §2's whole reason to exist, proven against the database: withdrawing does not delete or mark
+     * The read-side filter, proven against the database: withdrawing does not delete or mark
      * the {@code registration_files} row, but the file it pointed at stops being a use as soon as the
      * application is no longer live.
      */
@@ -152,7 +152,7 @@ class RegistrationFileIT {
 
         registrationService.withdraw(application.id(), candidate.getId());
 
-        // The row is still there, still Current: withdrawing is deliberately not a cascade (ADR-09 §2).
+        // The row is still there, still Current: withdrawing is deliberately not a cascade.
         RegistrationFileId key = new RegistrationFileId(application.id(), sheet.id());
         assertThat(registrationFileRepository.findById(key))
                 .isPresent()
@@ -169,7 +169,7 @@ class RegistrationFileIT {
                 .isEmpty();
     }
 
-    /** The seventh way a file is reachable (ADR-14 §2's sister): the table's own master opens it. */
+    /** The seventh way a file is reachable (the sister of the one before): the table's own master opens it. */
     @Test
     void theTablesMasterReadsTheCandidatesAttachedFile() {
         String fileId = givenAnApplicationWithAFile();

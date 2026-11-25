@@ -39,13 +39,13 @@ public interface GameTableMapper {
             boolean joined);
 
     /**
-     * A table as the player's history shows it (ADR-19 §8) - a card with when it closed and the actor's
+     * A table as the player's history shows it - a card with when it closed and the actor's
      * own attendance, and neither the seat count nor the schedule-clash warning
      * {@link #toSummary} carries: a table that already ended cannot clash with anything, and its
-     * cupo stopped mattering the moment it stopped recruiting.
+     * the seat count stopped mattering the moment it stopped recruiting.
      *
      * @param gameTable  the table, {@code Finished} or {@code Canceled}
-     * @param attendance the actor's own historical attendance on it, the aggregate of ADR-08 §5
+     * @param attendance the actor's own historical attendance on it, the historical aggregate
      * @return its history card
      */
     @Mapping(target = "status", expression = "java(gameTable.getStatus().name())")
@@ -56,7 +56,7 @@ public interface GameTableMapper {
     /**
      * The rich-text fields - the three long texts and the optional sections - arrive as parameters
      * rather than being read off the entity: they are
-     * sanitized on the way out as well as on the way in (ADR-03 §8), and passing the cleaned strings in
+     * sanitized on the way out as well as on the way in, and passing the cleaned strings in
      * keeps that from turning a read into a write on the managed entity.
      */
     @Mapping(target = "status", expression = "java(gameTable.getStatus().name())")
@@ -90,7 +90,7 @@ public interface GameTableMapper {
      *
      * <p>The roster arrives as a parameter and is not read off the entity: it is the table's active
      * players joined with whatever was recorded, which is a question about two tables and not about
-     * this row (ADR-08 §4).
+     * this row.
      *
      * @param session    the session
      * @param attendance the roster, one line per active player of the table
@@ -107,8 +107,7 @@ public interface GameTableMapper {
     }
 
     /**
-     * One session as the player sitting at the table sees it: no notes, and only their own attendance
-     * (ADR-05 §5).
+     * One session as the player sitting at the table sees it: no notes, and only their own attendance.
      *
      * @param session      the session
      * @param myAttendance what was recorded for the actor of the token, or {@code Unknown}
@@ -134,7 +133,7 @@ public interface GameTableMapper {
      * One line of a session's roster.
      *
      * @param player     the player the line is about
-     * @param attendance what was recorded for them, or {@code Unknown} when nothing was (ADR-08 §5)
+     * @param attendance what was recorded for them, or {@code Unknown} when nothing was
      * @return the roster line
      */
     default SessionAttendanceEntry toAttendanceEntry(User player, AttendanceStatus attendance) {

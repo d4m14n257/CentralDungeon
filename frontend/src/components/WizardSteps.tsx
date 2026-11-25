@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
  * One step of a wizard, as the indicator needs to know it.
  *
  * @typeParam Id - the caller's own union of step names, so `onGoTo` hands back that union and not a
- * bare `string` the caller has to cast (regla dura 6)
+ * bare `string` the caller has to cast
  */
 interface WizardStepDescriptor<Id extends string> {
   /** Stable identifier, used as the React key and handed back by `onGoTo`. */

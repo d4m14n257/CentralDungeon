@@ -5,7 +5,7 @@ package com.centraldungeon.features.files;
  *
  * <p>Two values and not three. The legacy mixed a {@code Deleted} value into this same column,
  * making one field carry both "what kind of attachment is this" and "is it still attached" - the
- * exact confusion M3 flagged and M21.9 confirmed. Here the second question is {@code status}'s, and
+ * exact confusion that design caused. Here the second question is {@code status}'s, and
  * this enum only answers the first.
  */
 public enum TableFileType {

@@ -10,7 +10,7 @@ import type { FileCategory, StagedFile } from '../types'
 export interface LibraryUpload {
   /** The file as it was staged. Only `new` entries are sent: the library's dropzone stages nothing else. */
   staged: StagedFile
-  /** The cajón it is published into, chosen on its own row (ADR-14 §7). */
+  /** The category it is published into, chosen on its own row. */
   category: FileCategory
 }
 
@@ -20,13 +20,13 @@ export interface LibraryUploadResult {
   published: string[]
   /** The files the server could not take, each with why, to be tried again. */
   failed: UploadFailure[]
-  /** The names the admin had already uploaded, whose existing row came back published (ADR-13 §3, §4). */
+  /** The names the admin had already uploaded, whose existing row came back published. */
   reused: string[]
 }
 
 /**
- * Sends what is staged on /admin/files/upload into the platform's library, each file with the cajón
- * chosen on its row (ADR-14 §4, §7, ADR-13 §5) — published now, or left unpublished for later, as the admin
+ * Sends what is staged on /admin/files/upload into the platform's library, each file with the category
+ * chosen on its row — published now, or left unpublished for later, as the admin
  * chose with the button they pressed.
  *
  * **A failure does not undo the rest**, the same rule as `useCommitStagedFiles`: each file is sent on
@@ -34,7 +34,7 @@ export interface LibraryUploadResult {
  * (or a generic one when there was no code to read), so the screen keeps them listed and the
  * admin can try again — which is free, because the server recognises content it already has.
  *
- * @returns the mutation, taking the files with their cajones and whether to publish them now
+ * @returns the mutation, taking the files with their categories and whether to publish them now
  */
 export function useUploadToLibrary() {
   const queryClient = useQueryClient()

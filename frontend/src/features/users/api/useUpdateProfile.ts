@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { usersApi } from './usersApi'
 
 /**
- * Edits the display name and country once onboarding is done (ADR-10 §4), and refreshes both views of
+ * Edits the display name and country once onboarding is done, and refreshes both views of
  * the caller's profile: the shell's `/users/me` and the profile screen's own.
  *
  * Refused with `ONBOARDING_PENDING` while the first step is still pending; that and any other failure

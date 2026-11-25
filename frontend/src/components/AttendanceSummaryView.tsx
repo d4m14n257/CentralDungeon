@@ -8,20 +8,20 @@ interface AttendanceSummaryViewProps {
 }
 
 /**
- * Somebody's historical attendance, on one table or aggregated across every table (ADR-08 §5).
+ * Somebody's historical attendance, on one table or aggregated across every table.
  *
  * **Three numbers and never a percentage.** A ratio would have decided for the reader, and the
  * distinction it hides is the one that matters: missing after warning and simply not turning up are
- * different facts, and collapsing them makes attendance unexplainable — it is ADR-11 §10 applied one level
- * down. The reader draws a better conclusion from the three numbers than from an average that
+ * different facts, and collapsing them makes attendance unexplainable: attendance and karma are never folded into one number
+ * either. The reader draws a better conclusion from the three numbers than from an average that
  * already drew it for them.
  *
  * The denominator is the sessions **with something recorded**: a table of twelve that started
  * yesterday has eleven unrecorded ones, and counting those would make everybody read as a chronic
  * absentee.
  *
- * Transversal and not owned by `features/tables` (arquitectura §3.1.2): it renders no domain
- * entity, only four numbers, and a second feature — `features/users`, for the profile card of F2.3 —
+ * Transversal and not owned by `features/tables`: it renders no domain
+ * entity, only four numbers, and a second feature — `features/users`, for the profile card —
  * needs the identical rendering for the identical shape. `features/tables` still owns the raw type's
  * mirror duty on the wire (`AttendanceSummary` lives in `types/api.ts`); this component owns showing
  * it.

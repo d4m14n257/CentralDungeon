@@ -6,35 +6,32 @@ import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './help
 import { acceptReview } from './helpers/review'
 
 /**
- * F3.4 end to end, against the real backend: the two "se prueba" sentences of
- * `roles-y-alcance.md` §4, which are the only place the slice can be proven at all.
- *
- * > *Un master pide pausa y un admin la aprueba; el calendario del jugador se congela. Un
- * > `Primary` veta a alguien: esa persona deja de ver la mesa en el explorador, recibe `404` en el
- * > detalle y `404` en el archivo que antes descargaba.*
+ * Pause and veto end to end, against the real backend: a master asks for a pause and an admin
+ * approves it, and the player's calendar freezes; a `Primary` master vetoes someone, and that person
+ * stops seeing the table in the explorer and gets a `404` on the detail and a `404` on the file
+ * they used to download.
  *
  * The veto is no longer direct: any master of the table asks for it, an admin decides, and only the
  * Primary or an admin lifts it - which is the flow the second test walks.
  *
- * **What no unit test proves and this does.** The veto is a rule with seven front doors (§7 of the
- * same document: «el veto toca seis vías de lectura y es fácil cerrar cinco»), and a unit test can
- * only ever ask one door at a time with the other six mocked away. Here the same person walks the
+ * **What no unit test proves and this does.** The veto is a rule with many front doors (it touches
+ * six read paths and it is easy to close five), and a unit test can only ever ask one door at a
+ * time with the others mocked away. Here the same person walks the
  * explorer, the detail and the download **in one browser session** before and after the veto, so a
  * door left open is a failing assertion rather than a test nobody wrote. The pause is the mirror
- * case: `PauseRequested` was an orphan state for three phases, and the thing worth proving is not
+ * case: `PauseRequested` was an orphan state for a long time, and the thing worth proving is not
  * that a column changed but that the request crosses into an admin's tray and the answer reaches
  * the player's calendar — three screens and two actors, none of them anybody's unit.
  *
- * It is also the spec F3.4 shipped without. The slice reached review with 165 integration tests and
- * zero Playwright, which is the one gap F3.3 had already written the lesson for: «lo encontró
- * Playwright, no los tests ni la revisión».
+ * It exists because the feature once reached review with 165 integration tests and no browser test
+ * at all, and the gap was only found by driving the real screens.
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
 
-/** The community's usual slot, and the hour the materialized sessions take (ADR-07 §4). */
+/** The community's usual slot, and the hour the materialized sessions take. */
 const FRIDAY_EVENING = '20:00'
 
 async function testLogin(request: APIRequestContext, discordId: string, asMaster = false, asAdmin = false) {
@@ -55,13 +52,13 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 /**
  * A table with a real calendar, sent for review.
  *
- * The start date and the session count are what materialization needs (ADR-08 §3), and the pause half
+ * The start date and the session count are what materialization needs, and the pause half
  * of this spec is about sessions disappearing — so a table without them would have nothing to freeze.
  *
  * @param page    the tab, already authenticated as a master
  * @param name    the table's name
- * @param weekday the agenda's day. Two tables for one master need different ones: R1 of ADR-08 §2 refuses
- *                overlapping agendas and every table carries one (ADR-07 §3)
+ * @param weekday the agenda's day. Two tables for one master need different ones: the rule that refuses
+ *                overlapping agendas applies and every table carries one
  * @returns the id of the created table
  */
 async function createTableWithCalendar(page: Page, name: string, weekday = 'Viernes'): Promise<string> {
@@ -76,7 +73,7 @@ async function createTableWithCalendar(page: Page, name: string, weekday = 'Vier
   await addScheduleSlot(page, FRIDAY_EVENING, weekday)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
+  // The files step: nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Sesiones planeadas').fill('4')
@@ -86,7 +83,7 @@ async function createTableWithCalendar(page: Page, name: string, weekday = 'Vier
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
-  // Born in Draft since ADR-07 §1: nothing an admin can approve until it is sent.
+  // Born in Draft: nothing an admin can approve until it is sent.
   await submitForReview(page, id as string)
   return id as string
 }
@@ -117,7 +114,7 @@ async function acceptAsPlayer(master: Page, player: Page, tableId: string, playe
  * stops turning up while the calendar is still promising dates. That the request lands in the shared
  * tray as an admin's work, which is what makes `TablePause` a request rather than a column. And that
  * the admin's yes reaches the player: the pending sessions leave the calendar, which is the whole
- * point of freezing an agenda (ADR-07 §2, ADR-08 §3) and is derived on read rather than deleted, so the same
+ * point of freezing an agenda and is derived on read rather than deleted, so the same
  * screen is the only place it can be seen.
  */
 test('a master asks for a pause, an admin grants it, and the player calendar freezes', async ({ browser }) => {
@@ -144,7 +141,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     await player.page.goto(`/player/my-tables/${tableId}`)
     await expect(player.page.getByText('Sesión 1')).toBeVisible()
 
-    // Asking. The reason is mandatory (ADR-07 §2) and it is what the admin reads in the tray.
+    // Asking. The reason is mandatory and it is what the admin reads in the tray.
     await master.page.getByRole('button', { name: 'Pedir pausa' }).click()
     const pauseDialog = master.page.getByRole('dialog')
     await pauseDialog.getByRole('textbox').fill('Me operan y no puedo dirigir por un mes')
@@ -177,14 +174,13 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     // Resolved work is not work waiting on anybody.
     await expect(pauseRow).toBeHidden()
 
-    // The reason is in the history, a tab of its own since the decisions moved to the status notice (ADR-21 §10).
+    // The reason is in the history, a tab of its own since the decisions moved to the status notice.
     await master.page.goto(`/master/tables/${tableId}/history`)
     await expect(master.page.getByText('Pausada', { exact: true })).toBeVisible()
-    // The admin's reason is the pause's justification: they wrote why once and it is recorded once
-    // (ADR-07 §2, arquitectura §4.5).
+    // The admin's reason is the pause's justification: they wrote why once and it is recorded once.
     await expect(master.page.getByText('Aprobada: avisá cuando puedas retomar')).toBeVisible()
 
-    // And this is the sentence the slice promised: the calendar froze. A paused table promises no
+    // And this is the sentence the feature promised: the calendar froze. A paused table promises no
     // dates, so the pending sessions stop being shown - to its master either.
     await player.page.goto(`/player/my-tables/${tableId}`)
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
@@ -197,7 +193,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
 })
 
 /**
- * The second sentence, now with the two-step veto of ADR-09 §4: **nobody vetoes directly**. Any master
+ * The second sentence, now with the two-step veto: **nobody vetoes directly**. Any master
  * of the table asks, an admin decides, and only then does the person lose the table.
  *
  * The same player walks all three doors **before** the request, **after the request but before the
@@ -206,7 +202,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
  * would pass just as well against a request that vetoed on submit, or against a table the player
  * could never reach in the first place.
  *
- * And the answer is `404` every time, never `403` (ADR-09 §4): a 403 confirms what the 404 denies.
+ * And the answer is `404` every time, never `403`: a 403 confirms what the 404 denies.
  */
 test('a co-master asks for a veto, an admin grants it, and the Primary lifts it', async ({ browser }) => {
   const tableName = `Mesa Veto E2E ${runId}`
@@ -230,8 +226,8 @@ test('a co-master asks for a veto, an admin grants it, and the Primary lifts it'
     })
     expect(added.ok()).toBeTruthy()
 
-    // A shared attachment, which is the door ADR-14 §2 anticipated the bug on: until F3.4 the condition
-    // was «not private» alone, so any authenticated person reached it - the vetoed included.
+    // A shared attachment, which is the door where the bug was most likely: the read condition used to be
+    // «not private» alone, so any authenticated person reached it - the vetoed included.
     await master.page.goto(`/master/tables/${tableId}/files`)
     await master.page.getByRole('button', { name: 'Agregar un archivo' }).click()
     const fileDialog = master.page.getByRole('dialog')
@@ -255,7 +251,7 @@ test('a co-master asks for a veto, an admin grants it, and the Primary lifts it'
 
     // Asked over HTTP rather than through the download button: what is being pinned is the status
     // code, and a started-then-cancelled browser download cannot show one. The token goes in the
-    // header because the JWT is not a cookie (ADR-05 §3).
+    // header because the JWT is not a cookie.
     const fileId = await fileIdOfTable(player.page, player.accessToken, tableId)
     expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(200)
 
@@ -314,7 +310,7 @@ test('a co-master asks for a veto, an admin grants it, and the Primary lifts it'
 
     await player.page.goto(`/player/tables/${tableId}`)
     // The not-found state of a 404 detail, which is the same sentence a deleted table gets: from this
-    // person's side the table stopped existing, and telling the two apart would be the 403 (ADR-09 §4).
+    // person's side the table stopped existing, and telling the two apart would be the 403.
     await expect(player.page.getByText('Lo que buscas no existe o ya no está disponible.')).toBeVisible()
     await expect(player.page.getByRole('heading', { name: tableName })).toBeHidden()
 
@@ -368,7 +364,7 @@ test('a co-master asks for a veto, an admin grants it, and the Primary lifts it'
  * exposes, and the point of the assertion is the status code of a request, not the markup.
  *
  * @param page        the reader's page, for its request context
- * @param accessToken  the reader's token - the API authenticates by header, never by cookie (ADR-05 §3)
+ * @param accessToken  the reader's token - the API authenticates by header, never by cookie
  * @param tableId      the table
  * @returns the id of its first shared file
  */

@@ -10,11 +10,11 @@ import org.jspecify.annotations.Nullable;
  * How a table is run - "Public", "First class". Table {@code table_types}.
  *
  * <p>Read-only: the rows come from V2__seed.sql, and there is still no admin CRUD screen for them
- * (out of scope, unlike catalogs/). F1.1 adds the endpoint that lists them, which is what the wizard
- * of F1.2 needs and what did not exist before.
+ * (out of scope, unlike catalogs/). The endpoint that lists them is what the table creation wizard
+ * needs.
  *
- * <p>{@code code} is what separates a row the application shipped from one a person will type
- * (ADR-23 §4). The seeded pair carries {@code PUBLIC} and {@code FIRST_CLASS} and the frontend renders
+ * <p>{@code code} is what separates a row the application shipped from one a person will type.
+ * The seeded pair carries {@code PUBLIC} and {@code FIRST_CLASS} and the frontend renders
  * their translation; a type an admin adds later has none, and its {@code name} is read verbatim -
  * the same rule that already governs {@code systems}, {@code tags} and {@code platforms}.
  *
@@ -30,8 +30,8 @@ public class TableType extends BaseEntity {
     private String name;
 
     /**
-     * The stable identifier of a type the application shipped, or null for one a person created
-     * (ADR-23 §4). Never shown: it is what the frontend translates by.
+     * The stable identifier of a type the application shipped, or null for one a person created.
+     * Never shown: it is what the frontend translates by.
      */
     @Column(unique = true, length = 32)
     private @Nullable String code;

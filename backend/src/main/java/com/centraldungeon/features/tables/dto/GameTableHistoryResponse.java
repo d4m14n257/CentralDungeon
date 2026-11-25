@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A table as the player's history shows it (ADR-19 §8) - a screen of its own, not
+ * A table as the player's history shows it - a screen of its own, not
  * {@link GameTableSummaryResponse} with a different filter, because what the two cards carry is
  * genuinely different and not only which rows come back.
  *
@@ -19,10 +19,10 @@ import org.jspecify.annotations.Nullable;
  * @param status        where the table ended: {@code Finished} or {@code Canceled}
  * @param tableTypeName how the table was run, resolved to its label. Null when none was chosen
  * @param tableTypeCode the identifier the frontend translates by, when the application shipped
- *                       that type. Null for one a person named, whose label is read verbatim (ADR-23 §4)
- * @param closedAt      when the table closed (ADR-07 §7). Null only for a row that predates that
+ *                       that type. Null for one a person named, whose label is read verbatim
+ * @param closedAt      when the table closed. Null only for a row that predates that
  *                       column ever being stamped
- * @param attendance    the actor's own historical attendance on this table, the aggregate of ADR-08 §5
+ * @param attendance    the actor's own historical attendance on this table, the historical aggregate
  */
 public record GameTableHistoryResponse(
         String id,

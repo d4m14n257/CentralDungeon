@@ -1,9 +1,9 @@
 /**
- * Public surface of the tables feature (ADR-19 §1) - the aggregate the whole app revolves around.
+ * Public surface of the tables feature - the aggregate the whole app revolves around.
  * Anything not listed here is private to it.
  *
  * This is the only kind of barrel the project has: one per feature, at its boundary. An `index.ts`
- * per folder would reintroduce import cycles and draw no boundary at all (arquitectura §3.1.3).
+ * per folder would reintroduce import cycles and draw no boundary at all.
  */
 
 export { adminTableSearchFields, explorerSearchFields, tableStatusChoices } from './searchFields'
@@ -62,7 +62,7 @@ export { useAdminUpdateTable } from './api/useAdminUpdateTable'
 export { changeTableStatusSchema, createGameTableSchema, WIZARD_STEPS } from './schemas'
 /** The form value types, inferred from the zod schemas above, plus the wizard's four steps. */
 export type { ChangeTableStatusForm, CreateGameTableForm, WizardStep } from './schemas'
-/** The feature's domain types. Each is written once in `types.ts` and derived from there (arquitectura §3.2). */
+/** The feature's domain types. Each is written once in `types.ts` and derived from there. */
 export type { SessionListItem } from './components/SessionList'
 export type {
   AddMasterRequest,

@@ -55,7 +55,7 @@ beforeEach(() => {
 describe('UserAdminHistory', () => {
   /**
    * The reason the two audit tables are worth writing: a role change nobody can read back is a row
-   * that was born orphaned, which is exactly what §7 of the phase document warns about.
+   * that was born orphaned, which is the classic failure of audit tables.
    */
   it('reads back each kind of change with who made it and why', async () => {
     byId.mockResolvedValue(DETAIL)
@@ -77,11 +77,11 @@ describe('UserAdminHistory', () => {
     expect(screen.getByText('Se quitó el rol Jugador')).toBeInTheDocument()
     expect(screen.getByText('Activa → Bloqueada')).toBeInTheDocument()
     expect(screen.getAllByText('Por Ana Valdez')).toHaveLength(3)
-    // Never conditional: the justification is mandatory on both tables (ADR-05 §7, ADR-06 §1).
+    // Never conditional: the justification is mandatory on both tables.
     expect(screen.getByText('"Acoso reiterado"')).toBeInTheDocument()
   })
 
-  /** An account nobody touched says so, rather than drawing an empty list (skill `diseno` §5). */
+  /** An account nobody touched says so, rather than drawing an empty list. */
   it('says so when nobody has changed the account yet', async () => {
     byId.mockResolvedValue(DETAIL)
     history.mockResolvedValue([])
@@ -90,7 +90,7 @@ describe('UserAdminHistory', () => {
     expect(await screen.findByText('Sin cambios registrados')).toBeInTheDocument()
   })
 
-  /** Its own four states (ADR-19 §4): the listing around it loaded, this is a second question. */
+  /** Its own four states: the listing around it loaded, this is a second question. */
   it('explains a 403 rather than blanking', async () => {
     byId.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Denied', errorCode: 'FORBIDDEN' }))
     history.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Denied', errorCode: 'FORBIDDEN' }))

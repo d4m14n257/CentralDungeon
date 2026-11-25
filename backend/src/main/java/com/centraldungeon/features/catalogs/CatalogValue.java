@@ -10,11 +10,11 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The shape the three catalogs share by definition, not by coincidence: systems, tags and platforms
- * are the same row with a different table name (arquitectura §2.4, case 2).
+ * are the same row with a different table name.
  *
- * <p><b>{@code canonicalId} is flat and always depth 1</b> (ADR-12 §2): an alias points
+ * <p><b>{@code canonicalId} is flat and always depth 1</b>: an alias points
  * straight at its group's canonical entry, and a canonical entry has it {@code NULL}. There is no
- * tree, because under pure symmetric equivalence (ADR-12 §2) depth means nothing - the search resolves the
+ * tree, because under pure symmetric equivalence depth means nothing - the search resolves the
  * whole group from any member, and a second level would only be a cycle waiting to happen.
  *
  * <p>It is a plain column and not a {@code @ManyToOne} to itself: nothing ever needs to navigate to
@@ -27,22 +27,22 @@ public abstract class CatalogValue extends BaseEntity {
 
     /**
      * The value as it is written and displayed - the alias its author chose, never rewritten to the
-     * group's canonical entry (ADR-12 §4). Unique across the catalog, case-sensitively at the column level
+     * group's canonical entry. Unique across the catalog, case-sensitively at the column level
      * and case-insensitively when a new value is proposed.
      */
     @Column(nullable = false, unique = true, length = 128)
     private String name;
 
-    /** The group this value belongs to. NULL means this row is its group's canonical entry (ADR-12 §2). */
+    /** The group this value belongs to. NULL means this row is its group's canonical entry. */
     @Column(name = "canonical_id", length = 64)
     private @Nullable String canonicalId;
 
-    /** Where the value is in its lifecycle. Only {@code Accepted} shows to players and filters (ADR-12 §3). */
+    /** Where the value is in its lifecycle. Only {@code Accepted} shows to players and filters. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private CatalogStatus status = CatalogStatus.Created;
 
-    /** Soft delete (ADR-03 §7, ADR-12 §5): set when an admin takes the value out of circulation, cleared on restore. */
+    /** Soft delete: set when an admin takes the value out of circulation, cleared on restore. */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -51,7 +51,7 @@ public abstract class CatalogValue extends BaseEntity {
     }
 
     /**
-     * Builds a value that has not been reviewed yet: no group and status {@code Created} (ADR-12 §3).
+     * Builds a value that has not been reviewed yet: no group and status {@code Created}.
      *
      * @param name the value as its author wrote it
      */
@@ -71,7 +71,7 @@ public abstract class CatalogValue extends BaseEntity {
     /**
      * Returns the group this value belongs to.
      *
-     * @return the canonical entry's id, or null when this row is the canonical entry itself (ADR-12 §2)
+     * @return the canonical entry's id, or null when this row is the canonical entry itself
      */
     public @Nullable String getCanonicalId() {
         return canonicalId;
@@ -81,7 +81,7 @@ public abstract class CatalogValue extends BaseEntity {
      * Moves the value into a synonym group, or out of every group.
      *
      * <p>Only {@link AbstractCatalogService} calls this, and it validates the depth-1 invariant
-     * first: the target has to be a canonical entry itself (ADR-12 §2).
+     * first: the target has to be a canonical entry itself.
      *
      * @param canonicalId the canonical entry to point at, or null to make this row canonical
      */
@@ -119,7 +119,7 @@ public abstract class CatalogValue extends BaseEntity {
 
     /**
      * Stamps or clears the logical delete. Never deletes the row, and never touches the links that
-     * point at it - that is the whole point of ADR-12 §5.
+     * point at it - that is what makes restoring it free.
      *
      * @param deletedAt when it was disabled, or null when it is being restored
      */
@@ -129,7 +129,7 @@ public abstract class CatalogValue extends BaseEntity {
 
     /**
      * Tells whether this row is its group's canonical entry - the only legal target of a
-     * {@code canonicalId} (ADR-12 §2).
+     * {@code canonicalId}.
      *
      * @return true when the value has no canonical entry above it
      */

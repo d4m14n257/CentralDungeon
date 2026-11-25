@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import i18n from '@/providers/i18n'
 import { ApiError } from '@/types/api'
 
-/** Per-data staleTime policy (arquitectura §3.3) - the default of 0 is what causes request goteo. */
+/** Per-data staleTime policy - the default of 0 is what causes a trickle of needless refetches. */
 export const staleTime = {
   catalogs: 60 * 60 * 1000,
   tableList: 30_000,
@@ -16,20 +16,20 @@ export const staleTime = {
   /** What a table asks and what came in: same shape as files — somebody publishes, somebody answers. */
   tasks: 60_000,
   /**
-   * The shared admin tray (ADR-16 §5). Short on purpose: it is the one listing whose rows are taken away
+   * The shared admin tray. Short on purpose: it is the one listing whose rows are taken away
    * by **somebody else**, so anything an admin is about to press may already belong to a colleague.
    */
   queue: 10_000,
 } as const
 
 /**
- * The listings that refresh themselves, and how often (F3.3).
+ * The listings that refresh themselves, and how often.
  *
  * **This is the only place in the application with a `refetchInterval` besides `useBackendStatus`,
  * and it is here rather than in the hook for the same reason `staleTime` is**: "how live is this
  * screen" is a decision about the data, not an implementation detail of one query.
  *
- * It exists because of one sentence in the acceptance of F3.3: an item another admin reserves has to
+ * It exists because of one sentence in the acceptance criteria of the shared tray: an item another admin reserves has to
  * disappear **without the reader reloading the page by hand**. Until now the frontend refreshed only
  * on invalidation after its own mutation, which cannot see what somebody else did — so with what was
  * there, the criterion was simply not met.
@@ -38,16 +38,16 @@ export const staleTime = {
  * refetch is what matters most, because an admin coming back to the tab after reading Discord is
  * exactly the person about to act on a stale row.
  *
- * **F6 replaces this with the WebSocket** (ADR-18 §2, `roles-y-alcance.md` §5). Polling is the
+ * **A WebSocket push is meant to replace this.** Polling is the
  * honest stopgap: it is one request every fifteen seconds per admin looking at the tray, which for a
  * handful of admins is nothing, and it is deleted in one line when the socket lands.
  */
 export const live = {
-  /** The shared admin tray: rows leave it because a colleague took them (ADR-16 §5). */
+  /** The shared admin tray: rows leave it because a colleague took them. */
   queue: { refetchInterval: 15_000, refetchOnWindowFocus: true },
   /**
    * The bell: a notification is written by somebody else's act, which no mutation of the reader's can
-   * see (ADR-18 §2). A minute is enough for news that is not urgent, and the focus refetch catches the
+   * see. A minute is enough for news that is not urgent, and the focus refetch catches the
    * reader coming back to the tab.
    */
   notifications: { refetchInterval: 60_000, refetchOnWindowFocus: true },
@@ -55,51 +55,51 @@ export const live = {
 
 /**
  * The error codes that have a message of their own to show, rendered here from the code and the
- * parameters the backend sent with it (ADR-23 §3).
+ * parameters the backend sent with it.
  *
  * A short list on purpose: a person only reads a specific message when the backend committed to a
- * code for it. `SCHEDULE_CONFLICT` (ADR-08 §2) is the first — a clash is refused naming the table it
+ * code for it. `SCHEDULE_CONFLICT` is the first — a clash is refused naming the table it
  * collides with, and answering "could not save" there would hide the one thing the person can
- * actually resolve (principle 2 of diseno §1).
+ * actually resolve.
  *
- * Before ADR-23 §3 the backend's own `detail` was shown verbatim, which meant a Spanish sentence no
+ * Originally the backend's own `detail` was shown verbatim, which meant a Spanish sentence no
  * matter what language the reader had picked.
  */
 const EXPLAINED_ERROR_CODES = new Set([
   'SCHEDULE_CONFLICT',
-  // The same clash of ADR-08 §2 seen by the master accepting somebody (R3). Its own code because the
+  // The same clash seen by the master accepting somebody. Its own code because the
   // sentence is about a third person: "where you are already committed" is false when what
   // collided is the candidate's week, not the reader's.
   'CANDIDATE_SCHEDULE_CONFLICT',
-  // And seen by whoever edits a table run by several (ADR-08 §2): the week that collides is a
+  // And seen by whoever edits a table run by several: the week that collides is a
   // co-master's, so the sentence names them instead of saying "you".
   'MASTER_SCHEDULE_CONFLICT',
-  // Every refusal of an upload (F1.4). "Could not save" would be the worst possible answer here:
+  // Every refusal of an upload. "Could not save" would be the worst possible answer here:
   // the person picked a file, and what they need to know is which file and why - the type, or the
   // size and the limit. The limit travels as a number of bytes and the sentence is written on this
-  // side, in their language and their units (ADR-23 §3).
+  // side, in their language and their units.
   'FILE_TOO_LARGE',
   'FILE_TYPE_NOT_ALLOWED',
   'FILE_EMPTY',
-  // The three things a table cannot be run without (ADR-07 §3): what is played, where, and when. The
+  // The three things a table cannot be run without: what is played, where, and when. The
   // wizard blocks all three before sending, so these only surface when somebody reaches the API by
   // another route - and then "could not save" would hide which of the three is missing.
   'TABLE_NEEDS_SYSTEM',
   'TABLE_NEEDS_PLATFORM',
   'TABLE_NEEDS_TAG',
   'TABLE_NEEDS_SCHEDULE',
-  // Handing in an answer to a request the master already closed (F1.5). "Could not save" is the
+  // Handing in an answer to a request the master already closed. "Could not save" is the
   // worst possible answer to somebody who just wrote one: retrying will not help, and what they need
   // to know is that the intake ended — which is a fact about the table, not about their connection.
   'TASK_CLOSED',
   // The master editing a request that was closed while the form was open: the screens never offer
   // the edit on a closed request, so this only surfaces from a stale tab or a direct call.
   'TASK_CLOSED_NOT_EDITABLE',
-  // Publishing a library file nobody has said what it is (ADR-14 §7). The admin can fix it in one step -
+  // Publishing a library file nobody has said what it is. The admin can fix it in one step -
   // "Change what it is" on the same row - so naming that step is the whole answer; "could not
   // complete the action" left them guessing at something the server knew exactly.
   'FILE_NEEDS_CATEGORY',
-  // An admin lowering a table's capacity below the players it already has (ADR-06 §8). Nobody is removed to
+  // An admin lowering a table's capacity below the players it already has. Nobody is removed to
   // make the number fit, so the only way out is a bigger number - and saying how many players there
   // are is what tells the admin which one.
   'CAPACITY_BELOW_PLAYERS',
@@ -116,7 +116,7 @@ const EXPLAINED_ERROR_CODES = new Set([
   // the row was on screen. The state changed under the reader, so the sentence says what it is now.
   'FILE_ALREADY_PUBLISHED',
   'FILE_NOT_PUBLISHED',
-  // The two doors of ADR-10 §4 stay distinct: the screens only reach the right one, so these surface
+  // The two onboarding doors stay distinct: the screens only reach the right one, so these surface
   // when a stale tab or a direct call hits the wrong door - and then the sentence says which.
   'ONBOARDING_PENDING',
   'ONBOARDING_ALREADY_COMPLETED',
@@ -135,7 +135,7 @@ const EXPLAINED_ERROR_CODES = new Set([
  * The safety net for every mutation that does not bring its own `onError`, which today is all of
  * them: a write that fails - backend down, a 500, whatever it is - used to say nothing at all. The
  * button simply stopped being "pending" and that was the end of it, with whoever pressed it none the
- * wiser. Queries do not come through here: their four mandatory states (skill `diseno` §5)
+ * wiser. Queries do not come through here: their four mandatory states
  * already show the error on the screen itself, and repeating it here would be the same notice twice.
  *
  * A particular mutation that needs a more specific message adds its own `onError` on the
@@ -171,7 +171,7 @@ function reportMutationError(
 /**
  * The application's single QueryClient.
  *
- * Two decisions live in it. Its default `staleTime` is the policy (ADR-18 §2) instead of the library's
+ * Two decisions live in it. Its default `staleTime` is the policy instead of the library's
  * 0, which is what produces the steady drip of refetches - a query declares one only when it differs;
  * and every mutation without its own `onError` gets a toast, so a failed write never ends in silence.
  */

@@ -38,19 +38,19 @@ interface JustifiedTableActionDialogProps {
    * The explanation of what this act does, shown above the note.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura §3.1.5). The screen composes the two.
+   * never imports one. The screen composes the two.
    */
   help?: ReactNode
   /**
    * The refusal to show over the button, already translated, or null.
    *
-   * **Inline and not a toast** (ADR-23 §3): the form is still open and the answer belongs where the reader
+   * **Inline and not a toast**: the form is still open and the answer belongs where the reader
    * is looking. The races this dialog cannot prevent — a colleague resolved it, the reservation ran
    * out — are exactly what lands here.
    */
   errorMessage?: string | null
   /**
-   * The review shown before anything is written (ADR-21 §9): what is about to happen and what follows,
+   * The review shown before anything is written: what is about to happen and what follows,
    * with `submitLabel` as its button. **Required**, so no act that goes through this dialog can skip
    * it — the note makes the act deliberate, the review is what catches the wrong row or the wrong
    * button.
@@ -59,9 +59,9 @@ interface JustifiedTableActionDialogProps {
 }
 
 /**
- * Every transition that demands a justification (Request changes, Cancel, and since F3.3 resolving
+ * Every transition that demands a justification (Request changes, Cancel, and resolving
  * from the shared admin tray) shares this shape - one screen, abstracted no further than it earns:
- * several real uses (arquitectura §2.4).
+ * several real uses.
  */
 export function JustifiedTableActionDialog({
   open,

@@ -619,7 +619,7 @@ final class MatrixFixtures {
      *
      * @param owner      who uploaded it
      * @param type       its life cycle; a {@code Public} one is stamped as published
-     * @param categories the cajones it belongs to
+     * @param categories the categories it belongs to
      * @return the file
      */
     StoredFile file(User owner, FileType type, FileCategory... categories) {
@@ -633,7 +633,7 @@ final class MatrixFixtures {
      * @param owner      who uploaded it
      * @param type       its life cycle
      * @param content    its bytes
-     * @param categories the cajones it belongs to
+     * @param categories the categories it belongs to
      * @return the file
      */
     StoredFile file(User owner, FileType type, byte[] content, FileCategory... categories) {

@@ -5,7 +5,7 @@ import '@/providers/i18n'
 import { BlockingHelp, RequestsAdminHelp, RolesHelp } from './admins'
 
 /**
- * The help F3.1 owes (plan-desarrollo.md §6 point 8, ADR-20 §5).
+ * The help owed for roles and blocking.
  *
  * These assert on the **substance** of each section rather than on whole sentences: the wording is
  * free to improve, but a section that stopped saying who may grant what, or stopped warning that a
@@ -26,14 +26,14 @@ describe('RolesHelp', () => {
     expect(body).toMatch(/no es un error/i)
   })
 
-  /** ADR-06 §1: promoting an admin to owner makes their Admin chip disappear, and that needs explaining. */
+  /** Promoting an admin to owner makes their Admin chip disappear, and that needs explaining. */
   it('explains that Admin and Owner are exclusive', () => {
     render(<RolesHelp />)
 
     expect(document.body.textContent).toMatch(/excluyentes/i)
   })
 
-  /** The invariante global of the phase, with the why in one sentence. */
+  /** The global invariant, with the why in one sentence. */
   it('explains why the platform can never be left without an owner', () => {
     render(<RolesHelp />)
 
@@ -51,7 +51,7 @@ describe('RolesHelp', () => {
   })
 
   /**
-   * ADR-20 §6: the help teaches how to do it, not only what exists. The numbered steps are the shape
+   * The help teaches how to do it, not only what exists. The numbered steps are the shape
    * somebody can follow with the screen open behind the dialog, so a section that lost them would
    * still read fine and stop being usable.
    */
@@ -68,7 +68,7 @@ describe('RolesHelp', () => {
 
 describe('BlockingHelp', () => {
   /**
-   * ADR-05 §7, and the pair of facts that has to arrive together: "block" is a word people read as
+   * The pair of facts that has to arrive together: "block" is a word people read as
    * "delete", so learning the second half afterwards is learning it too late.
    */
   it('says the person cannot get back in and that their data is kept', () => {
@@ -104,7 +104,7 @@ describe('BlockingHelp', () => {
     expect(body).toMatch(/Desbloquear/)
   })
 
-  /** And, like the roles section, it teaches the doing and not only the rule (ADR-20 §6). */
+  /** And, like the roles section, it teaches the doing and not only the rule. */
   it('walks through blocking, step by step', () => {
     const { container } = render(<BlockingHelp />)
 
@@ -116,7 +116,7 @@ describe('BlockingHelp', () => {
   })
 })
 
-/** The other half of F3.2's help: what the tray is, and what approving each kind actually does. */
+/** The other half of the request help: what the tray is, and what approving each kind actually does. */
 describe('RequestsAdminHelp', () => {
   /**
    * The reason this section exists. The two approvals look identical on screen and do different
@@ -133,7 +133,7 @@ describe('RequestsAdminHelp', () => {
     expect(body).toMatch(/no hay una segunda forma de otorgarlo/i)
   })
 
-  /** ADR-16 §1: the note is required on both acts, and on a rejection it is all whoever asked receives. */
+  /** The note is required on both acts, and on a rejection it is all whoever asked receives. */
   it('says both acts need a note and that it reaches whoever asked', () => {
     render(<RequestsAdminHelp />)
 
@@ -142,7 +142,7 @@ describe('RequestsAdminHelp', () => {
     expect(body).toMatch(/lo único que va a recibir/i)
   })
 
-  /** ADR-20 §4: what the tray opens showing, and how to see the rest. */
+  /** What the tray opens showing, and how to see the rest. */
   it('explains that it opens filtered by what is pending, and how to see the rest', () => {
     render(<RequestsAdminHelp />)
 
@@ -169,7 +169,7 @@ describe('RequestsAdminHelp', () => {
     expect(body).toMatch(/fantasma/i)
   })
 
-  /** ADR-20 §6: the doing, not only the rule - including the step approving a table request leaves behind. */
+  /** The doing, not only the rule - including the step approving a table request leaves behind. */
   it('walks through resolving, step by step, ending with the table that still has to be created', () => {
     const { container } = render(<RequestsAdminHelp />)
 

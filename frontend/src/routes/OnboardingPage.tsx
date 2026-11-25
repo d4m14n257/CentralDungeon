@@ -9,7 +9,7 @@ import { completeOnboardingSchema, ProfileFields, useCompleteOnboarding, type Co
 import { useConfirm } from '@/hooks/useConfirm'
 
 /**
- * The first step of a new account: display name and country, asked once (ADR-10 §4).
+ * The first step of a new account: display name and country, asked once.
  *
  * It blocks, whatever the entry point: the session guard in `RootLayout` sends every account that
  * has not completed it here, and takes out of here every account that has. This screen only asks.
@@ -24,7 +24,7 @@ export function OnboardingPage() {
   })
 
   async function onSubmit(values: CompleteOnboardingForm) {
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({ title: t('confirmTitle', { name: values.name }), description: t('confirmDescription') })
     if (!confirmed) return
     // No navigation here: the answer lands in the `/users/me` cache and the session guard takes the

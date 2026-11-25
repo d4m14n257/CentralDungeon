@@ -1,25 +1,24 @@
 import type { StrictOmit } from '@/types/utils'
 
 /**
- * The kinds of request the platform knows (ADR-16 §1).
+ * The kinds of request the platform knows.
  *
- * **Five since F3.4, and the last two arrived with their producer** — which is the rule F3.2 set
- * when it deliberately declared three: a value of an enum that nothing emits is an orphan, and this
- * phase exists partly to close the ones F1.7 surveyed. `TablePause` is emitted by
+ * **Five, and the last two arrived with their producer** — the rule being that a value of an enum
+ * that nothing emits is an orphan, so the first three were declared alone. `TablePause` is emitted by
  * `POST /game-tables/{id}/request-pause` and `PlayerBan` by `.../registrations/{id}/request-block`.
  *
  * **Neither of the two new ones can be raised from `POST /api/v1/requests`** — see
  * `SUBMITTABLE_REQUEST_TYPES` in `requestTypes.ts`. Both are *about* something other than the person
  * asking, and that endpoint takes no `entityId` on purpose.
  *
- * A union of literals and not a TS `enum` (arquitectura §3.2): mirror of `ApprovalRequestType`.
+ * A union of literals and not a TS `enum`: mirror of `ApprovalRequestType`.
  */
 export type ApprovalRequestType = 'MasterGrant' | 'TableOpen' | 'General' | 'TablePause' | 'PlayerBan'
 
 /**
  * The kinds `POST /api/v1/requests` accepts: the three that are *about whoever is asking*.
  *
- * Derived with `Extract` rather than written out a second time (regla dura 6), so that renaming one
+ * Derived with `Extract` rather than written out a second time, so that renaming one
  * above stops compiling here instead of quietly shrinking what the form offers.
  */
 export type SubmittableRequestType = Extract<ApprovalRequestType, 'MasterGrant' | 'TableOpen' | 'General'>
@@ -31,12 +30,12 @@ export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected'
  * Mirror of `ApprovalRequestDetailResponse` — one request in full, as `/admin/requests/{id}` answers
  * and as the two resolvers answer back.
  *
- * **The base type, with the listing's row derived from it below** (arquitectura §3.2): the detail
+ * **The base type, with the listing's row derived from it below**: the detail
  * is what a resolution comes back as, so it is the shape the screen writes into its cache.
  *
  * `entityType`/`entityId` are a loose pair and not a reference to an entity, because that is the
- * price of ADR-16 §2: the row survives whatever it points at. In F3.2 all three kinds point at the person
- * who asked (`user`), which is true of every one of them — the request is about them.
+ * price of letting the row survive whatever it points at. The three kinds raised by the asker themselves point at the
+ * person who asked (`user`) — the request is about them.
  *
  * Names and never ids on the people involved: a queue nobody can read without a second lookup is a
  * queue nobody reads.
@@ -50,8 +49,8 @@ export interface ApprovalRequestDetail {
   requestedByName: string
   justification: string
   /**
-   * Who took the request for themselves. **Always null in F3.2**: the columns exist (ADR-16 §5) and the
-   * claim endpoints are F3.3's, so nothing writes it yet.
+   * Who took the request for themselves. **Null until somebody claims it**: it is
+   * written by the claim endpoints of the shared tray.
    */
   claimedByName: string | null
   resolvedByName: string | null
@@ -92,7 +91,7 @@ export type ApprovalRequestSummary = StrictOmit<
 }
 
 /**
- * Mirror of `BanRequestResponse` — one veto a co-master is asking for (ADR-09 §5, F3.4).
+ * Mirror of `BanRequestResponse` — one veto a co-master is asking for.
  *
  * **Its own shape and not {@link ApprovalRequestSummary}**, because of the one thing that summary
  * cannot say: *who* is going to be vetoed. The shared row carries who asked and why, which is right
@@ -102,7 +101,7 @@ export type ApprovalRequestSummary = StrictOmit<
  *
  * **Every field is non-null, and that is the point.** The alternative was a nullable
  * `targetUserName` on the shared summary, filled in for one type out of five — the record with half
- * its fields null that R3 forbids, and one that would have made every other reader carry a field
+ * its fields null, and one that would have made every other reader carry a field
  * that is always null for them. Two questions, two shapes.
  */
 export interface BanRequest {
@@ -113,7 +112,7 @@ export interface BanRequest {
   targetUserId: string
   /** The field this shape exists for: a decision about a person is made by name, not by id. */
   targetUserName: string
-  /** The co-master who asked. They are the one the answer is written to (ADR-16 §1). */
+  /** The co-master who asked. They are the one the answer is written to. */
   requestedByName: string
   /** Why they are asking, verbatim. It is the whole of what the `Primary` decides on. */
   justification: string
@@ -121,10 +120,10 @@ export interface BanRequest {
 }
 
 /**
- * What asking for something sends: which kind, and why (ADR-16 §1).
+ * What asking for something sends: which kind, and why.
  *
- * **No `entityId`.** The three kinds of F3.2 are about whoever is asking, and who that is comes from
- * the token (arquitectura §2.6) — taking it from the body would let somebody ask in another
+ * **No `entityId`.** The three submittable kinds are about whoever is asking, and who that is comes from
+ * the token — taking it from the body would let somebody ask in another
  * person's name.
  */
 export interface SubmitApprovalRequestInput {
@@ -141,7 +140,7 @@ export interface SubmitApprovalRequestInput {
 /**
  * What resolving one sends: the note, which is all either act sends.
  *
- * **Required on both of them** (ADR-16 §1): the justification is obligatory at the two ends of the
+ * **Required on both of them**: the justification is obligatory at the two ends of the
  * mechanism. Rejecting without saying why is half a mechanism.
  */
 export interface ResolveApprovalRequestInput {

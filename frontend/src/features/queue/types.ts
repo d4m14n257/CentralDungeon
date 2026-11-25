@@ -1,35 +1,35 @@
 /**
- * Which table a tray item came out of (ADR-16 §5).
+ * Which table a tray item came out of.
  *
- * **The same vocabulary of strings `entity_type` (ADR-16 §2) and `Notification.relatedEntityType` already
+ * **The same vocabulary of strings `entity_type` and `Notification.relatedEntityType` already
  * use**, and not a third one invented here: the value travels in the claim URL
  * (`/admin/queue/{type}/{id}/claim`), so a spelling of its own would be a second name for a thing
  * that already has one.
  *
- * A union of literals and not a TS `enum` (arquitectura §3.2).
+ * A union of literals and not a TS `enum`.
  */
 export type QueueItemType = 'approval_request' | 'game_table'
 
 /**
  * What kind of work the item is — the fine discriminator, mirror of `QueueItemKind`.
  *
- * Two of them in F3.3 and not four: the comments under review and the untriaged system feedback are
- * F5's, and they arrive with the query that produces them. A value of an enum nothing can emit is a
+ * Two of them and not four: the comments under review and the untriaged system feedback
+ * are still to come, and they arrive with the query that produces them. A value of an enum nothing can emit is a
  * filter that always answers nothing.
  *
- * It crosses HTTP, so the backend pins it with `@JsonValue` over these exact names (ADR-04 §5).
+ * It crosses HTTP, so the backend pins it with `@JsonValue` over these exact names.
  */
 export type QueueItemKind = 'ApprovalRequest' | 'TableWaitingReview'
 
 /**
  * Mirror of `QueueItemResponse` — one row of the shared admin tray, whatever it came from.
  *
- * **One flat shape for every source, which is the whole point of the tray** (ADR-16 §5): an admin opens
- * one screen and sees everything waiting on them, ordered by who has been waiting longest (ADR-20 §4),
+ * **One flat shape for every source, which is the whole point of the tray**: an admin opens
+ * one screen and sees everything waiting on them, ordered by who has been waiting longest,
  * rather than checking four listings and guessing which is most overdue.
  *
  * `id` is the id of the row **in its own table**, not an id of the tray: there is no `admin_queue`
- * table and there is not going to be one (ADR-03 §1). The pair `(type, id)` is what addresses an item.
+ * table and there is not going to be one. The pair `(type, id)` is what addresses an item.
  *
  * The people involved are shown by name, like every other admin listing: a tray nobody can read
  * without a second lookup is a tray nobody reads. The requester's id travels beside the name only so
@@ -47,10 +47,10 @@ export interface QueueItem {
   requestedByName: string
   /** The justification of a request. Null for a table: sending one in carries no words. */
   detail: string | null
-  /** Since when it has been waiting. The tray's order, and the only urgency it has (ADR-20 §4). */
+  /** Since when it has been waiting. The tray's order, and the only urgency it has. */
   waitingSince: string
   /**
-   * Who took the item for themselves, or null while nobody has (ADR-16 §5).
+   * Who took the item for themselves, or null while nobody has.
    *
    * **A non-null value here always means the reader**: the listing only ever returns what is free or
    * what belongs to whoever asked, so a name in this field is their own. That is what
@@ -77,19 +77,19 @@ export interface QueueItem {
  *
  * **It is not a permission check, and it never should have read like one.** Resolving an item does
  * not require holding it: an item nobody holds is resolved on the spot, and doing so reserves it
- * implicitly (ADR-16 §5). What this answers is narrower and purely presentational — does the row say
+ * implicitly. What this answers is narrower and purely presentational — does the row say
  * "Tomar" or "Soltar", and does the chip say it is free or that somebody is on it.
  *
  * Written as a function over the row rather than compared against the reader's own name, because the
  * server already answered the question: `GET /admin/queue` returns `claimed_by IS NULL OR
- * claimed_by = :actor` and nothing else (ADR-16 §5), so a claim that is visible at all is the reader's.
+ * claimed_by = :actor` and nothing else, so a claim that is visible at all is the reader's.
  * Matching names on this side would be a second, worse implementation of a rule that is enforced
  * where it belongs — and it would break on two people sharing a display name.
  *
  * **That filter is this function's whole premise, and it is a rule of the endpoint, not of the
  * shape.** Today it is written once per source — `ApprovalRequestRepository` and
  * `GameTableRepository` both carry the `claimed_by is null or claimed_by.id = :actorId` clause. **A
- * source added in F5 without it would not make this function wrong so much as make it lie by its own
+ * source added later without it would not make this function wrong so much as make it lie by its own
  * name**: it would start answering "somebody has this" while calling itself "the reader has this",
  * and the tray would offer "Soltar" on a colleague's row — a button whose only possible answer is
  * `ITEM_ALREADY_CLAIMED`. Whoever adds `comments` or `system_feedback` to the tray checks that

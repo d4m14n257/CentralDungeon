@@ -11,7 +11,7 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * How {@link QueueItemKind} crosses HTTP, in both directions.
  *
- * <p>This test exists because of ADR-04 §5, which this phase has already paid for twice.
+ * <p>This test exists because enum serialization has already bitten this project twice.
  * {@code PlatformRole} crossed HTTP without {@code @JsonValue}: every response published
  * {@code "Player"} - built by hand in a mapper - and every request carrying that same value was
  * rejected with a 400. No service test could see it, because a service test calls the method with the
@@ -20,7 +20,7 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>The constants already coincide with their wire names, so Jackson's default would produce the
  * same strings today. That is precisely why the pin is worth having: it is the day somebody renames a
- * constant, or F5 adds a kind whose wire name differs, that the two would drift - and the drift is
+ * constant, or a later kind is added whose wire name differs, that the two would drift - and the drift is
  * silent in exactly one direction.
  *
  * <p>Jackson 3 ({@code tools.jackson.*}), like the rest of the application.
@@ -76,13 +76,12 @@ class QueueItemKindJsonTest {
     }
 
     /**
-     * <b>Two values and not four</b>, and that is a decision and not an oversight. the {@code arquitectura} skill
-     * §4.5 lists four sources: the two here, plus {@code comments} in {@code Under review} and
-     * {@code system_feedback} in {@code New} - and those two arrive in F5 <em>with the feature that
-     * produces them</em>. An enum value nothing emits is the orphan this phase came to close.
+     * <b>Two values and not four</b>, and that is a decision and not an oversight. The design lists four sources: the two here, plus
+     * {@code comments} in {@code Under review} and {@code system_feedback} in {@code New} - and those
+     * two arrive <em>with the feature that produces them</em>. An enum value nothing emits is an orphan.
      */
     @Test
-    void entranDosClasesYNoCuatro() {
+    void exactlyTwoKindsExistNotFour() {
         assertThat(QueueItemKind.values())
                 .containsExactly(QueueItemKind.ApprovalRequest, QueueItemKind.TableWaitingReview);
 

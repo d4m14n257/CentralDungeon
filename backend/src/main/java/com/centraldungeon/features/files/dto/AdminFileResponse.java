@@ -9,30 +9,30 @@ import org.jspecify.annotations.Nullable;
  * tables use it and whether it is still live.
  *
  * <p>A separate record rather than three nullable fields on {@link FileResponse}, because those
- * three are exactly what nobody but an admin should see (arquitectura §2.3): the owner's name on
+ * three are exactly what nobody but an admin should see: the owner's name on
  * somebody else's upload, the tables using it, and the fact that a file was marked gone.
  *
  * @param id             the file's identifier
  * @param name           the original filename
  * @param mimeType       the declared MIME type
- * @param sizeBytes      the size as it was uploaded, before compression (ADR-13 §3)
- * @param fileType       which of the three lifecycles it has (ADR-13 §2), as a string
- * @param categories     the cajones it belongs to (ADR-14 §4), as strings. An admin sees them because
+ * @param sizeBytes      the size as it was uploaded, before compression
+ * @param fileType       which of the three lifecycles it has, as a string
+ * @param categories     the categories it belongs to, as strings. An admin sees them because
  *                       they are the one who declares them when publishing
  * @param ownerId        who uploaded it. Publishing a file changes what it is for, never whose it is
  * @param ownerName      how to name them on screen - their Discord username, which everybody has
  * @param tables         the tables that hold a live link to it, named so the screen can link each one.
- *                       <b>This is where ADR-14 §1 stops being a claim</b>: one file used by three tables
+ *                       <b>This is where sharing one file across tables stops being a claim</b>: one file used by three tables
  *                       reads as one row with three tables, which is what makes "linking is not copying"
  *                       visible rather than asserted. The number of uses is its size
- * @param status         live or marked gone, as a string. Marking never freed a byte (ADR-03 §7, ADR-13 §8)
+ * @param status         live or marked gone, as a string. Marking never freed a byte
  * @param lastUsedAt     when it was last used, in UTC. Null when it never was, which the purge reads
- *                       as its creation date (ADR-13 §3)
+ *                       as its creation date
  * @param createdAt      when it was uploaded, in UTC
  * @param publishedAt    when it was first published into the platform's library, in UTC, or null if
  *                       it never was. With {@code fileType}, it is what tells the three states of the
  *                       library apart: {@code Public} is published, {@code Library} with a date is
- *                       hidden, {@code Library} without one has never been published (ADR-14 §7)
+ *                       hidden, {@code Library} without one has never been published
  */
 public record AdminFileResponse(
         String id,

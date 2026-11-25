@@ -12,20 +12,19 @@ import { browserTimeZone, formatDate } from '@/lib/date'
 import { TableStatusBadge, useTableHistory } from '@/features/tables'
 
 /**
- * `/player/history` (ADR-19 §8) - every table this reader played at whose run is over, `Finished` or
+ * `/player/history` - every table this reader played at whose run is over, `Finished` or
  * `Canceled`, with how it ended for them.
  *
  * It exists because `/player/my-tables` stopped answering for these the moment it was scoped to
  * live tables only: a table does not vanish from someone's record the day it closes, it moves here.
  *
- * **An empty list reads as news, not as a problem** (diseno §1, principle 2 read the
- * other way round): nobody who has never finished a table did anything wrong, so the empty state
+ * **An empty list reads as news, not as a problem** (an empty state is not an error): nobody who has never finished a table did anything wrong, so the empty state
  * says exactly that and nothing that could be mistaken for an error.
  */
 export function PlayerHistoryPage() {
   const { t, i18n } = useTranslation('tables')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (ADR-19 §4).
+  // loaded.
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTableHistory()
 
   const entries = data?.pages.flatMap((page) => page.content) ?? []
@@ -33,8 +32,8 @@ export function PlayerHistoryPage() {
 
   return (
     <div className="space-y-4">
-      {/* A table no longer in «Mis mesas» looks lost until somebody explains it moved on its own
-          (ADR-19 §8): that is what the help of this screen says. */}
+      {/* A table no longer in the "my tables" list looks lost until somebody explains it moved on its own:
+         that is what the help of this screen says. */}
       <PageHeader title={t('history.title')} help="players.history" />
       {isPending && (
         <div className="space-y-2">

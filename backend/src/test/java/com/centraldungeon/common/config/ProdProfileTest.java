@@ -17,7 +17,7 @@ import org.yaml.snakeyaml.Yaml;
  * Guards the production profile against falling back to a development default for anything that is
  * a secret or depends on where the system runs: application.yml carries defaults so a local machine
  * boots, and in production every one of them must come from the environment or the start-up must
- * fail (ADR-02 §5, ADR-05 §2).
+ * fail.
  */
 class ProdProfileTest {
 

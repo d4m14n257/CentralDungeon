@@ -6,10 +6,10 @@ import { approvalsApi } from './approvalsApi'
 import type { ResolveApprovalRequestInput } from '../types'
 
 /**
- * Approves a request, with the note that is required on both acts (ADR-16 §1).
+ * Approves a request, with the note that is required on both acts.
  *
  * **Approving a `MasterGrant` grants the role through `UserRoleService`** — the same single road
- * `/admin/users` uses, and not a second one (roles-y-alcance.md §4, F3.2). That is why this
+ * `/admin/users` uses, and not a second one. That is why this
  * invalidates the users branch as well: the role it just moved is on a screen this one knows nothing
  * about, and leaving that cache in place would show an account without a role it now holds.
  *
@@ -18,8 +18,8 @@ import type { ResolveApprovalRequestInput } from '../types'
  * `General` has no effect beyond being closed — that is its nature.
  *
  * Refused with `REQUEST_ALREADY_RESOLVED` when somebody else got there first, with
- * `REQUEST_ENTITY_GONE` when what the request pointed at no longer exists (ADR-16 §2), and since F3.3 with
- * `ITEM_ALREADY_CLAIMED` when a colleague has taken it from the shared tray (ADR-16 §5). **No reservation
+ * `REQUEST_ENTITY_GONE` when what the request pointed at no longer exists, and
+ * with `ITEM_ALREADY_CLAIMED` when a colleague has taken it from the shared tray. **No reservation
  * is required to approve**: `/admin/requests` offers no way to make one, and resolving something
  * nobody holds takes it implicitly. All three are races a screen cannot prevent on its own, which is
  * why the dialog shows the refusal inline.
@@ -36,7 +36,7 @@ export function useApproveRequest() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.adminAll() })
       // A granted role lands on an account, and that account is listed somewhere else entirely.
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.adminAll() })
-      // And the row leaves the shared tray: resolved work is not work waiting on anybody (ADR-16 §5).
+      // And the row leaves the shared tray: resolved work is not work waiting on anybody.
       void queryClient.invalidateQueries({ queryKey: queryKeys.queue.all() })
       // Approving a veto request is the veto: the table's lists of requests, people and tables go stale.
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.banAll() })

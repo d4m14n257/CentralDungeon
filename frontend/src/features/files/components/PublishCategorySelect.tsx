@@ -6,9 +6,9 @@ import { PUBLISHABLE_CATEGORIES } from '../categories'
 import type { FileCategory } from '../types'
 
 interface PublishCategorySelectProps {
-  /** The cajón chosen for this file, or null while nothing has been chosen yet. */
+  /** The category chosen for this file, or null while nothing has been chosen yet. */
   value: FileCategory | null
-  /** Called with the cajón that was picked. */
+  /** Called with the category that was picked. */
   onChange: (value: FileCategory) => void
   /** The file's name, so the accessible label says which file the select is about. */
   fileName: string
@@ -19,19 +19,19 @@ interface PublishCategorySelectProps {
 }
 
 /**
- * What one file is, chosen on its own row of the upload list of /admin/files/upload (ADR-14 §4, §7).
+ * What one file is, chosen on its own row of the upload list of /admin/files/upload.
  *
  * **One per file**, because each file dropped in is its own document: the community's blank sheet is
  * table material, the rules are an announcement, and they can go up together.
  *
- * **Only the three a file can be published into.** The two player-side cajones hold what each person
+ * **Only the three a file can be published into.** The two player-side categories hold what each person
  * answered with, and nothing is ever published there; the backend refuses them too.
  *
- * Nothing is preselected, which is M24.1's fix carried across from the audience it replaced: a default
+ * Nothing is preselected, which carries across the rule of the audience it replaced: a default
  * would publish a document into a flow nobody chose.
  *
- * @param props.value    the cajón chosen, or null
- * @param props.onChange called with the cajón picked
+ * @param props.value    the category chosen, or null
+ * @param props.onChange called with the category picked
  * @param props.fileName the file the select is about, for its accessible label
  * @param props.invalid  marks the select as what is missing
  * @param props.disabled disables it while the upload is in flight

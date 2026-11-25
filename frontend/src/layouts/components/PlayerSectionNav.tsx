@@ -13,9 +13,9 @@ import { SectionNav, type SectionNavItem } from '@/components/SectionNav'
  * contexts got their nav the moment they grew a second screen; this one did not.
  *
  * It grows with the context, in this list and not in a different one somewhere else: `/player/files`
- * joins here when F2 builds it. `/player/history` (ADR-19 §8) is the one already added, for the exact
+ * joins here when that screen is built. `/player/history` is the one already added, for the exact
  * reason this whole component exists - without an entry here it would be reachable only by typing
- * the URL, which is the bug F1's review found with this context the first time.
+ * the URL, which is a bug this context had once.
  */
 export function PlayerSectionNav() {
   const { t } = useTranslation('tables')

@@ -1,16 +1,16 @@
 import { ApiError } from '@/types/api'
 
 /**
- * The one refusal the reservation adds (ADR-16 §5, ADR-23 §3).
+ * The one refusal the reservation adds.
  *
  * **It is a race a screen cannot prevent on its own**, which is exactly why it needs a sentence of
- * its own rather than the generic "no pudimos completar la acción". Two admins with the tray open is
+ * its own rather than the generic failure message. Two admins with the tray open is
  * the normal case, not the edge one: the whole mechanism exists because that happens.
  *
  * **There was a second code here, `ITEM_NOT_CLAIMED`, and it was a mistake of the rule rather than of
  * the code.** The rule it belonged to said resolving required holding the item, which made every
  * resolution from `/admin/requests` — a screen with no way to reserve anything — answer `409` for a
- * reservation it could not offer. What ADR-16 §5 actually buys is "if one takes it, it drops for the
+ * reservation it could not offer. What the reservation actually buys is "if one takes it, it drops for the
  * rest": what has to be refused is acting on what **somebody else** holds. An item nobody holds is
  * not that situation, and resolving it reserves it implicitly. No branch can emit `ITEM_NOT_CLAIMED`
  * any more, so it is gone from here too — a code the backend cannot send is a sentence nobody can

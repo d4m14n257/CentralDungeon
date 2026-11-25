@@ -12,11 +12,11 @@ interface PendingConfirm {
 }
 
 /**
- * The one dialog every irreversible action goes through, never a generic "are you sure?"
- * (diseno §1, principle 3).
+ * The one dialog every irreversible action goes through, never a generic "are you sure?":
+ * it names what is about to happen.
  *
  * **Only components are exported from here**; `useConfirm` and its Context live in `hooks/`, which is
- * where a hook belongs (arquitectura §3.1) and which is also what keeps fast refresh working — a
+ * where a hook belongs and which is also what keeps fast refresh working — a
  * module exporting a component *and* a hook loses it.
  */
 export function ConfirmDialogProvider({ children }: { children: ReactNode }) {

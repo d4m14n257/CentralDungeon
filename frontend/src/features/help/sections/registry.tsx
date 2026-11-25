@@ -59,7 +59,7 @@ import {
 /**
  * What the screen raising the help can tell it about itself.
  *
- * **Everything here is optional and most sections take none of it** (ADR-22 §3): the help is fixed text,
+ * **Everything here is optional and most sections take none of it**: the help is fixed text,
  * and a section that needs no context declares no props — a `() => ReactNode` still satisfies this.
  * What forced the first one is the search: its rules are the same everywhere, but its *examples* have
  * to be written with the commands of the box that was being used, or they teach commands that screen
@@ -81,13 +81,13 @@ export interface HelpSectionDefinition {
 /**
  * Every piece of help the application can show, addressed by a stable id.
  *
- * **The id is the contract** (ADR-20 §5, inherited from ADR-20 §6): a screen names the section it wants and
+ * **The id is the contract**: a screen names the section it wants and
  * knows nothing else about it. The ids keep the `audience.ref` shape the old `/help/masters#schedule`
  * links used, so the mapping from what the URLs said to what the dialogs show stays legible.
  *
- * There is no audience gate on any of this. It is fixed text with nothing to protect (ADR-20 §1), and a
+ * There is no audience gate on any of this. It is fixed text with nothing to protect, and a
  * section is only reachable from the screen that links it - a screen the reader already got past
- * its own guard to be on. The `HelpAudienceGate` of ADR-20 §6(b) existed because `/help/admins` was a URL
+ * its own guard to be on. The old `HelpAudienceGate` existed because `/help/admins` was a URL
  * anybody could type; it no longer is one.
  */
 export const HELP_SECTIONS = {
@@ -96,11 +96,11 @@ export const HELP_SECTIONS = {
   'basics.table-status': { titleKey: 'basics.tableStatus.title', Body: TableStatusHelp },
   'basics.account': { titleKey: 'basics.account.title', Body: AccountHelp },
   'basics.notifications': { titleKey: 'basics.notifications.title', Body: NotificationsHelp },
-  // The two screens of the account menu (ADR-21 §5): a player's and a master's alike, so under `basics`.
+  // The two screens of the account menu: a player's and a master's alike, so under `basics`.
   'basics.my-files': { titleKey: 'basics.myFiles.title', Body: MyFilesHelp },
   'basics.my-schedule': { titleKey: 'basics.mySchedule.title', Body: MyScheduleHelp },
   // Under `basics` and not under `players`, because the mechanism is one and the three screens that
-  // raise a request are not all a player's (ADR-16 §1): the same section is read from the profile, from
+  // raise a request are not all a player's: the same section is read from the profile, from
   // the explorer and from the support screen.
   'basics.requests': { titleKey: 'basics.requests.title', Body: RequestsHelp },
 
@@ -127,11 +127,11 @@ export const HELP_SECTIONS = {
   'masters.co-masters': { titleKey: 'masters.coMasters.title', Body: CoMastersHelp },
   'masters.dashboard': { titleKey: 'masters.dashboard.title', Body: DashboardHelp },
   'masters.edit-table': { titleKey: 'masters.editTable.title', Body: EditTableHelp },
-  // Asking for a pause (ADR-07 §2, F3.4). Its own section and not a line inside `running`: the thing that
+  // Asking for a pause. Its own section and not a line inside `running`: the thing that
   // has to be learned is that asking is not pausing, and a bullet inside another section is where
   // that gets skimmed past.
   'masters.pause': { titleKey: 'masters.pause.title', Body: PauseRequestHelp },
-  // The veto (ADR-09 §4, §5). Deliberately not near `admins.blocking`, which is about closing an account:
+  // The veto. Deliberately not near `admins.blocking`, which is about closing an account:
   // the two share a verb in Spanish and nothing else, and a master looking for one must not land on
   // the other.
   'masters.banning': { titleKey: 'masters.banning.title', Body: BanningHelp },
@@ -139,26 +139,26 @@ export const HELP_SECTIONS = {
   'masters.seeking': { titleKey: 'masters.seeking.title', Body: SeekingPlayersHelp },
 
   // What reviewing a table is and where it happens. Its text moved with the buttons when approving
-  // and requesting changes left `/admin/tables` for the tray (ADR-16 §7, F3.3).
+  // and requesting changes left `/admin/tables` for the tray.
   'admins.reviewing': { titleKey: 'admins.reviewing.title', Body: ReviewingHelp },
-  // The reservation of the shared tray (ADR-16 §5, F3.3): a rule that is invisible until it refuses
+  // The reservation of the shared tray: a rule that is invisible until it refuses
   // something, which is the worst way to learn one.
   'admins.claiming': { titleKey: 'admins.claiming.title', Body: ClaimingHelp },
   'admins.assign-masters': { titleKey: 'admins.assignMasters.title', Body: AssignMastersHelp },
   'admins.catalogs': { titleKey: 'admins.catalogs.title', Body: CatalogsHelp },
   'admins.files': { titleKey: 'admins.files.title', Body: AdminFilesHelp },
-  // One table read whole, and the admin's own edit of it (ADR-06 §8): what is read-only, what the admin
+  // One table read whole, and the admin's own edit of it: what is read-only, what the admin
   // may change, and that the masters are always told.
   'admins.table-detail': { titleKey: 'admins.tableDetail.title', Body: TableDetailHelp },
   'admins.owner': { titleKey: 'admins.owner.title', Body: OwnerHelp },
   'admins.roles': { titleKey: 'admins.roles.title', Body: RolesHelp },
   'admins.blocking': { titleKey: 'admins.blocking.title', Body: BlockingHelp },
-  // The two buttons ADR-07 §1 left without a screen for two phases, and the clash that can refuse one.
+  // The two buttons that used to have no screen around them, and the clash that can refuse one.
   'admins.pausing': { titleKey: 'admins.pausing.title', Body: PausingHelp },
   // The other end of `basics.requests`: what the tray is, and that approving is not one act but
-  // three different ones depending on what was asked for (F3.2).
+  // three different ones depending on what was asked for.
   'admins.requests': { titleKey: 'admins.requests.title', Body: RequestsAdminHelp },
-  // The editable configuration of ADR-17 §3 (F3.5). Its own section: what has to be learned is not who
+  // The editable configuration. Its own section: what has to be learned is not who
   // may edit a setting but that two of them are not cosmetic adjustments.
   'admins.settings': { titleKey: 'admins.settings.title', Body: SettingsHelp },
 } as const satisfies Record<string, HelpSectionDefinition>
@@ -166,7 +166,7 @@ export const HELP_SECTIONS = {
 /**
  * The address of a piece of help.
  *
- * Derived from the registry rather than written out beside it (regla dura 6): adding a section is
+ * Derived from the registry rather than written out beside it: adding a section is
  * one entry, and naming one that does not exist stops compiling.
  */
 export type HelpSectionId = keyof typeof HELP_SECTIONS

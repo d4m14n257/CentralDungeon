@@ -1,5 +1,5 @@
 /**
- * The public surface of `features/tasks` (ADR-19 §1).
+ * The public surface of `features/tasks`.
  *
  * From outside, this is the only path: `@/features/tasks`, never a route inside it. What is not
  * exported here is private to the feature — the api module and the query hooks the components use
@@ -7,7 +7,7 @@
  *
  * Two of the components take **render props** rather than importing what they need: the file picker
  * and the file list belong to `features/files`, and a feature never imports from another. The screens
- * in `src/routes/` are the one place domains are composed (regla dura 16, §3.1.5).
+ * in `src/routes/` are the one place domains are composed.
  */
 export { ApplicableTaskList } from './components/ApplicableTaskList'
 export { MySubmissions } from './components/MySubmissions'

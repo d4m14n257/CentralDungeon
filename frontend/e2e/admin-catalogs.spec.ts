@@ -3,11 +3,11 @@ import { acceptReview } from './helpers/review'
 
 /**
  * Catalog administration against the real backend and the real seed: the table of groups and the
- * canvas each group opens into (ADR-12 §7).
+ * canvas each group opens into.
  *
  * What it proves is the half of the catalog design a unit test cannot see: the synonym groups of
- * V3__catalog_seed.sql arrive already assembled (ADR-12 §2), a proposal floats on the canvas until
- * it is connected to a group, and disabling a value and restoring it puts everything back (ADR-12 §5).
+ * V3__catalog_seed.sql arrive already assembled, a proposal floats on the canvas until
+ * it is connected to a group, and disabling a value and restoring it puts everything back.
  *
  * Login goes through TestLoginController (the backend's `test` profile), like every other spec.
  * Playwright's viewport is wider than `md`, so the canvas is what renders and the list it becomes on
@@ -76,8 +76,8 @@ async function openGroup(page: Page, kind: string, name: string) {
 }
 
 /**
- * The table lists groups, not values (ADR-12 §7): searching an alias brings up the group it belongs to
- * (ADR-12 §2), and opening it draws the alias hanging from its head.
+ * The table lists groups, not values: searching an alias brings up the group it belongs to, and
+ * opening it draws the alias hanging from its head.
  */
 test('searching an alias finds its group, and the group opens as a canvas', async ({ browser }) => {
   const { context, page } = await newAuthenticatedPage(browser, `e2e-cat-admin-${runId}`, true)
@@ -103,7 +103,7 @@ test('searching an alias finds its group, and the group opens as a canvas', asyn
 
 /**
  * The three tabs are the same catalog with a different table behind each, and the state lives in
- * the URL: a catalog row is something one admin sends to another (ADR-12 §7).
+ * the URL: a catalog row is something one admin sends to another.
  */
 test('the chosen catalog and the search live in the URL', async ({ browser }) => {
   const { context, page } = await newAuthenticatedPage(browser, `e2e-cat-url-${runId}`, true)
@@ -122,13 +122,13 @@ test('the chosen catalog and the search live in the URL', async ({ browser }) =>
 })
 
 /**
- * The gesture the canvas exists for (ADR-12 §7): a proposal floats, connected to nothing, until the admin
- * drags it onto a group's head - and then it is an accepted synonym of that group (ADR-12 §3).
+ * The gesture the canvas exists for: a proposal floats, connected to nothing, until the admin
+ * drags it onto a group's head - and then it is an accepted synonym of that group.
  */
 test('connecting a floating proposal to a group accepts it into that group', async ({ browser }) => {
   const { context, page, accessToken } = await newAuthenticatedPage(browser, `e2e-cat-float-${runId}`, true)
   const headers = { Authorization: `Bearer ${accessToken}` }
-  // The `E2E ` prefix is what the suite's cleanup deletes (ADR-24 §3): a proposal cannot be deleted from the
+  // The `E2E ` prefix is what the suite's cleanup deletes: a proposal cannot be deleted from the
   // API, only rejected or disabled, so without it every run would leave one more row behind.
   const name = `E2E flotante ${runId}`
 
@@ -151,7 +151,7 @@ test('connecting a floating proposal to a group accepts it into that group', asy
 })
 
 /**
- * ADR-12 §5 in full, from the node's menu - the keyboard's way to everything the canvas does. A
+ * Disabling and restoring a value in full, from the node's menu - the keyboard's way to everything the canvas does. A
  * standalone tag from the seed is used, one with no synonyms, so disabling it does not have to
  * choose a successor; that path has an integration test of its own.
  */

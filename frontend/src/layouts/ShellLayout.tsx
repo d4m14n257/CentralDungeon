@@ -8,7 +8,7 @@ import { AppHeader } from './components/AppHeader'
  * It serves the screens that belong to no context - the inbox, support, the reader's own week and files,
  * the two profiles - and the 404 of an address outside every context, which is exactly why it has no
  * nav to show: their sections are not a context's sections. The header keeps
- * reporting whichever context the reader came from (ADR-20 §2).
+ * reporting whichever context the reader came from.
  */
 export function ShellLayout() {
   return (

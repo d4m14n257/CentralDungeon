@@ -17,31 +17,31 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 /**
  * Who holds which global role, and who is allowed to change that.
  *
- * <p><b>The granting is the rule, not the door</b> (roles-y-alcance.md §4). The controller's
+ * <p><b>The granting is the rule, not the door</b>. The controller's
  * {@code @PreAuthorize} says {@code hasAnyRole('ADMIN','OWNER')} and stops there, because the line
  * between the two is not a role check: an admin may move Player and Master and nothing else, and
  * that sentence cannot be written in an annotation without either a {@code RoleHierarchy} - which
- * this project refuses (ADR-06 §1, ADR-05 §4) - or a second endpoint that does the same thing with a
+ * this project refuses - or a second endpoint that does the same thing with a
  * different guard. So it lives here, once, and every path into a role change goes through it. When
- * F3.2 approves a "please make me a master" request, it calls this service; it does not grow a
+ * an admin approves a "please make me a master" request, the approval calls this service; it does not grow a
  * second way to write the same row.
  *
  * <p>Five rules are worth naming because none of them is obvious from the table:
  *
  * <ul>
- *   <li><b>Owner is not granted from the application</b> (ADR-06 §1). {@link #grantRole} refuses it
+ *   <li><b>Owner is not granted from the application</b>. {@link #grantRole} refuses it
  *       for every actor, an Owner included; for now the role is given from the database only.
  *       Taking it away is still possible, with the guards below.</li>
- *   <li><b>Admin and Owner never coexist</b> (ADR-06 §1). Granting Admin to an Owner revokes Owner,
+ *   <li><b>Admin and Owner never coexist</b>. Granting Admin to an Owner revokes Owner,
  *       in the same transaction, and the revocation gets an audit row of its own - burying it inside
  *       the grant would lose exactly the event somebody would go looking for.</li>
  *   <li><b>The platform is never left without an Owner.</b> The only global invariant of roles, and
  *       MySQL cannot express it, so it is checked here - <em>before</em> anything is written, so a
  *       refused operation leaves no half of itself behind.</li>
- *   <li><b>Restoring a revoked role flips a row, never inserts one</b> (ADR-03 §7). The key of
+ *   <li><b>Restoring a revoked role flips a row, never inserts one</b>. The key of
  *       {@code users_roles} is {@code (user_id, role_id)}: there is only ever one row per pair, and
  *       {@link UserRoleRepository#findAllGrants} exists for this exact write.</li>
- *   <li><b>Every change evicts the auth cache</b> (ADR-05 §3). The TTL is the revocation window, and a
+ *   <li><b>Every change evicts the auth cache</b>. The TTL is the revocation window, and a
  *       demotion that takes a minute to apply is a demotion that did not happen yet.</li>
  * </ul>
  */
@@ -96,14 +96,14 @@ public class UserRoleService {
      * @param targetId      the person the role is given to
      * @param role          the role to grant
      * @param justification why, for the audit row. Never blank - the request validates it
-     * @param actor         the actor, from the token (ADR-05 §5)
+     * @param actor         the actor, from the token
      * @return the person afterwards, so the screen does not have to re-fetch
      * @throws ForbiddenActionException 403 {@code OWNER_NOT_GRANTABLE} when the role is Owner, whoever
      *                                  asks; 403 {@code ROLE_GRANT_FORBIDDEN} when an admin reaches
      *                                  for Admin
      * @throws NotFoundException        404 when nobody has that id
      * @throws ConflictException        409 {@code CANNOT_REVOKE_OWN_OWNER} when an Owner grants Admin to
-     *                                  themselves, which the exclusion of ADR-06 §1 turns into
+     *                                  themselves, which the Admin/Owner exclusion turns into
      *                                  taking away their own Owner; 409 {@code LAST_OWNER} when the
      *                                  same exclusion would take Owner away from the last one left
      * @implNote Two simultaneous grants of the same role must write one audit row, so the second decides
@@ -182,7 +182,7 @@ public class UserRoleService {
 
     /**
      * Takes a role away. The row of {@code users_roles} stays and its status flips: the record of
-     * who once held what is worth keeping (ADR-03 §7).
+     * who once held what is worth keeping.
      *
      * <p>Idempotent, like {@link #grantRole}: revoking a role that was already revoked, or that the
      * person never held, is a no-op with no audit row and a 200.
@@ -190,7 +190,7 @@ public class UserRoleService {
      * @param targetId      the person the role is taken from
      * @param role          the role to revoke
      * @param justification why, for the audit row
-     * @param actor         the actor, from the token (ADR-05 §5)
+     * @param actor         the actor, from the token
      * @return the person afterwards
      * @throws ForbiddenActionException 403 {@code ROLE_GRANT_FORBIDDEN} when an admin reaches for
      *                                  Admin or Owner
@@ -263,7 +263,7 @@ public class UserRoleService {
 
     /**
      * Who may move which rank. An admin moves Player and Master; Admin and Owner are an Owner's to
-     * give and to take (roles-y-alcance.md §3).
+     * give and to take.
      *
      * <p>403 and not 400 on purpose: the request is perfectly well formed, and what makes it fail is
      * who sent it.
@@ -291,7 +291,7 @@ public class UserRoleService {
      * the same moment each saw the other still live, each concluded somebody would remain, and the
      * platform ended with nobody who could grant Owner back - a state with no way in from outside,
      * which is the entire reason the rule exists. The same hole opened from the other side, through
-     * promotions to Admin, because the exclusion of ADR-06 §1 revokes Owner as a side effect.
+     * promotions to Admin, because the Admin/Owner exclusion revokes Owner as a side effect.
      *
      * <ol>
      *   <li>{@link RoleRepository#lockByName} on the Owner row: a single, always-present row that
@@ -336,7 +336,7 @@ public class UserRoleService {
      * between the eviction and the commit: a concurrent request misses the cache, reads the rows as
      * they were <em>before</em> the commit, and repopulates {@code userAuth} with the answer the
      * change was meant to replace - where it then survives the full TTL. That is the exact hole
-     * ADR-05 §3 exists to close, so the eviction waits for {@code afterCommit}.
+     * the role cache must not have, so the eviction waits for {@code afterCommit}.
      *
      * <p>Called without a transaction - a unit test, or a future caller that forgets one - it
      * evicts immediately, which is the best that can be done when there is no commit to wait for.

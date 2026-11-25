@@ -25,15 +25,15 @@ const BOARD_GROUPS = [
 export interface TaskBoardListProps {
   /** The table's tasks, oldest first. */
   tasks: TableTask[]
-  /** Called with the task to correct; never offered on a closed one. Absent for a reader who may not change it - an admin (ADR-06 §8). */
+  /** Called with the task to correct; never offered on a closed one. Absent for a reader who may not change it - an admin. */
   onEdit?: ((task: TableTask) => void) | undefined
-  /** Called with the task whose intake should end. Absent for a reader who may not end it (ADR-06 §8). */
+  /** Called with the task whose intake should end. Absent for a reader who may not end it. */
   onClose?: ((task: TableTask) => void) | undefined
   /** Whether a mutation is in flight, so the row actions can say so. */
   isBusy: boolean
   /** How to render the files of an answer — see `TaskSubmissionsPanel` for why it is a prop. */
   renderFiles: (files: SubmittedFile[]) => ReactNode
-  /** Opens a person's card (ADR-10 §6): the addressee of an individual request, and whoever answered. Absent, no action. */
+  /** Opens a person's card: the addressee of an individual request, and whoever answered. Absent, no action. */
   onOpenPerson?: ((userId: string) => void) | undefined
 }
 

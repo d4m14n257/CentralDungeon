@@ -72,7 +72,7 @@ beforeEach(() => {
 
 describe('AdminUsersPage', () => {
   /**
-   * The proof of §3's matrix on the screen, and of principle 2: **absent, not disabled**. An admin
+   * The proof of the role matrix on the screen: **absent, not disabled**. An admin
    * opening this page has a way to make somebody a master and no way at all to make somebody an
    * admin — the dialog's role list is the whole of what is on offer, and it does not contain the rank.
    */
@@ -92,7 +92,7 @@ describe('AdminUsersPage', () => {
     expect(dialog.getByText(/el rol Admin lo mueve solo un owner/)).toBeInTheDocument()
   })
 
-  /** Owner is not granted from the application (ADR-06 §1): the owner is offered three and told so. */
+  /** Owner is not granted from the application: the owner is offered three and told so. */
   it('the owner is offered Player, Master and Admin and never Owner to grant', async () => {
     signedInAs('Owner')
     list.mockResolvedValue(page([account()]))
@@ -152,7 +152,7 @@ describe('AdminUsersPage', () => {
 
   /**
    * Reading the record is not an action on the account, so it survives on a row nobody may touch.
-   * Since ADR-06 §8 it opens the whole record, where the history now lives.
+   * It opens the whole record, where the history now lives.
    */
   it('offers the record on every row, even the untouchable ones', async () => {
     signedInAs('Admin')
@@ -164,7 +164,7 @@ describe('AdminUsersPage', () => {
     expect(row.getByRole('button', { name: 'Ver ficha' })).toBeInTheDocument()
   })
 
-  /** ADR-20 §1: no guard in the router, so the 403 has to land somewhere that explains itself. */
+  /** No guard in the router, so the 403 has to land somewhere that explains itself. */
   it('paints the forbidden state when the backend refuses the listing', async () => {
     signedInAs('Player')
     list.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
@@ -174,7 +174,7 @@ describe('AdminUsersPage', () => {
     await waitFor(() => expect(screen.getByText('No tienes permiso')).toBeInTheDocument())
   })
 
-  /** The four states of ADR-19 §4; this is the one that is easiest to leave out. */
+  /** One of the four mandatory states; this is the one that is easiest to leave out. */
   it('says the search found nobody, differently from having no accounts at all', async () => {
     signedInAs('Admin')
     list.mockResolvedValue(page([]))
@@ -185,9 +185,9 @@ describe('AdminUsersPage', () => {
   })
 
   /**
-   * Point 8 of plan-desarrollo.md §6 (ADR-20 §5): the help is raised from the screen that prompts
-   * the question, and the search help documents **this** box's commands rather than a fixed list
-   * (ADR-22 §3). `/role` and `/status` are written once, in `adminUserSearchFields`, and the box hands
+   * The help is raised from the screen that prompts
+   * the question, and the search help documents **this** box's commands rather than a fixed list.
+   * `/role` and `/status` are written once, in `adminUserSearchFields`, and the box hands
    * them over - so this is what proves they reach the reader without being spelled out twice.
    */
   it('documents its own search commands, /role and /status among them', async () => {
@@ -208,7 +208,7 @@ describe('AdminUsersPage', () => {
     expect(dialog.queryByText(/file_name/)).not.toBeInTheDocument()
   })
 
-  /** The explanation of who may grant what, raised from the header (ADR-20 §5). */
+  /** The explanation of who may grant what, raised from the header. */
   it('offers the roles help from the screen itself', async () => {
     signedInAs('Admin')
     list.mockResolvedValue(page([account()]))
@@ -227,7 +227,7 @@ describe('AdminUsersPage', () => {
     renderPage()
     const row = await rowFor('dami')
 
-    // The order of ADR-07 §8, whatever order the server sent them in.
+    // The roles' canonical order, whatever order the server sent them in.
     expect(row.getAllByRole('listitem').map((chip) => chip.textContent)).toEqual(['Jugador', 'Master'])
     expect(row.getByText('Bloqueada')).toBeInTheDocument()
   })

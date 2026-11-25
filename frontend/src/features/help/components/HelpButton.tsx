@@ -12,18 +12,18 @@ export interface HelpButtonProps extends HelpSectionBodyProps {
   /** Which piece of help to open. */
   section: HelpSectionId
   /**
-   * `default` for a screen's header, `sm` for a section's (ADR-21 §5). Both say «Cómo funciona»: the
+   * `default` for a screen's header, `sm` for a section's. Both say "how it works": the
    * place tells the reader what "this" is.
    */
   size?: 'default' | 'sm'
 }
 
 /**
- * «Cómo funciona» for a whole screen or a whole section, always in the same place: the right end of
- * the header, before the main action (ADR-21 §5).
+ * The "how it works" button for a whole screen or a whole section, always in the same place: the right end of
+ * the header, before the main action.
  *
  * **Not the same thing as `HelpLink`.** A `HelpLink` sits inside a sentence next to one control —
- * "para pausar la mesa… cómo pausar" — and belongs where the thing it explains is. This one answers
+ * "to pause the table… how to pause" — and belongs where the thing it explains is. This one answers
  * "how does this screen work", and until it had a fixed place every screen put it somewhere else:
  * across from the title, under it, at the bottom of the page, or nowhere.
  *

@@ -7,11 +7,11 @@ import { acceptReview } from './helpers/review'
 import { runnableTableBody } from './helpers/tableApi'
 
 /**
- * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
- * of ADR-08 §2 that can be seen from the interface.
+ * Table schedules end to end, against the real backend: the complete wizard with an agenda, and the two
+ * overlap rules that can be seen from the interface (one master, and one player).
  *
  * What no unit test can prove and this does: that the time a master types in their own zone travels
- * as UTC and is read back in their zone (ADR-03 §6), and that a clash is refused **with the reason on
+ * as UTC and is read back in their zone, and that a clash is refused **with the reason on
  * screen** — the 409 naming the table it collides with, not a "could not save".
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
@@ -48,13 +48,13 @@ async function fillWizard(page: Page, name: string, hourtime: string) {
   await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // A system and a platform are required now (ADR-07 §3), so the catalogs step is filled in, not skipped.
+  // A system and a platform are required, so the catalogs step is filled in, not skipped.
   await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
   await addScheduleSlot(page, hourtime)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
+  // The files step: nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -62,8 +62,8 @@ async function fillWizard(page: Page, name: string, hourtime: string) {
 }
 
 /**
- * F1.2's central scenario: the master builds a table with a real agenda and reads it back in their
- * own time, with the UTC equivalent in view while they type it (ADR-03 §6).
+ * The central scenario: the master builds a table with a real agenda and reads it back in their
+ * own time, with the UTC equivalent in view while they type it.
  */
 test('a master builds a table with a real weekly agenda through the wizard', async ({ browser }) => {
   const tableName = `Mesa Con Agenda E2E ${runId}`
@@ -78,12 +78,12 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
     await addScheduleSlot(master.page, FRIDAY_EVENING)
 
-    // The slot reads in local time and says underneath what gets stored: it is the half of ADR-03 §6 that shows.
+    // The slot reads in local time and says underneath what gets stored: it is the half of the time handling that shows.
     await expect(master.page.getByText(`Viernes ${FRIDAY_EVENING}–23:00`)).toBeVisible()
     await expect(master.page.getByText(/^En UTC:/)).toBeVisible()
 
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
-    // The files step (ADR-08 §1): nothing is required there.
+    // The files step: nothing is required there.
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
 
     // The last step is the summary: the agenda shows before anything is sent for review.
@@ -99,9 +99,9 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
 })
 
 /**
- * R1 of ADR-08 §2, with the reason on screen: the same master's second table in the same slot is refused
+ * The master-side overlap rule, with the reason on screen: the same master's second table in the same slot is refused
  * with a 409 that **names** the table it collides with. A "could not save" here would be exactly the
- * unexplained grey button that principle 2 of diseno §1 forbids.
+ * unexplained grey button: a refusal must say why.
  */
 test('a master cannot run two tables in the same slot, and is told which one it clashes with', async ({ browser }) => {
   const firstName = `Mesa Choque A E2E ${runId}`
@@ -113,7 +113,7 @@ test('a master cannot run two tables in the same slot, and is told which one it 
     await expect(master.page.getByRole('heading', { name: firstName })).toBeVisible()
 
     // Building a second table, the hour the first one holds is not on offer at all: the grid draws
-    // what ADR-08 §2 measures, so the clash is prevented rather than refused afterwards (ADR-08 §6, §1).
+    // what the overlap rule measures, so the clash is prevented rather than refused afterwards.
     await master.page.goto('/master/tables/new')
     await master.page.getByRole('textbox', { name: 'Nombre' }).fill(secondName)
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
@@ -133,7 +133,7 @@ test('a master cannot run two tables in the same slot, and is told which one it 
 })
 
 /**
- * R2 of ADR-08 §2 from the player's side: a table that overlaps one they already play at shows warned in
+ * The player-side overlap rule: a table that overlaps one they already play at shows warned in
  * the explorer, and the apply button explains why it cannot be used.
  */
 test('a player sees the clash warning and cannot apply to a table that overlaps one they play at', async ({ browser }) => {
@@ -145,11 +145,11 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
   const player = await newAuthenticatedPage(browser, playerDiscordId, false, false)
 
   try {
-    // Two tables from two different masters in the same slot: from the same one, R1 would refuse.
+    // Two tables from two different masters in the same slot: from the same one, the master-side rule would refuse.
     await fillWizard(master.page, firstTable, FRIDAY_EVENING)
     await expect(master.page.getByRole('heading', { name: firstTable })).toBeVisible()
     const firstId = master.page.url().split('/master/tables/')[1] as string
-    // Both have to reach an admin, and a draft reaches nobody (ADR-07 §1).
+    // Both have to reach an admin, and a draft reaches nobody.
     await submitForReview(master.page, firstId)
 
     const otherMaster = await newAuthenticatedPage(browser, `e2e-clash-m3-${runId}`, true, false)

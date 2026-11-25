@@ -6,14 +6,14 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * What somebody is asking for. One mechanism, several requests (ADR-16 §1).
+ * What somebody is asking for. One mechanism, several requests.
  *
- * <p><b>Five now, and the last two arrived with their producer.</b> F3.2 declared three and wrote
- * down why: {@code TablePause} and {@code PlayerBan} had nobody to emit them, and «declararlos hoy
- * crearía dos valores de enum que nada emite - que es exactamente el huérfano que F1.7 relevó en
- * {@code PauseRequested}». F3.4 is where both producers were built, so both constants land here at
- * the same time. That is also ADR-16 §2 paying off: the column is a {@code VARCHAR(32)}, so adding a flow
- * was adding a constant and never an {@code ALTER TABLE}.
+ * <p><b>Five now, and the last two arrived with their producer.</b> The first three were declared
+ * on their own because {@code TablePause} and {@code PlayerBan} had nobody to emit them: declaring
+ * them early would have created two enum values nothing emits, the same orphan that
+ * {@code PauseRequested} used to be. Both constants landed here together with the flows that
+ * produce them. That is also the polymorphic reference paying off: the column is a
+ * {@code VARCHAR(32)}, so adding a flow was adding a constant and never an {@code ALTER TABLE}.
  *
  * <p><b>The two new ones point somewhere other than the requester</b>, which the first three never
  * did. That is what {@link ApprovalEntityResolver}'s switch was left throwing for: a type whose
@@ -21,26 +21,27 @@ import java.util.Optional;
  * for ever in the orphan sweep.
  *
  * <p><b>Every type carries the kind of entity its request is about</b> ({@link #entityType()}). The
- * reference is polymorphic and has no foreign key (ADR-16 §2), so the pair
+ * reference is polymorphic and has no foreign key, so the pair
  * {@code entity_type}/{@code entity_id} is resolved by the service and by
  * {@link ApprovalOrphanCheckService}, never by a {@code @ManyToOne}. The first three types below all answer
  * {@code "user"}: {@code TableOpen} asks for a table that does not exist yet and {@code General} is
  * about no entity at all, and both columns are {@code NOT NULL} - so they point at the person who
- * asked, which is true and keeps the invariant of ADR-16 §2 without a nullable column per flow (ADR-16 §2).
- * The two F3.4 added point at a {@code game_table} and at a {@code table_registration}.
+ * asked, which is true and keeps the invariant that both columns are always set without a
+ * nullable column per flow. The last two point at a {@code game_table} and at a
+ * {@code table_registration}.
  */
 public enum ApprovalRequestType {
 
     /**
      * "Make me a master." Approving it grants {@code PlatformRole.MASTER} through
-     * {@code UserRoleService}, the one place a role is ever written (roles-y-alcance.md §4).
+     * {@code UserRoleService}, the one place a role is ever written.
      */
     MasterGrant(ApprovalEntityResolver.USER),
 
     /**
      * "Open a table, there is nothing to play." Approving it records that the request stands; it does
-     * <b>not</b> create the table. The admin creates it {@code Unassigned} and assigns a master (ADR-06 §7),
-     * which is the same circuit seen from its other end (ADR-16 §1). Creating it automatically is not a
+     * <b>not</b> create the table. The admin creates it {@code Unassigned} and assigns a master,
+     * which is the same circuit seen from its other end. Creating it automatically is not a
      * choice that was refused - it is impossible: the request carries no name, no system, no seats and
      * no agenda.
      */
@@ -50,15 +51,15 @@ public enum ApprovalRequestType {
     General(ApprovalEntityResolver.USER),
 
     /**
-     * "Pause my table." The master asks, an admin answers (ADR-07 §2).
+     * "Pause my table." The master asks, an admin answers.
      *
      * <p>The first type whose entity is not the requester: it points at the {@code game_table},
      * because the request is about the table and a co-master reading the tray has to see which one.
      * Submitting it moves the table to {@code PauseRequested} in the same transaction - which is how
-     * a state that F1.7 surveyed as an orphan finally gets a producer.
+     * a state that used to be an orphan finally gets a producer.
      *
      * <p>Approving moves it to {@code Pause} with the resolution note as the justification
-     * {@code table_status_changes} requires (ADR-07 §2). <b>Rejecting has an effect too</b>, which no type
+     * {@code table_status_changes} requires. <b>Rejecting has an effect too</b>, which no type
      * before this one had: the table goes back to {@code InProgress}. A table left sitting in
      * {@code PauseRequested} after being told no would be a table stuck in a waiting room.
      *
@@ -91,7 +92,7 @@ public enum ApprovalRequestType {
      * same string today - and would stop the day a constant is renamed or a type is added with a
      * different wire name. {@code PlatformRole} learned that the expensive way: it crossed HTTP
      * without this and every request naming a role answered 400 while every response published the
-     * value it rejected (ADR-04 §5). One method defines the spelling for reading and for writing at once,
+     * value it rejected. One method defines the spelling for reading and for writing at once,
      * so the two cannot drift, and {@code ApprovalRequestTypeJsonTest} pins both directions.
      *
      * @return the wire name, never null
@@ -105,7 +106,7 @@ public enum ApprovalRequestType {
      * What kind of entity a request of this type is about.
      *
      * <p>The service asks this <em>before</em> inserting and again before resolving, and the orphan
-     * sweep asks it of every unresolved row. Keeping the answer on the type is what lets F3.4 add a
+     * sweep asks it of every unresolved row. Keeping the answer on the type is what lets a new
      * flow pointing at a {@code game_table} without touching either of them.
      *
      * @return the entity type, as {@code approval_requests.entity_type} spells it
@@ -122,7 +123,7 @@ public enum ApprovalRequestType {
      * {@link #wireName()}'s {@code @JsonValue}, and as literal text inside {@code ?q=} when somebody
      * types {@code /request_type MasterGrant}. This one is the forgiving door - a search box has to
      * survive being typed into, so it matches case-insensitively and an unknown name is simply
-     * nobody rather than a 400 (arquitectura §2.5).
+     * nobody rather than a 400.
      *
      * @param wireName a type name, in any case
      * @return the matching constant, or empty when it is not one of the five

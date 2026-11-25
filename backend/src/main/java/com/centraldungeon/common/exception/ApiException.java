@@ -9,13 +9,13 @@ import org.springframework.http.HttpStatus;
  * correctly.
  *
  * <p>Sealed: the five subclasses below are the whole vocabulary of intentional failure, and keeping
- * it closed is what lets a {@code switch} over them stay exhaustive (arquitectura §2.4). Anything
+ * it closed is what lets a {@code switch} over them stay exhaustive. Anything
  * that is not one of these is a bug, and a bug answers 500.
  *
- * <p><b>The message is for whoever is reading a log, not for the person on the screen</b> (ADR-23 §3). It
+ * <p><b>The message is for whoever is reading a log, not for the person on the screen</b>. It
  * is written in English like the rest of the code; what the user reads is rendered by the frontend
  * from {@link #getErrorCode()} and {@link #getErrorParams()}, in whichever language they picked.
- * Before ADR-23 §3 the clash message of ADR-04 §4 was written in Spanish precisely because it was shown
+ * The schedule clash message used to be written in Spanish precisely because it was shown
  * verbatim - that is what stopped being true.
  */
 public sealed abstract class ApiException extends RuntimeException
@@ -30,8 +30,8 @@ public sealed abstract class ApiException extends RuntimeException
     /**
      * The values the frontend's translated message needs, keyed by placeholder name.
      *
-     * <p>An open map rather than a named record, unlike everything else that crosses HTTP (regla
-     * dura 3): this is not a response body but an RFC 9457 <em>extension member</em>, which is the
+     * <p>An open map rather than a named record, unlike everything else that crosses HTTP:
+     * this is not a response body but an RFC 9457 <em>extension member</em>, which is the
      * mechanism the standard defines for exactly this, and every error carries different values.
      * Naming a record per error code would be one type per message and none of them reused.
      */
@@ -41,7 +41,7 @@ public sealed abstract class ApiException extends RuntimeException
      * @param status    the HTTP status this failure maps to
      * @param errorCode the stable code that travels in the {@code ProblemDetail}
      * @param message   the developer-facing detail, in English. It reaches the client but is not what
-     *                  the client shows (ADR-23 §3)
+     *                  the client shows
      */
     protected ApiException(HttpStatus status, String errorCode, String message) {
         this(status, errorCode, message, Map.of());

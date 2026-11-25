@@ -19,11 +19,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * Something that happened and that one person needs to know about. Table {@code notifications}.
  *
- * <p>A row, not a push: the WebSocket that makes them arrive live is F6 (ADR-18 §2). Until then the bell does not poll - it
- * refreshes when it is opened or after a mutation - and when the socket does land it carries an invalidation signal rather than the data - the row
- * here stays the single source of truth (arquitectura §3.3).
+ * <p>A row, not a push: the WebSocket that would make them arrive live does not exist yet. Until then the bell does not poll - it
+ * refreshes when it is opened or after a mutation - and when the socket does land it carries an invalidation
+ * signal rather than the data - the row here stays the single source of truth.
  *
- * <p><b>A row stores what happened, not the sentence describing it</b> (ADR-23 §3). It is written once
+ * <p><b>A row stores what happened, not the sentence describing it</b>. It is written once
  * and read for months, and the reader can change the application's language in between, so the type
  * plus {@link #getParams()} is what travels and the frontend renders the sentence. {@code title} and
  * {@code message} survive only for the rows written before that change.
@@ -51,18 +51,18 @@ public class Notification {
     private NotificationType notificationType;
 
     /**
-     * The frozen headline of a row written before ADR-23 §3, in the language of the day. Null on every
+     * The frozen headline of a row written before notification text moved to the client, in the language of the day. Null on every
      * row written since: the bell renders the title from the type and the parameters instead.
      */
     @Column(length = 128)
     private @Nullable String title;
 
-    /** The frozen detail of a row written before ADR-23 §3. Null on every row written since. */
+    /** The frozen detail of a row written before notification text moved to the client. Null on every row written since. */
     @Column(length = 1024)
     private @Nullable String message;
 
     /**
-     * The names the rendered sentence needs (ADR-23 §3). Null only on rows written before that change,
+     * The names the rendered sentence needs. Null only on rows written before that change,
      * which is exactly when the frozen {@link #title} and {@link #message} are used instead.
      */
     @Convert(converter = NotificationParamsConverter.class)
@@ -98,7 +98,7 @@ public class Notification {
      * Emits a notification, unread.
      *
      * <p>No text: the sentence is rendered by whoever reads it, from the type and these parameters,
-     * in the language they chose (ADR-23 §3).
+     * in the language they chose.
      *
      * @param user              the recipient
      * @param notificationType  which event this is. It decides which sentence gets rendered
@@ -150,7 +150,7 @@ public class Notification {
     /**
      * Returns the recipient.
      *
-     * @return the user, lazily loaded. Compared against the actor before any read (ADR-05 §5)
+     * @return the user, lazily loaded. Compared against the actor before any read
      */
     public User getUser() {
         return user;
@@ -166,7 +166,7 @@ public class Notification {
     }
 
     /**
-     * Returns the frozen headline of a row written before ADR-23 §3.
+     * Returns the frozen headline of a row written before notification text moved to the client.
      *
      * @return the stored title, or null on any row written since - those render their sentence from
      *         the type and the parameters instead
@@ -176,7 +176,7 @@ public class Notification {
     }
 
     /**
-     * Returns the frozen detail of a row written before ADR-23 §3.
+     * Returns the frozen detail of a row written before notification text moved to the client.
      *
      * @return the stored message, or null
      */
@@ -185,7 +185,7 @@ public class Notification {
     }
 
     /**
-     * Returns the names the rendered sentence needs (ADR-23 §3).
+     * Returns the names the rendered sentence needs.
      *
      * @return the parameters, or null on a row written before the change - which is when the frozen
      *         {@link #getTitle()} and {@link #getMessage()} are what gets shown

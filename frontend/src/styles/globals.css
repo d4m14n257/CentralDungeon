@@ -4,7 +4,7 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* CentralDungeon design tokens — Tailwind 4 @theme block.
-   Source of truth: the design system (decision ADR-21 §1).
+   Source of truth: the design system.
    Transcribed into frontend/src/styles/globals.css. */
 
 @theme {
@@ -129,7 +129,7 @@
   --color-input: var(--color-border);
   --color-ring: var(--color-brand-500);
 
-  /* -- brand gradient: measured from links.centraldungeon.org (ADR-21 §2) -- */
+  /* -- brand gradient: measured from links.centraldungeon.org -- */
   --gradient-brand: linear-gradient(-45deg, #214b90, #070c12, #211949, #3e308b);
 
   /* -- accent used as text (karma, links, the wordmark's second half) -- */

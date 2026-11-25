@@ -28,13 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code /admin/users}: the people of the platform, seen by whoever administers them.
  *
  * <p>Admin and Owner are enumerated explicitly on every method. There is no {@code RoleHierarchy} in
- * this project: an Owner can do everything an Admin can by being listed, not by inheriting (ADR-06 §1,
- * ADR-06 §1, ADR-05 §4). And the annotation is where the guard <em>stops</em> - the line between the two roles
- * is a rule about what is being granted, so it lives in {@link UserRoleService} and in
- * {@link AdminUserService}, not up here (roles-y-alcance.md §4).
+ * this project: an Owner can do everything an Admin can by being listed, not by inheriting. And the
+ * annotation is where the guard <em>stops</em> - the line between the two roles is a rule about what is being
+ * granted, so it lives in {@link UserRoleService} and in {@link AdminUserService}, not up here.
  *
- * <p>The actor always comes from {@code @AuthenticationPrincipal}, never from the path or the body
- * (arquitectura §2.6). The {@code {id}} in these routes is the <b>target</b>, and it is the only
+ * <p>The actor always comes from {@code @AuthenticationPrincipal}, never from the path or the body.
+ * The {@code {id}} in these routes is the <b>target</b>, and it is the only
  * controller in the application where the two are different people on purpose.
  */
 @RestController
@@ -60,10 +59,10 @@ public class AdminUserController {
      * The listing. Sees blocked and deleted accounts, which {@code GET /users/search} deliberately
      * does not.
      *
-     * @param q        the search box, in the language of ADR-22 §1: bare text matches either name, and
+     * @param q        the search box, in the admin search language: bare text matches either name, and
      *                 {@code /discord_name}, {@code /user_name}, {@code /role} and {@code /status}
      *                 narrow it. Null or blank lists everybody
-     * @param pageable page, size and sort; by Discord handle, with a tie-break by id (ADR-07 §9, ADR-04 §6)
+     * @param pageable page, size and sort; by Discord handle, with a tie-break by id
      * @return 200 with one page of people
      */
     @GetMapping
@@ -96,10 +95,10 @@ public class AdminUserController {
      *
      * @param id          the person the role is given to
      * @param request     which role, and why
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with the person afterwards. 403 when the role is Owner (nobody is granted it
      *         here) or when an admin reaches for Admin, 404 when the person does not exist, 409
-     *         when the exclusion of ADR-06 §1 would leave no owner
+     *         when the Admin/Owner exclusion would leave no owner
      */
     @PostMapping("/{id}/grant-role")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
@@ -111,11 +110,11 @@ public class AdminUserController {
     }
 
     /**
-     * Takes a role away. The grant is marked, never deleted (ADR-03 §7).
+     * Takes a role away. The grant is marked, never deleted.
      *
      * @param id          the person the role is taken from
      * @param request     which role, and why
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with the person afterwards. 403 when an admin reaches for Admin or Owner, 404 when
      *         the person does not exist, 409 when an owner tries to step down or is the last one
      */
@@ -129,11 +128,11 @@ public class AdminUserController {
     }
 
     /**
-     * Blocks an account (ADR-05 §7). Their data is kept; only the door closes.
+     * Blocks an account. Their data is kept; only the door closes.
      *
      * @param id          the account to block
      * @param request     why
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with the account afterwards. 403 when the target holds Admin or Owner, 404 when
      *         they do not exist, 409 when the account is not Allowed
      */
@@ -151,7 +150,7 @@ public class AdminUserController {
      *
      * @param id          the account to unblock
      * @param request     why
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with the account afterwards. 404 when they do not exist, 409 when the account is
      *         not Blocked
      */

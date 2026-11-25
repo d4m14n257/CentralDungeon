@@ -6,12 +6,12 @@ import { masterTableFilesPath, myTableDetailPath } from '@/config/paths'
 import type { FileUsage } from '../types'
 
 interface FileUsageChipsProps {
-  /** Where the file is being used (ADR-14 §3). An empty array is a meaningful answer, not a missing one. */
+  /** Where the file is being used. An empty array is a meaningful answer, not a missing one. */
   usages: FileUsage[]
 }
 
 /**
- * Where a file is being used, as chips (ADR-14 §3).
+ * Where a file is being used, as chips.
  *
  * **This is the classification, shown.** The origin of a file — a player's, a master's — is not a
  * column on the row but a fact about each place it is used, because the same character sheet can be
@@ -19,10 +19,10 @@ interface FileUsageChipsProps {
  * screen shows the uses rather than a label, and a file with two of them shows two.
  *
  * **The empty case is the point of the component, not its degenerate state.** A file nothing points
- * at is the one the purge of ADR-13 §3 will reach first, and saying so plainly — "sin usar" — is what lets
+ * at is the one the purge will reach first, and saying so plainly — "sin usar" — is what lets
  * somebody notice before it goes quiet, without the screen ever having to explain retention.
  *
- * **Each table links to the reader's own view of it** (ADR-14 §3): the master's Files tab for a table
+ * **Each table links to the reader's own view of it**: the master's Files tab for a table
  * they run, the player's table for one they play at, and the plain name for neither. The backend says
  * which, because directing a table is not deduced from the role.
  *
@@ -40,7 +40,7 @@ export function FileUsageChips({ usages }: FileUsageChipsProps) {
       {usages.map((usage) => {
         const href = usageHref(usage)
         // `tableName` and not `context`: i18next reserves `context` for its own key resolution,
-        // so passing the table's name under it would look up `usage.Table_Hijos del Vacío`.
+        // so passing the table's name under it would look up `usage.Table_<table name>`.
         const text = t(`usage.${usage.category}`, { tableName: usage.contextName })
         const chip = 'bg-muted text-fg-muted inline-flex items-center rounded-md px-2 py-0.5 text-xs'
         return href === null ? (

@@ -10,8 +10,8 @@ interface AttachedFile {
 /**
  * Applies to a table from its public detail, walking the dialog's two steps.
  *
- * **The second step arrived with F2.2 and broke four specs at once** (ADR-13 §5, ADR-09 §2). Applying used to
- * be one form: open the dialog, press «Postularme», done. Now the dialog is *write and attach* →
+ * **The second step broke four specs at once when it arrived.** Applying used to
+ * be one form: open the dialog, press the apply button, done. Now the dialog is *write and attach* →
  * *review and send*, because an application cannot be edited once it is sent and the character sheet
  * that goes with it is attached forever. Every spec that only cared about *being* a player — to test
  * sessions, tasks or a schedule clash — was pressing the same button twice and timing out on a dialog
@@ -25,7 +25,7 @@ interface AttachedFile {
  *                with neither is valid and is what most specs want
  */
 export async function applyToTable(page: Page, options: { message?: string; files?: AttachedFile[] } = {}): Promise<void> {
-  // A rejected reader has no header button: the way back in is «Postularme de nuevo», in the notice.
+  // A rejected reader has no header button: the way back in is the "apply again" button, in the notice.
   await page.getByRole('button', { name: /^Postularme( de nuevo)?$/ }).click()
   const dialog = page.getByRole('dialog')
 

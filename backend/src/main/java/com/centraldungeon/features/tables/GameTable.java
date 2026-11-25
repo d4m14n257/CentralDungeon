@@ -22,13 +22,13 @@ import org.jspecify.annotations.Nullable;
  * file that maps an entity. Same reason {@code GameSystem} is not {@code System}.
  *
  * <p>Its lifecycle is a nine-state machine driven entirely by {@link GameTableService}, never by a
- * setter called from outside it (ADR-07 §1). Who runs the table is
- * <b>not</b> a column here: it is a row in {@code masters} (ADR-06 §4), and who plays in it is a row in
+ * setter called from outside it. Who runs the table is
+ * <b>not</b> a column here: it is a row in {@code masters}, and who plays in it is a row in
  * {@code table_registrations}.
  *
- * <p>{@code claimed_by} / {@code claimed_at} are the admin queue's reservation (ADR-16 §5). They arrived
- * with F3.3 and needed <b>no migration</b>: {@code V1__baseline.sql} declared both columns and the
- * foreign key from the start, exactly as the note that used to sit here promised (arquitectura §4.4).
+ * <p>{@code claimed_by} / {@code claimed_at} are the admin queue's reservation. They needed
+ * <b>no migration</b>: {@code V1__baseline.sql} declared both columns and the
+ * foreign key from the start.
  * Only {@link com.centraldungeon.features.queue.QueueService} moves them - a table is reserved from
  * the shared tray and from nowhere else.
  */
@@ -45,13 +45,13 @@ public class GameTable extends BaseEntity {
     @Column(nullable = false, length = 128)
     private String name;
 
-    /** What the table is about. Rich text, sanitized on write and on read (ADR-03 §8). */
+    /** What the table is about. Rich text, sanitized on write and on read. */
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String description;
 
     /**
      * What is allowed at this table - the house rules a master writes out so nobody has to guess.
-     * Rich text, same sanitization as the description (ADR-03 §8).
+     * Rich text, same sanitization as the description.
      */
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String permitted;
@@ -77,22 +77,22 @@ public class GameTable extends BaseEntity {
     private @Nullable String safety;
 
     /**
-     * The day the table starts running - the cut-off the calendar is laid out from (ADR-08 §3, ADR-07 §4).
+     * The day the table starts running - the cut-off the calendar is laid out from.
      *
      * <p><b>A date and not an instant</b>: no session ever takes its hour from here. The hours come
      * from the weekly agenda, and this only says which week the first one falls in. A plain date is
-     * also the same day in every zone, which an instant is not (ADR-03 §6, ADR-07 §4).
+     * also the same day in every zone, which an instant is not.
      */
     @Column(name = "start_date")
     private @Nullable LocalDate startDate;
 
     /** How long <b>one</b> session lasts - not the campaign. Stored as a time of day, read as a length. */
 
-    /** How many sessions are planned (ADR-08 §3). With the start date and the schedule, it is the whole agenda. */
+    /** How many sessions are planned. With the start date and the schedule, it is the whole agenda. */
     @Column(name = "total_sessions")
     private @Nullable Integer totalSessions;
 
-    /** The player cap (ADR-07 §5). Null means the master has not set one. */
+    /** The player cap. Null means the master has not set one. */
     @Column(name = "max_players")
     private @Nullable Integer maxPlayers;
 
@@ -103,29 +103,29 @@ public class GameTable extends BaseEntity {
 
     /**
      * When the table stopped being an ongoing thing: stamped on entering {@code Finished} or
-     * {@code Canceled}, and never again (ADR-07 §7).
+     * {@code Canceled}, and never again.
      *
      * <p>It is not decoration. It starts the two-week window in which the people who shared the
-     * table can still see each other's profiles (ADR-10 §2), and it is what tells a table closed yesterday
+     * table can still see each other's profiles, and it is what tells a table closed yesterday
      * from one closed a year ago.
      */
     @Column(name = "closed_at")
     private @Nullable LocalDateTime closedAt;
 
-    /** Soft delete (ADR-03 §7). Only set for a table that was never public (ADR-07 §6); anything past that is cancelled. */
+    /** Soft delete. Only set for a table that was never public; anything past that is cancelled. */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
     /**
      * Who created the row - a master creating their own table, or an admin creating an unassigned
-     * one (ADR-06 §7). <b>Not</b> the same as who runs it: that is a row in {@code masters} (ADR-06 §4).
+     * one. <b>Not</b> the same as who runs it: that is a row in {@code masters}.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
     /**
-     * The admin who reserved this table's review from the shared tray (ADR-16 §5).
+     * The admin who reserved this table's review from the shared tray.
      *
      * <p>Null for every table nobody is looking at right now, which is the normal state. It is not
      * part of the lifecycle: reserving a table changes who is working on it, never where it is.
@@ -136,7 +136,7 @@ public class GameTable extends BaseEntity {
 
     /**
      * When it was reserved. Released automatically after
-     * {@code app.queue.claim-timeout} (ADR-16 §5).
+     * {@code app.queue.claim-timeout}.
      */
     @Column(name = "claimed_at")
     private @Nullable LocalDateTime claimedAt;
@@ -155,7 +155,7 @@ public class GameTable extends BaseEntity {
     }
 
     /**
-     * Builds a table in {@code Draft}, with nothing but its title and its author (ADR-07 §1): it is its
+     * Builds a table in {@code Draft}, with nothing but its title and its author: it is its
      * master's alone until they send it to review.
      *
      * @param name      the table's title
@@ -215,7 +215,7 @@ public class GameTable extends BaseEntity {
     /**
      * Sets what the table is about.
      *
-     * @param description rich text, already sanitized by the service (ADR-03 §8)
+     * @param description rich text, already sanitized by the service
      */
     public void setDescription(@Nullable String description) {
         this.description = description;
@@ -233,7 +233,7 @@ public class GameTable extends BaseEntity {
     /**
      * Sets the table's house rules.
      *
-     * @param permitted rich text, already sanitized by the service (ADR-03 §8)
+     * @param permitted rich text, already sanitized by the service
      */
     public void setPermitted(@Nullable String permitted) {
         this.permitted = permitted;
@@ -251,7 +251,7 @@ public class GameTable extends BaseEntity {
     /**
      * Sets what is asked of a player to be accepted.
      *
-     * @param requirements rich text, already sanitized by the service (ADR-03 §8)
+     * @param requirements rich text, already sanitized by the service
      */
     public void setRequirements(@Nullable String requirements) {
         this.requirements = requirements;
@@ -341,7 +341,7 @@ public class GameTable extends BaseEntity {
     /**
      * Sets the day the table starts running.
      *
-     * @param startDate the day, with no hour and no zone attached (ADR-07 §4)
+     * @param startDate the day, with no hour and no zone attached
      */
     public void setStartDate(@Nullable LocalDate startDate) {
         this.startDate = startDate;
@@ -352,7 +352,7 @@ public class GameTable extends BaseEntity {
     /**
      * Returns how many sessions are planned.
      *
-     * @return the planned count (ADR-08 §3), or null when it is not set
+     * @return the planned count, or null when it is not set
      */
     public @Nullable Integer getTotalSessions() {
         return totalSessions;
@@ -362,7 +362,7 @@ public class GameTable extends BaseEntity {
      * Sets how many sessions are planned.
      *
      * @param totalSessions the planned count; it decides how many rows are materialized when the
-     *                      table opens (ADR-08 §3)
+     *                      table opens
      */
     public void setTotalSessions(@Nullable Integer totalSessions) {
         this.totalSessions = totalSessions;
@@ -371,7 +371,7 @@ public class GameTable extends BaseEntity {
     /**
      * Returns the player cap.
      *
-     * @return the maximum number of players (ADR-07 §5), or null when there is no cap
+     * @return the maximum number of players, or null when there is no cap
      */
     public @Nullable Integer getMaxPlayers() {
         return maxPlayers;
@@ -398,7 +398,7 @@ public class GameTable extends BaseEntity {
     /**
      * Returns when the table was closed.
      *
-     * @return the instant it entered {@code Finished} or {@code Canceled} (ADR-07 §7), or null while it
+     * @return the instant it entered {@code Finished} or {@code Canceled}, or null while it
      *         is still going
      */
     public @Nullable LocalDateTime getClosedAt() {
@@ -409,7 +409,7 @@ public class GameTable extends BaseEntity {
      * Stamps when the table closed.
      *
      * <p>Only {@link GameTableService} calls this, on the two transitions that end a table's life,
-     * and it never overwrites a stamp that is already there: a table closes once (ADR-10 §2, ADR-07 §7).
+     * and it never overwrites a stamp that is already there: a table closes once.
      *
      * @param closedAt the closing instant, in UTC
      */
@@ -427,10 +427,10 @@ public class GameTable extends BaseEntity {
     }
 
     /**
-     * Stamps or clears the logical delete (ADR-03 §7).
+     * Stamps or clears the logical delete.
      *
      * @param deletedAt when it was deleted, or null to bring it back. Only a table that was never
-     *                  public gets here at all (ADR-07 §6)
+     *                  public gets here at all
      */
     public void setDeletedAt(@Nullable LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
@@ -452,14 +452,14 @@ public class GameTable extends BaseEntity {
      * Returns who created the row.
      *
      * @return the author. Not necessarily a master of the table - an admin can create one without
-     *         running it (ADR-06 §7)
+     *         running it
      */
     public User getCreatedBy() {
         return createdBy;
     }
 
     /**
-     * Returns the admin who reserved this table's review (ADR-16 §5).
+     * Returns the admin who reserved this table's review.
      *
      * @return the admin, or null when nobody has taken it
      */
@@ -479,14 +479,14 @@ public class GameTable extends BaseEntity {
     /**
      * Takes the reservation for an admin.
      *
-     * <p>Two columns and one method, the same reasoning {@link com.centraldungeon.features.approvals
-     * .ApprovalRequest#resolve} gives for its four: a row that names an admin with no instant, or an
+     * <p>Two columns and one method, the same reasoning
+     * {@link com.centraldungeon.features.approvals.ApprovalRequest#resolve} gives for its four: a row that names an admin with no instant, or an
      * instant with no admin, is a state nothing should be able to produce. Whether the reservation is
      * allowed - free, or already this same admin's - is decided by
      * {@link com.centraldungeon.features.queue.QueueService} under the table's row lock, because it
      * is a rule about two admins racing and not about one row.
      *
-     * @param admin     the admin taking it, always the actor from the token (ADR-05 §5)
+     * @param admin     the admin taking it, always the actor from the token
      * @param claimedAt when they took it
      */
     public void claim(User admin, LocalDateTime claimedAt) {
@@ -496,7 +496,7 @@ public class GameTable extends BaseEntity {
 
     /**
      * Gives the reservation back: by the admin who had it, or by the job that expires it after
-     * {@code app.queue.claim-timeout} (ADR-16 §5).
+     * {@code app.queue.claim-timeout}.
      */
     public void releaseClaim() {
         this.claimedBy = null;

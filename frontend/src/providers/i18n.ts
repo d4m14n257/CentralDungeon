@@ -34,7 +34,7 @@ import tasks from '@/locales/es/tasks.json'
 import users from '@/locales/es/users.json'
 
 /**
- * The two languages the application speaks (ADR-23 §2).
+ * The two languages the application speaks.
  *
  * <p>Both bundles ship with the application rather than being fetched on demand: together they are a
  * few tens of kilobytes of JSON, and a screen that has to wait on the network before it can render
@@ -79,7 +79,7 @@ i18n.services.formatter?.add('megabytes', (value) => String(Math.floor(Number(va
 i18n.services.formatter?.add('minutes', (value) => String(Math.max(1, Math.ceil(Number(value) / 60))))
 
 /**
- * Keeps `<html lang>` in step with the language in use (ADR-23 §2).
+ * Keeps `<html lang>` in step with the language in use.
  *
  * It lives here and not in a component because it has to hold everywhere, including the screens
  * that render before anybody is signed in: a page that claims Spanish while showing English is read

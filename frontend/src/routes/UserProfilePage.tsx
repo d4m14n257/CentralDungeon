@@ -8,16 +8,16 @@ import { ProfileCard, useMe, useUserProfile } from '@/features/users'
 import { ApiError } from '@/types/api'
 
 /**
- * `/users/:id` — somebody else's profile, subject to the visibility rules of ADR-10 §1, §2 and
- * ADR-10 §1.
+ * `/users/:id` — somebody else's profile, subject to the visibility rules: it opens through a relationship
+ * on a table and stops being visible a fixed number of days after that table closes.
  *
- * The backend answers **404** both when the id never existed and when the two-week window of ADR-10 §2
- * has already closed (ADR-10 §3) — on purpose, so the two cases are indistinguishable on
+ * The backend answers **404** both when the id never existed and when the visibility window after the table
+ * has already closed — on purpose, so the two cases are indistinguishable on
  * the wire and probing ids cannot tell a real account from an expired relationship. This screen
  * still softens the copy: "you can no longer view this profile" tells the truth to whoever once had
  * a relationship with that person, and reveals nothing to anybody else that a plain 404 would not
- * already have (ADR-10 §3) — it never claims the profile "does not exist", which the veto's own 404
- * deliberately does (ADR-09 §4) and this one deliberately does not.
+ * already have — it never claims the profile "does not exist", which the veto's own 404
+ * deliberately does and this one deliberately does not.
  */
 export function UserProfilePage() {
   const { t } = useTranslation('users')
@@ -35,8 +35,8 @@ export function UserProfilePage() {
     )
   }
 
-  // Not "no existe" (ADR-09 §4's veto reads that way on purpose): this 404 covers two very different
-  // truths on the wire, and only this copy is safe to show to both (ADR-10 §3).
+  // Not a plain "does not exist" (a veto's 404 reads that way on purpose): this 404 covers two very different
+  // truths on the wire, and only this copy is safe to show to both.
   if (error instanceof ApiError && error.status === 404) {
     return <ForbiddenState description={t('profile.expiredDescription')} />
   }

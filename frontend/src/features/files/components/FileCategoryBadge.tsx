@@ -7,9 +7,9 @@ import { cn } from '@/lib/utils'
 import type { FileCategory } from '../types'
 
 /**
- * The icon each cajón is recognised by, before its label is read.
+ * The icon each category is recognised by, before its label is read.
  *
- * A `Record` over `FileCategory` rather than a lookup with a fallback (§3.2 regla 9): a sixth kind
+ * A `Record` over `FileCategory` rather than a lookup with a fallback: a sixth kind
  * cannot be added to the union without the compiler asking how it looks.
  */
 const CATEGORY_ICONS: Record<FileCategory, ReactNode> = {
@@ -21,25 +21,25 @@ const CATEGORY_ICONS: Record<FileCategory, ReactNode> = {
 }
 
 interface FileCategoryBadgeProps {
-  /** The cajón (ADR-14 §4). */
+  /** The category. */
   category: FileCategory
   /** Extra classes for the caller's layout. */
   className?: string
 }
 
 /**
- * Which flow a file belongs to (ADR-14 §4), as a badge.
+ * Which flow a file belongs to, as a badge.
  *
  * It says **where the file is used**, never what the document is — nobody can declare that a PDF is a
  * character sheet template, but the system always knows the file came in through a table, an
- * application or an answer. A file in two cajones gets two of these, because membership is a list.
+ * application or an answer. A file in two categories gets two of these, because membership is a list.
  *
  * **Quiet on purpose.** It sits next to `FileTypeBadge`, which carries the state colour; two
  * coloured badges side by side would compete instead of reading as "kept · character sheet". The
  * icon is `aria-hidden` — the label beside it is the accessible name, and announcing both would say
  * everything twice.
  *
- * @param props.category  the cajón
+ * @param props.category  the category
  * @param props.className extra classes for the caller's layout
  */
 export function FileCategoryBadge({ category, className }: FileCategoryBadgeProps) {

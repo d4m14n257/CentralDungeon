@@ -1,6 +1,6 @@
 /**
- * Public surface of the approvals feature (ADR-19 §1): the one mechanism behind every request somebody
- * makes of an admin (ADR-16 §1), from the three screens that raise one to the tray that resolves them.
+ * Public surface of the approvals feature: the one mechanism behind every request somebody
+ * makes of an admin, from the three screens that raise one to the tray that resolves them.
  * Anything not listed here is private to it.
  */
 
@@ -28,7 +28,7 @@ export {
   type ResolveApprovalRequestForm,
   type SubmitApprovalRequestForm,
 } from './schemas'
-/** The feature's domain types. Each is written once in `types.ts` and derived from there (§3.2). */
+/** The feature's domain types. Each is written once in `types.ts` and derived from there. */
 export type {
   ApprovalRequestDetail,
   ApprovalRequestSummary,

@@ -56,8 +56,8 @@ describe('ApplicableTaskList', () => {
 
   /**
    * Somebody who has not applied still sees what will be asked of them — half of deciding whether to
-   * apply (ADR-14 §2) — and the screen says why they cannot answer yet rather than just not offering a
-   * button (principle 2 of diseno §1).
+   * apply — and the screen says why they cannot answer yet rather than just not offering a
+   * button.
    */
   it('explains why a request cannot be answered instead of hiding the reason', async () => {
     const onAnswer = renderList([task({ canSubmit: false })])
@@ -79,7 +79,7 @@ describe('ApplicableTaskList', () => {
   })
 
   /**
-   * Answers accumulate and none replaces another (ADR-15 §2), so a second one is offered as "again" and
+   * Answers accumulate and none replaces another, so a second one is offered as "again" and
    * what was already sent is counted rather than reduced to a tick.
    */
   it('says how many times the reader already answered, and offers to answer again', async () => {
@@ -90,7 +90,7 @@ describe('ApplicableTaskList', () => {
     expect(screen.getByRole('button', { name: 'Entregar de nuevo' })).toBeInTheDocument()
   })
 
-  /** ADR-15 §2 in the interface: "important" is a label, and nothing on the screen threatens anybody. */
+  /** "important" is a label, and nothing on the screen threatens anybody. */
   it('shows mandatory as a label and never as a consequence', () => {
     renderList([task({ isMandatory: true })])
 

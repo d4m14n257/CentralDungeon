@@ -167,7 +167,7 @@ public class TableFileService {
     public TableFileResponse attach(String gameTableId, LinkTableFileRequest request, String actorId) {
         requireMasterOf(gameTableId, actorId);
         StoredFile file = fileService.requireAttachable(request.fileId(), actorId);
-        // The link is what classifies the file, not the upload (ADR-14 §4): attaching it to a table is
+        // The link is what classifies the file, not the upload: attaching it to a table is
         // what makes it table material, and the membership stands even if it is detached later.
         fileService.classify(file.getId(), FileCategory.TableMaterial);
 
@@ -239,8 +239,8 @@ public class TableFileService {
      *
      * <p><b>No authorization here, on purpose.</b> This travels inside
      * {@code GameTableDetailResponse}, and that read has already decided who may see the table -
-     * down to answering 404 to somebody vetoed (ADR-09 §4). Checking again here would be a second copy of a
-     * rule that can only drift out of step with the first. Same decision F1.3 took for the calendar.
+     * down to answering 404 to somebody vetoed. Checking again here would be a second copy of a
+     * rule that can only drift out of step with the first. The calendar read takes the same decision.
      *
      * <p>Private attachments are simply absent. Not listed and locked: absent. A player has no reason
      * to know their master keeps notes, and a row they cannot open is worse than no row.
@@ -267,7 +267,7 @@ public class TableFileService {
      *
      * <p>Files marked gone are left out of the map, which is what makes every caller skip them: an
      * owner deleting a file removes it from the tables that showed it, without those links having to
-     * be found and rewritten (ADR-03 §7).
+     * be found and rewritten.
      */
     private Map<String, StoredFile> filesOf(List<TableFile> links) {
         if (links.isEmpty()) {

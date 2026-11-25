@@ -24,17 +24,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The five rules of "Visibilidad de perfiles" (arquitectura §4.5: ADR-10 §1, §2, ADR-06 §8), written a
+ * The five profile visibility rules, written a
  * year ago and never implemented until now - in **one place**, {@link #requireVisible}, cheapest
  * check first.
  *
  * <p>The whole rule set answers one question: given the table that links two people, is that link
- * still open? A table that never published anything never opens it (ADR-10 §1); one that has, or is
+ * still open? A table that never published anything never opens it; one that has, or is
  * running, or is paused, keeps it open for as long as it has not closed; once closed, it stays open
- * for a configurable window (`profiles.visibility_window_days`, 14 by default) and then it does not (ADR-10 §2). That single idea - {@link #isLinkStillOpen} - is
- * reused by all three of the table-shaped rules (ADR-10 §1), which is why a special case for
- * {@code Pause} is never written: {@code closed_at} is null while the table is paused exactly as it
- * is while the table is running, so the clock never starts in the first place.
+ * for a configurable window (`profiles.visibility_window_days`, 14 by default) and then it does not. That
+ * single idea - {@link #isLinkStillOpen} - is reused by all three of the table-shaped rules, which is why a
+ * special case for {@code Pause} is never written: {@code closed_at} is null while the table is paused
+ * exactly as it is while the table is running, so the clock never starts in the first place.
  *
  * <p>Lives next to {@link ProfileService} rather than folded into it because assembling a profile and
  * deciding whether it may be read are two different questions with two different sets of collaborators
@@ -46,55 +46,54 @@ public class ProfileVisibilityService {
 
 
     /**
-     * States a table's own master row can never be seen through (ADR-10 §1). Every other status - Opened,
+     * States a table's own master row can never be seen through. Every other status - Opened,
      * InProgress, PauseRequested, Pause, Finished, Canceled - has been out where somebody could look
      * at it at some point, which is the premise {@link #isLinkStillOpen} builds on. {@code Deleted} is
-     * here for the same reason it is everywhere else: a soft-deleted table is gone for everyone
-     * (ADR-03 §7, ADR-07 §6).
+     * here for the same reason it is everywhere else: a soft-deleted table is gone for everyone.
      */
     private static final Set<GameTableStatus> NEVER_PUBLISHED = EnumSet.of(
             GameTableStatus.Draft, GameTableStatus.Unassigned, GameTableStatus.Preparation,
             GameTableStatus.ChangesRequested, GameTableStatus.Deleted);
 
     /**
-     * The registrations through which a master can read an applicant's profile (ADR-10 §1): a live
+     * The registrations through which a master can read an applicant's profile: a live
      * application, an accepted player, and a vetoed applicant - the master who vetoed somebody still
      * needs to identify them in order to lift the veto.
      */
     private static final List<TableRegistrationStatus> APPLICATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player, TableRegistrationStatus.Blocked);
 
-    /** Who runs which table, and since when - the source rule ADR-10 §1 both read. */
+    /** Who runs which table, and since when - the source both visibility rules read. */
     private final MasterRepository masterRepository;
 
-    /** Who applied where, and who plays where - ADR-10 §1. */
+    /** Who applied where, and who plays where. */
     private final TableRegistrationRepository registrationRepository;
 
-    /** Resolves the tables two players share, once their ids are known (ADR-10 §1). */
+    /** Resolves the tables two players share, once their ids are known. */
     private final GameTableRepository gameTableRepository;
 
-    /** Answers ADR-06 §8: whether the actor is an Admin or the platform Owner. */
+    /** Answers whether the actor is an Admin or the platform Owner. */
     private final UserRoleRepository userRoleRepository;
 
     /**
      * How long a closed table keeps a profile visible through it - {@code
-     * profiles.visibility_window_days} in {@code system_settings} (ADR-10 §2, ADR-17 §3).
+     * profiles.visibility_window_days} in {@code system_settings}.
      *
-     * <p><b>It was a constant of this class until F3.5</b>, and it is the one setting of that slice
+     * <p><b>It was a constant of this class until it became a setting</b>, and it is the one setting
      * whose change is retroactive: nothing is recomputed and nothing is stored, so lowering the
      * number takes visibility away from people who have it at this instant and raising it hands it
-     * back to people who had already lost it. That is a property of ADR-10 §2 itself - the rule is
+     * back to people who had already lost it. That is a property of the closed-table rule itself - it is
      * evaluated against {@code closed_at} on every read - and it is why {@code /admin/settings} warns
      * before saving this one and not the other three.
      */
     private final SettingsService settingsService;
 
     /**
-     * @param masterRepository       who runs which table (ADR-10 §1)
-     * @param registrationRepository who applied, and who plays (ADR-10 §1)
-     * @param gameTableRepository    resolves the tables two players share (ADR-10 §1)
-     * @param userRoleRepository     the actor's global roles, for ADR-06 §8
-     * @param settingsService        the visibility window, editable without a deploy (ADR-10 §2, ADR-17 §3)
+     * @param masterRepository       who runs which table
+     * @param registrationRepository who applied, and who plays
+     * @param gameTableRepository    resolves the tables two players share
+     * @param userRoleRepository     the actor's global roles, to tell whether they are an Admin or the platform Owner
+     * @param settingsService        the visibility window, editable without a deploy
      */
     public ProfileVisibilityService(
             MasterRepository masterRepository,
@@ -113,12 +112,12 @@ public class ProfileVisibilityService {
      * The one gate every profile read goes through.
      *
      * @param targetId whose profile is being read
-     * @param actorId  who is reading it, always from the token (ADR-05 §5)
-     * @throws NotFoundException if the actor may not see this profile - never a {@code 403} (ADR-10 §3):
+     * @param actorId  who is reading it, always from the token
+     * @throws NotFoundException if the actor may not see this profile - never a {@code 403}:
      *                           the same reason a vetoed table and a deleted one both answer 404
-     *                           (ADR-09 §4, ADR-07 §6) is why this does too. A {@code 403} would confirm that
+     *                           is why this does too. A {@code 403} would confirm that
      *                           the target exists and that a relationship once linked them, which is
-     *                           precisely what the window of ADR-10 §2 is meant to stop confirming
+     *                           precisely what the visibility window is meant to stop confirming
      */
     @Transactional(readOnly = true)
     public void requireVisible(String targetId, String actorId) {
@@ -141,20 +140,20 @@ public class ProfileVisibilityService {
         throw new NotFoundException("User not found: " + targetId);
     }
 
-    /** ADR-06 §8: an Admin or the platform Owner has no restriction here. */
+    /** An Admin or the platform Owner has no restriction here. */
     private boolean isAdminOrOwner(String actorId) {
         Set<String> roles = userRoleRepository.findActiveRoleNames(actorId);
         return roles.contains(PlatformRole.ADMIN.roleName()) || roles.contains(PlatformRole.OWNER.roleName());
     }
 
     /**
-     * ADR-10 §1: the target's profile is visible for anybody with a session while they run at least one
+     * Rule: the target's profile is visible for anybody with a session while they run at least one
      * table whose link is still open - except through a table where the reader is vetoed: the veto
      * hides that table from them, so running it cannot open the master's profile. The master stays
      * visible if another table the reader can still see, or a table they share, grants it.
      *
      * <p>Reads every master row the target ever held, live and deleted alike, and filters here rather
-     * than in the query: a deleted row grants nothing (ADR-07 §8), and that has to be a line of Java
+     * than in the query: a deleted row grants nothing, and that has to be a line of Java
      * somebody can read, not a silent {@code WHERE}.
      */
     private boolean runsAVisibleTable(String targetId, String actorId, LocalDateTime now) {
@@ -173,7 +172,7 @@ public class ProfileVisibilityService {
     }
 
     /**
-     * ADR-10 §1: the actor runs a table the target applied to. "Since it receives the application" is
+     * Rule: the actor runs a table the target applied to. "Since it receives the application" is
      * literal - {@code Candidate} counts exactly as much as {@code Player}, and there is no
      * acceptance to wait for. A {@code Blocked} applicant counts too: the master who vetoed them keeps
      * reading their profile, because they need to recognise the person to lift the veto.
@@ -199,7 +198,7 @@ public class ProfileVisibilityService {
         return false;
     }
 
-    /** ADR-10 §1: the actor and the target both hold a live {@code Player} registration on the same table. */
+    /** Rule: the actor and the target both hold a live {@code Player} registration on the same table. */
     private boolean sharesATableAsPlayer(String targetId, String actorId, LocalDateTime now) {
         Set<String> actorTables = tableIdsOf(registrationRepository.findByUser_IdAndStatus(actorId, TableRegistrationStatus.Player));
         if (actorTables.isEmpty()) {
@@ -229,7 +228,7 @@ public class ProfileVisibilityService {
     }
 
     /**
-     * ADR-10 §2, applied to whichever table links two people: is that link still open?
+     * The closed-table rule, applied to whichever table links two people: is that link still open?
      *
      * <p>A table that never published stays closed regardless of its dates. One that has - running,
      * paused, or finished within the window - is open. There is no branch for {@code Pause}: its

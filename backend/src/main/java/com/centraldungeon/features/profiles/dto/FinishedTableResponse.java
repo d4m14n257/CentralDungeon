@@ -5,7 +5,7 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * One table a person played to the end, as the list behind a profile's «finished tables» count shows
+ * One table a person played to the end, as the list behind a profile's "finished tables" count shows
  * it: only what the table's public detail already says, so it exposes nothing the profile did not.
  *
  * @param id       the table, to open its public detail

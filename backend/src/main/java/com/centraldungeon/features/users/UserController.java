@@ -23,14 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
  * People. Deliberately small: reading the caller's own profile, the picker that admins use to assign
  * masters, the onboarding step and the later profile edit.
  *
- * <p>There is no "get user by id" here. Public profiles and their visibility window (ADR-10 §1, §2)
- * are F2, and a user directory is not opened wider than the screens that need it (ADR-07 §8).
+ * <p>There is no "get user by id" here. Public profiles and their visibility window
+ * belong to the profile feature, and a user directory is not opened wider than the screens that need it.
  */
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final UserService userService;
 
     /**
@@ -45,7 +45,7 @@ public class UserController {
      * switcher offers, whether onboarding still blocks, the avatar and the karma.
      *
      * @param currentUser the actor, from the token. There is no id parameter, so this can only ever
-     *                    answer about the caller (ADR-05 §5)
+     *                    answer about the caller
      * @return 200 with their profile
      */
     @GetMapping("/me")
@@ -58,7 +58,7 @@ public class UserController {
      * User picker of /admin/tables (assigning masters). Admin-only for now: the only screen that
      * needs it is an admin one, and a user directory is not something to open wider than the
      * current consumer needs. When a Primary master gets to add a Secondary from /master/tables/:id,
-     * widening this is an explicit decision, not a side effect (ADR-07 §8).
+     * widening this is an explicit decision, not a side effect.
      *
      * <p>The query syntax lives in SearchQueryParser; the fields it accepts, in UserSearchField.
      *
@@ -77,11 +77,11 @@ public class UserController {
     }
 
     /**
-     * Completes onboarding, the blocking first-time step: name and country (ADR-10 §4).
+     * Completes onboarding, the blocking first-time step: name and country.
      *
      * @param request     the name and country they chose
      * @param currentUser the actor, from the token. This endpoint can only edit the caller's own
-     *                    profile - there is no id to point somewhere else (ADR-05 §5)
+     *                    profile - there is no id to point somewhere else
      * @return 200 with their profile, now past onboarding. 409 {@code ONBOARDING_ALREADY_COMPLETED}
      *         if they were already past it: this door does not work as an edit
      */
@@ -93,10 +93,10 @@ public class UserController {
     }
 
     /**
-     * Edits the caller's name and country once onboarding is done (ADR-10 §4).
+     * Edits the caller's name and country once onboarding is done.
      *
      * @param request     the new name and country
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with their profile. 409 {@code ONBOARDING_PENDING} if they have not completed
      *         onboarding yet: that step has its own endpoint
      */

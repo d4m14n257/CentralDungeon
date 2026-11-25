@@ -29,7 +29,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * Exactly one live Primary per table (arquitectura §4, ADR-06 §3) - MySQL has no partial unique index for
+ * Exactly one live Primary per table - MySQL has no partial unique index for
  * it, so MasterService's row lock on the table's masters is what has to hold under a race. Two
  * shapes of that race are covered: concurrent hand-offs from the same original Primary, where only
  * the one that grabs the lock first should still find the actor as Primary; and hand-offs racing
@@ -195,7 +195,7 @@ class MasterServiceIT {
                 .hasSize(1);
     }
 
-    /** Removed rows stay as a record (ADR-07 §6), and re-adding the same person revives that row. */
+    /** Removed rows stay as a record, and re-adding the same person revives that row. */
     @Test
     void reAddingARemovedCoMasterRevivesTheRowInsteadOfCreatingASecond() {
         User coMaster = candidates.getFirst();

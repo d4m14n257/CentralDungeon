@@ -61,8 +61,8 @@ describe('FileList', () => {
     await waitFor(() => expect(download).toHaveBeenCalledWith('/api/v1/files/file-1/content', 'ficha.pdf'))
   })
 
-  /** Images and PDFs open in the app; a Word document has nothing to draw, so it has no «Ver» at all. */
-  it('offers «Ver» only for images and PDFs', () => {
+  /** Images and PDFs open in the app; a Word document has nothing to draw, so it has no view button at all. */
+  it('offers the view button only for images and PDFs', () => {
     const word = {
       fileId: 'file-3',
       name: 'reglas.docx',

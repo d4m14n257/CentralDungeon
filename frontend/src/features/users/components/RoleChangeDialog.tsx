@@ -21,7 +21,7 @@ interface RoleChangeDialogProps {
   /** The account being changed, or null when the dialog is closed. */
   user: AdminUserSummary | null
   /**
-   * The roles this reader may move, from `useUserAdminCapabilities` — in the order of ADR-07 §8.
+   * The roles this reader may move, from `useUserAdminCapabilities` — in the fixed rank order.
    *
    * It arrives as a prop rather than being read here, so the dialog cannot disagree with the button
    * that opened it: the screen asks the capability question once and both sides of it use the answer.
@@ -45,7 +45,7 @@ interface RoleChangeDialogProps {
    * The explanation of who may grant what, rendered under the role list.
    *
    * **It arrives as a node instead of the dialog raising it itself**, because `HelpLink` lives in
-   * `features/help` and a feature never imports another one (arquitectura §3.1.5) - the one
+   * `features/help` and a feature never imports another one - the one
    * component that does is `SearchQueryInput`, and it is in the transversal `components/` layer, not
    * in a feature. The screen owns the composition, so the link still sits where the question is
    * born rather than in an index somewhere.
@@ -54,7 +54,7 @@ interface RoleChangeDialogProps {
 }
 
 /**
- * Grants or takes away one platform role, with a reason (ADR-06 §1).
+ * Grants or takes away one platform role, with a reason.
  *
  * **One role and one direction per press, not a checklist of four.** Grant and revoke are two
  * endpoints and each writes its own audit row with its own justification; a dialog that submitted a
@@ -64,12 +64,12 @@ interface RoleChangeDialogProps {
  *
  * **It only ever offers `grantableRoles`, plus `Owner` to take away.** An admin finds no way at all to
  * hand out `Admin`, and nobody finds a way to hand out `Owner` — not a disabled button, not one that
- * fails when pressed: the role is simply not on the list (principle 2 of diseno §1). `Owner` shows up
+ * fails when pressed: the role is simply not on the list. `Owner` shows up
  * only for an owner, and only on another owner's account, because that is the one thing that can be
  * done with it; on their own account an owner sees neither `Owner` nor `Admin`. The server refuses the rest too, with `ROLE_GRANT_FORBIDDEN` and `OWNER_NOT_GRANTABLE`,
- * which is what makes this a display decision rather than the security (ADR-20 §1).
+ * which is what makes this a display decision rather than the security.
  *
- * It owns the two mutations, as every `…Dialog` does (arquitectura §3.3, ADR-19 §6). The refusals it
+ * It owns the two mutations, as every `…Dialog` does. The refusals it
  * can get are specific — the last owner, an owner unmaking themselves — so they are rendered inline,
  * above the button that was pressed, instead of as a toast.
  *
@@ -124,7 +124,7 @@ export function RoleChangeDialog({
 
   async function onSubmit(values: ChangeUserRoleForm) {
     if (!user) return
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t(isHeld(values.role) ? 'users.confirmRevokeTitle' : 'users.confirmGrantTitle', {
         role: t(`users.roles.${values.role}`),
@@ -163,8 +163,8 @@ export function RoleChangeDialog({
               <FormItem>
                 <FormLabel>{t('users.roleFieldLabel')}</FormLabel>
                 {/* Buttons and not a <Select>: there are at most four and seeing them all at once is
-                    what lets somebody notice which ones this account already holds (ADR-14 §4's reasoning
-                    for the cajones, and the same shape). */}
+                    what lets somebody notice which ones this account already holds (the same reasoning as
+                    for the file categories). */}
                 <div className="flex flex-wrap gap-2">
                   {offeredRoles.map((role) => (
                     <button
@@ -184,7 +184,7 @@ export function RoleChangeDialog({
                 </div>
                 {/* Right under the list, because this is where the question is born: an admin sees
                     two of the four roles and needs to know that the absence is the rule working,
-                    not the screen failing (ADR-20 §5 - the help is raised where it is asked for). */}
+                    not the screen failing (the help is raised where it is asked for). */}
                 {help}
                 <FormMessage />
               </FormItem>

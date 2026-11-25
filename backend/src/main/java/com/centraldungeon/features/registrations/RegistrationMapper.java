@@ -12,8 +12,8 @@ public interface RegistrationMapper {
 
     /**
      * @param registration the application to describe
-     * @param attachedFiles what the applicant attached (ADR-13 §1 uso 2), resolved by the caller - a
-     *                      mapper never touches a repository (arquitectura §2.2). Empty when
+     * @param attachedFiles what the applicant attached, resolved by the caller - a
+     *                      mapper never touches a repository. Empty when
      *                      nothing was attached
      * @return the application as its reader sees it
      */
@@ -30,7 +30,7 @@ public interface RegistrationMapper {
     @Mapping(target = "attachedFiles", source = "attachedFiles")
     // The veto's three fields are filled by the service when there is a veto to describe, the same
     // way the two rejection fields are: the trail lives in `registration_status_changes` and a
-    // mapper never touches a repository (arquitectura §2.2).
+    // mapper never touches a repository.
     @Mapping(target = "blockedByName", ignore = true)
     @Mapping(target = "blockedAt", ignore = true)
     @Mapping(target = "blockJustification", ignore = true)

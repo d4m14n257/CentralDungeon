@@ -12,18 +12,18 @@ import org.jspecify.annotations.Nullable;
  * @param status           where the table is in its lifecycle, as a string
  * @param tableTypeName    how the table is run, resolved to its label. Null when none was chosen
  * @param tableTypeCode    the identifier the frontend translates by, when the application shipped
- *                         that type. Null for one a person named, whose label is read verbatim (ADR-23 §4)
- * @param maxPlayers       the player cap (ADR-07 §5), or null for no cap
+ *                         that type. Null for one a person named, whose label is read verbatim
+ * @param maxPlayers       the player cap, or null for no cap
  * @param playerCount      how many people are accepted right now, so the card can show "3/5"
- * @param schedule         the weekly agenda, in UTC (ADR-03 §6). The card converts it to the reader's own
+ * @param schedule         the weekly agenda, in UTC. The card converts it to the reader's own
  *                         time with {@code lib/date.ts}; the API never sends a local time
  * @param scheduleConflict whether this table's agenda overlaps something the <b>actor of the
- *                         token</b> is already committed to (ADR-08 §2). Derived per request and never
- *                         for an id taken from the URL (ADR-05 §5), which is what makes it impossible to
+ *                         token</b> is already committed to. Derived per request and never
+ *                         for an id taken from the URL, which is what makes it impossible to
  *                         ask on somebody else's behalf. False on listings where the question does
  *                         not arise - a table you already play at cannot clash with itself
  * @param applied          whether the <b>actor of the token</b> holds a live application on it - Candidate or
- *                         Player (ADR-09 §1) - which is the explorer's "you already applied" mark. Computed
+ *                         Player - which is the explorer's "you already applied" mark. Computed
  *                         here for the whole page instead of crossed on the client against a paginated
  *                         list that only ever held its first page. False where no actor is involved
  * @param joined           whether the actor of the token is already a Player of the table, which is a stronger

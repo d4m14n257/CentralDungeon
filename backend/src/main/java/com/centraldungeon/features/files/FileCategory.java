@@ -1,7 +1,7 @@
 package com.centraldungeon.features.files;
 
 /**
- * The flow a file belongs to (ADR-14 §4) - its cajón.
+ * The flow a file belongs to - its category.
  *
  * <p><b>It says where a file is used, not what the document is.</b> That distinction is the whole
  * design and the first attempt got it backwards. Nobody uploading can honestly declare "this is a
@@ -10,9 +10,9 @@ package com.centraldungeon.features.files;
  * the system <em>does</em> know for certain is which screen the file came from, and that is what
  * classifies it - so this is never asked, it is observed.
  *
- * <p><b>A file belongs to as many cajones as it has been used in</b>, which is why membership lives
+ * <p><b>A file belongs to as many categories as it has been used in</b>, which is why membership lives
  * in {@code file_categories} and not in a column. A sheet uploaded on an application and later handed
- * in to a task belongs to both, and deduplication (ADR-13 §3) makes that the normal case rather than an
+ * in to a task belongs to both, and deduplication makes that the normal case rather than an
  * edge one: the same bytes are one row by design, so one row has to be able to hold two answers.
  *
  * <p><b>Membership is never revoked.</b> Detaching a file from a table says nothing about whether it
@@ -28,31 +28,31 @@ public enum FileCategory {
      * What a master attaches to their table: maps, handouts, house rules, the sheet they require.
      *
      * <p>Filled while the table is being assembled and while it recruits. An admin publishes here so
-     * that the community's blank sheet is attached rather than re-uploaded by every master (ADR-14 §1).
+     * that the community's blank sheet is attached rather than re-uploaded by every master.
      */
     TableMaterial(true),
 
     /**
      * What a master attaches when <b>asking</b> for something on a table already in progress - the
-     * blank the request is about (ADR-15 §1).
+     * blank the request is about.
      *
-     * <p>A different moment from {@link #TableMaterial} and therefore a different cajón: one is what
+     * <p>A different moment from {@link #TableMaterial} and therefore a different category: one is what
      * the table offers, the other is what it asks for halfway through. The same published document
      * can sit in both, which costs two rows and no duplication - that is what a relation buys.
      */
     MasterRequest(true),
 
     /**
-     * What a player uploads when applying to a table (ADR-13 §1 uso 2).
+     * What a player uploads when applying to a table.
      *
-     * <p><b>An admin cannot publish here.</b> This cajón holds what each person answered with; a
-     * blank offered to everybody is not an answer, and it belongs in the master-side cajón the
+     * <p><b>An admin cannot publish here.</b> This category holds what each person answered with; a
+     * blank offered to everybody is not an answer, and it belongs in the master-side category the
      * request came from.
      */
     PlayerApplication(false),
 
     /**
-     * What a player hands in answering a request on a table they already play at (ADR-15 §1, §2).
+     * What a player hands in answering a request on a table they already play at.
      *
      * <p>Not publishable, for the same reason as {@link #PlayerApplication}.
      */
@@ -61,25 +61,25 @@ public enum FileCategory {
     /**
      * What the community publishes at large: its rules, an announcement.
      *
-     * <p><b>The one cajón that is not a flow</b>, and the reason it exists is that dropping
+     * <p><b>The one category that is not a flow</b>, and the reason it exists is that dropping
      * {@code public_audience} would otherwise leave this kind of document homeless: it comes out of
      * no application and is used on no table. Only an admin fills it, and everything in it is
      * published by construction.
      */
     Announcement(true);
 
-    /** Whether an admin may publish a file into this cajón. */
+    /** Whether an admin may publish a file into this category. */
     private final boolean publishable;
 
     /**
-     * @param publishable whether an admin may publish into this cajón
+     * @param publishable whether an admin may publish into this category
      */
     FileCategory(boolean publishable) {
         this.publishable = publishable;
     }
 
     /**
-     * Whether this cajón can hold somebody's <b>personal</b> file - one they keep in their own
+     * Whether this category can hold somebody's <b>personal</b> file - one they keep in their own
      * library rather than one the platform offers.
      *
      * <p>Four of the five can. {@link #Announcement} cannot, and the reason is not a permission: an
@@ -87,22 +87,22 @@ public enum FileCategory {
      * anybody lives through. It exists only in the platform's library, where an admin puts it there
      * by publishing - never in somebody's own.
      *
-     * <p><b>This is about the cajón, not about who is asking.</b> Which of the other four a given
+     * <p><b>This is about the category, not about who is asking.</b> Which of the other four a given
      * person may use depends on their roles and on the tables they run, and that is
      * {@code FileService.personalCategoriesOf}'s to answer.
      *
-     * @return true when a person may keep a file of their own in this cajón
+     * @return true when a person may keep a file of their own in this category
      */
     public boolean isPersonal() {
         return this != Announcement;
     }
 
     /**
-     * Returns whether an admin may publish a file into this cajón.
+     * Returns whether an admin may publish a file into this category.
      *
-     * <p>The two player-side cajones say no. They hold what individual people answered with, and a
+     * <p>The two player-side categories say no. They hold what individual people answered with, and a
      * blank offered to the whole community is not an answer - it is the request's, and it belongs in
-     * the master-side cajón the request was written from.
+     * the master-side category the request was written from.
      *
      * @return true when publishing here is allowed
      */

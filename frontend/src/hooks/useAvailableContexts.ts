@@ -10,7 +10,7 @@ interface AvailableContexts {
   contexts: AppContext[]
   /**
    * The context the reader is looking at. It is the one the **URL** belongs to, so the chip reports
-   * where they are instead of what they last chose (ADR-20 §2) - a master who opens `/player` reads
+   * where they are instead of what they last chose - a master who opens `/player` reads
    * "Jugador", because that is where they are. On a transversal screen, where no context owns the
    * path, it falls back to the remembered one.
    */
@@ -35,12 +35,11 @@ interface AvailableContexts {
 /**
  * Resolves the reader's contexts from their roles and from the URL.
  *
- * The Master context appears with the platform role **or** with at least one live row in `masters`
- * (ADR-06 §4): somebody running a single table, assigned without the role, still runs it.
+ * The Master context appears with the platform role **or** with at least one live row in `masters`: somebody running a single table, assigned without the role, still runs it.
  *
  * It reads the remembered context rather than trusting it raw: `activeContext` is persisted in
  * localStorage, which knows nothing about which account is signed in, so switching accounts in the
- * same browser can leave the previous session's context behind (ADR-18 §5).
+ * same browser can leave the previous session's context behind.
  *
  * @returns the contexts this account has, the one on screen, and the one to fall back to
  */

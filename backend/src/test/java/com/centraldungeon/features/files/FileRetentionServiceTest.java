@@ -20,11 +20,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The purge of ADR-13 §3, which is the lever that let the per-user quota of ADR-13 §3 be repealed: a quota limits
+ * The retention purge, which is the lever that made a per-user quota unnecessary: a quota limits
  * the person while the bill keeps growing, and this actually removes volume.
  *
  * <p>Which files qualify is a query, so what is asserted here is the contract around it - the cutoff
- * it is asked for, that a pass only marks, and that nothing physical happens (ADR-03 §7, ADR-13 §8).
+ * it is asked for, that a pass only marks, and that nothing physical happens.
  */
 @ExtendWith(MockitoExtension.class)
 class FileRetentionServiceTest {
@@ -52,7 +52,7 @@ class FileRetentionServiceTest {
         assertThat(cutoff.getValue()).isBetween(before.minusMinutes(1), before.plusMinutes(1));
     }
 
-    /** Marks and stamps. It never calls storage, because freeing bytes is F5's job (ADR-03 §7, ADR-13 §8). */
+    /** Marks and stamps. It never calls storage, because freeing bytes is a separate, later step. */
     @Test
     void marksTheCandidatesGoneAndStampsWhen() {
         StoredFile stale = file("file-1");

@@ -24,21 +24,20 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * {@code /requests}: the asking end. Two audiences means two controllers, and this is the one with
  * <b>no role at all</b> - anybody logged in can ask for something, which is what makes the mechanism
- * of ADR-16 §1 a door rather than a privilege.
+ * of approvals a door rather than a privilege.
  *
  * <p>Every endpoint here is scoped to the actor from the token. There is no user id in any path and
- * none in any body, so there is no way to ask on somebody else's behalf (ADR-05 §5, arquitectura §2.6) -
- * and the polymorphic reference has no foreign key that would catch it if there were (ADR-16 §2).
+ * none in any body, so there is no way to ask on somebody else's behalf -
+ * and the polymorphic reference has no foreign key that would catch it if there were.
  *
  * <p>The form that produces one of these lives on the screen that provokes it - the profile, the
- * explorer, the help page - and never on a "make a request" screen
- * (roles-y-alcance.md §4).
+ * explorer, the help page - and never on a "make a request" screen.
  */
 @RestController
 @RequestMapping("/api/v1/requests")
 public class ApprovalRequestController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final ApprovalService approvalService;
 
     /**
@@ -53,7 +52,7 @@ public class ApprovalRequestController {
      *
      * @param request     what is being asked for, and why. No entity id: the request is about the
      *                    actor, who comes from the token
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 201 with the request and a {@code Location} header. 400 when the reason is blank, the
      *         type is not one of the three, or a {@code TableOpen} names no table, 409 when the same request is already open or when the
      *         Master role is already held
@@ -77,8 +76,7 @@ public class ApprovalRequestController {
      * <p><b>This endpoint is why a request does not vanish.</b> Without it somebody sends a
      * justification into a hole: the screen that provoked the request has no way to say "you already
      * asked, it is pending since Tuesday" and offers the button again, where its only possible answer
-     * is a 409. A button that can only fail is a button that should not be drawn (principle 2 of
-     * diseno §1).
+     * is a 409. A button that can only fail is a button that should not be drawn.
      *
      * <p>Which is also why it takes a {@code ?q=}: reading page one of everything and inferring the
      * answer from it is how the button comes back anyway, the moment an old pending request is pushed
@@ -89,8 +87,8 @@ public class ApprovalRequestController {
      *                    {@code /status}, {@code /request_type} and {@code /requested_by}, with bare
      *                    text over the justification. Null or blank lists all of theirs. <b>It cannot
      *                    widen the result past the actor</b> - that filter is not part of the
-     *                    language and is applied in the service (ADR-05 §5)
-     * @param pageable    page and size; newest first, with a tie-break by id (ADR-07 §9)
+     *                    language and is applied in the service
+     * @param pageable    page and size; newest first, with a tie-break by id
      * @param currentUser the actor, from the token
      * @return 200 with one page of their requests
      */

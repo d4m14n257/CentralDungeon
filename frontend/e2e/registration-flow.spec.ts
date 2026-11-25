@@ -5,16 +5,14 @@ import { applyToTable } from './helpers/application'
 import { runnableTableBody } from './helpers/tableApi'
 
 /**
- * E1's vertical slice, end to end: a player finds an open table, applies, and the master
+ * The registration flow, end to end: a player finds an open table, applies, and the master
  * accepts them. Login goes through TestLoginController (backend "test" profile) instead of
- * a real Discord round trip - there is no Discord app registered yet (plan-desarrollo.md, E1
- * Bloque 8). Table creation has no UI in E1's scope (diseno §2 sitemap subset for
- * this stage has no "create table" screen), so it is seeded directly against the API, the same
- * way a fixture would be in any e2e suite.
+ * a real Discord round trip, which needs a registered Discord app. The table itself is seeded
+ * directly against the API, the same way a fixture would be in any e2e suite, because this spec
+ * is about the registration and not about the table wizard.
  *
- * Known limitation: there is no reset/seed harness yet, so each run leaves its user/table/
- * registration rows in the dev database - the random discordId suffix keeps repeated runs from
- * colliding with each other, not from accumulating data.
+ * The random discordId suffix keeps repeated and parallel runs from colliding with each other; the
+ * rows each run leaves behind are removed by the global teardown.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
@@ -28,8 +26,8 @@ async function testLogin(request: APIRequestContext, discordId: string, asMaster
 }
 
 /**
- * Preparation -> Opened is no longer the master's to do alone (E2 sub-slice 1, ADR-07 §1):
- * an admin has to approve it. An ephemeral admin signs in for that and nothing else.
+ * Preparation -> Opened is no longer the master's to do alone: an admin has to approve it. An
+ * ephemeral admin signs in for that and nothing else.
  */
 async function createOpenTable(request: APIRequestContext, accessToken: string, name: string) {
   const created = await request.post(`${BACKEND_URL}/api/v1/game-tables`, {
@@ -39,7 +37,7 @@ async function createOpenTable(request: APIRequestContext, accessToken: string, 
   expect(created.ok()).toBeTruthy()
   const table = (await created.json()) as { id: string }
 
-  // Born in Draft since ADR-07 §1: an admin has nothing to approve until its master lets go of it.
+  // Born in Draft: an admin has nothing to approve until its master lets go of it.
   const submitted = await request.post(`${BACKEND_URL}/api/v1/game-tables/${table.id}/submit`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
@@ -83,7 +81,7 @@ test('a player applies to an open table and the master accepts them', async ({ b
     const master2 = await newAuthenticatedPage(browser, masterDiscordId, true)
     try {
       await master2.page.goto(`/master/tables/${tableId}`)
-      // FIFO position and name, and no karma until F5 computes one (ADR-10 §5).
+      // FIFO position and name, and no karma until one is computed for the candidate.
       await expect(master2.page.getByText(new RegExp(`^1\\. ${playerDiscordId}`))).toBeVisible()
 
       await master2.page.getByRole('button', { name: 'Aceptar' }).click()

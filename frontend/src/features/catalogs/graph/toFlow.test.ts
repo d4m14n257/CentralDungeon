@@ -23,7 +23,7 @@ const dnd = [value('dnd'), value('dnd-a', { canonicalId: 'dnd' }), value('dnd-b'
 const pf2 = [value('pf2')]
 
 describe('toFlow', () => {
-  it('draws each group as a star: the head, and one edge from every member to it (ADR-12 §2)', () => {
+  it('draws each group as a star: the head, and one edge from every member to it', () => {
     const { nodes, edges } = toFlow([dnd], [])
 
     expect(nodes.map((node) => [node.id, node.data.role])).toEqual([
@@ -37,7 +37,7 @@ describe('toFlow', () => {
     ])
   })
 
-  it('leaves proposals floating, connected to nothing, to the left of every group (ADR-12 §7)', () => {
+  it('leaves proposals floating, connected to nothing, to the left of every group', () => {
     const { nodes, edges } = toFlow([dnd], [value('new', { status: 'Created' })])
 
     const floating = nodes.find((node) => node.id === 'new')

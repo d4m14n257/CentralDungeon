@@ -4,7 +4,7 @@ import { PLATFORM_ROLES } from './roles'
 import type { ChangeUserRoleInput, ChangeUserStatusInput } from './types'
 import type { Equals, Expect } from '@/types/utils'
 
-/** Validates the onboarding form: a display name and a country, both required (ADR-10 §4). */
+/** Validates the onboarding form: a display name and a country, both required. */
 export const completeOnboardingSchema = z.object({
   name: z.string().min(1).max(64),
   // min(1) first: an empty country reads as "required", not as a malformed code.
@@ -16,12 +16,12 @@ export const completeOnboardingSchema = z.object({
 
 /**
  * The onboarding form's values, inferred from the schema. Tied to `CompleteOnboardingInput` by a
- * compile-time assertion below, so form and payload cannot drift apart (arquitectura §3.2, rule 7).
+ * compile-time assertion below, so form and payload cannot drift apart.
  */
 export type CompleteOnboardingForm = z.infer<typeof completeOnboardingSchema>
 
 /**
- * Validates a role change: which role, and why (ADR-06 §1).
+ * Validates a role change: which role, and why.
  *
  * **The justification is required on this side too, and not only on the server.** The backend
  * answers `VALIDATION_ERROR` to an empty one, but a round trip is a bad way to learn that a textarea
@@ -40,7 +40,7 @@ export const changeUserRoleSchema = z.object({
 /** The role-change form's values, inferred from the schema. */
 export type ChangeUserRoleForm = z.infer<typeof changeUserRoleSchema>
 
-/** Validates a block or an unblock: the reason, which is all either of them sends (ADR-05 §7). */
+/** Validates a block or an unblock: the reason, which is all either of them sends. */
 export const changeUserStatusSchema = z.object({
   justification: z.string().trim().min(1).max(2000),
 })
@@ -49,7 +49,7 @@ export const changeUserStatusSchema = z.object({
 export type ChangeUserStatusForm = z.infer<typeof changeUserStatusSchema>
 
 /**
- * Form and payload cannot drift apart (arquitectura §3.2, regla 7): if the API's input type gains
+ * Form and payload cannot drift apart: if the API's input type gains
  * a field or renames one, these stop compiling instead of failing at runtime.
  */
 export type RoleFormMatchesPayload = Expect<Equals<ChangeUserRoleForm, ChangeUserRoleInput>>

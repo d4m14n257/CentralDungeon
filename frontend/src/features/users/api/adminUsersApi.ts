@@ -4,19 +4,19 @@ import { pageSize } from '@/config/pagination'
 import type { AdminUserDetail, AdminUserSummary, ChangeUserRoleInput, ChangeUserStatusInput, UserAdminChange } from '../types'
 
 /**
- * The seven calls of `/admin/users` (F3.1). A module of its own next to {@link usersApi} and not a
+ * The seven calls of `/admin/users`. A module of its own next to {@link usersApi} and not a
  * handful of extra functions inside it: these all answer to `hasAnyRole('ADMIN','OWNER')` and see
  * accounts nothing else in the application may see, the same way `catalogsApi` keeps its six admin
  * operations under their own prefix.
  *
  * **The four mutators answer with the updated detail** rather than `204`, which is what lets a
- * caller confirm the outcome — a grant of `Admin` comes back without `Owner` on it (ADR-06 §1), so the
+ * caller confirm the outcome — a grant of `Admin` comes back without `Owner` on it, so the
  * answer is the only place the second half of the transaction is visible. The hooks on top of it
  * still re-read the branch instead of patching one row in: one of these calls moves roles this
  * screen never asked about, and the listing has no way to know which rows those were.
  *
  * **The actor is never a parameter.** Who is acting comes from the token, and an id in the body
- * would be a claim the caller makes about themselves (arquitectura §2.6).
+ * would be a claim the caller makes about themselves.
  *
  * The two role sub-routes are `grant-role` and `revoke-role`, flat, and not `roles/grant`: that is
  * what `AdminUserController` registers, and it is the style `GameTableController` already uses for
@@ -28,7 +28,7 @@ export const adminUsersApi = {
    *
    * @param query the search box, already debounced, in the language of `lib/searchQuery.ts`
    * @param page  zero-based page number
-   * @param size  rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
+   * @param size  rows per page, one of `adminPageSizeOptions`
    */
   list: (query: string | undefined, page = 0, size: number = pageSize.admin) =>
     api.getPage<AdminUserSummary>('/api/v1/admin/users', { q: query, page, size }),
@@ -41,7 +41,7 @@ export const adminUsersApi = {
   byId: (id: string) => api.get<AdminUserDetail>(`/api/v1/admin/users/${id}`),
 
   /**
-   * What admins did to this account, and why (ADR-05 §7, ADR-06 §1). Never paginated: it is read as a whole,
+   * What admins did to this account, and why. Never paginated: it is read as a whole,
    * inside the panel that opens on one person.
    *
    * @param id the account whose history to read
@@ -50,7 +50,7 @@ export const adminUsersApi = {
 
   /**
    * Gives somebody a role. A `POST` with a body and not a `PUT`, because the justification is part
-   * of the act: a grant nobody explained is a grant nobody can review (ADR-06 §1).
+   * of the act: a grant nobody explained is a grant nobody can review.
    *
    * Refused with `OWNER_NOT_GRANTABLE` for `Owner`, whoever asks, and with `ROLE_GRANT_FORBIDDEN` when
    * an admin reaches for `Admin` — which this screen never offers, so they only surface for somebody
@@ -75,7 +75,7 @@ export const adminUsersApi = {
     api.post<AdminUserDetail, ChangeUserRoleInput>(`/api/v1/admin/users/${id}/revoke-role`, input),
 
   /**
-   * Closes an account (ADR-05 §7). The person stops being able to sign in; **nothing of theirs is
+   * Closes an account. The person stops being able to sign in; **nothing of theirs is
    * deleted** — their tables, applications and history stay exactly where they were.
    *
    * @param id    the account to block

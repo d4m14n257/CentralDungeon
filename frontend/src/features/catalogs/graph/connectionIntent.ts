@@ -1,11 +1,11 @@
 import type { AdminCatalogValue } from '../types'
 
 /**
- * What connecting one value to another means on the catalog canvas (ADR-12 §7, §6):
+ * What connecting one value to another means on the catalog canvas:
  *
- * - `accept` - a proposal nobody classified yet joins the group (ADR-12 §3)
- * - `reassign` - an alias leaves its group for this one (ADR-12 §6)
- * - `merge` - a whole group, head and aliases, folds into this one (ADR-12 §3)
+ * - `accept` - a proposal nobody classified yet joins the group
+ * - `reassign` - an alias leaves its group for this one
+ * - `merge` - a whole group, head and aliases, folds into this one
  */
 type CatalogConnectionIntent = 'accept' | 'reassign' | 'merge'
 
@@ -14,13 +14,13 @@ type CatalogConnectionIntent = 'accept' | 'reassign' | 'merge'
  *
  * **It is the whole grammar of the canvas**, and it is the same one the backend enforces, written
  * here so the canvas can refuse a connection while it is still being drawn instead of drawing it and
- * answering with a 409 (`isValidConnection`). The backend stays the authority; this is the grey
- * button principle 2 forbids, avoided.
+ * answering with a 409 (`isValidConnection`). The backend stays the authority; this avoids
+ * offering a connection that is going to be refused.
  *
  * - The target has to head a group and be accepted: depth is always 1, so nothing hangs from an
- *   alias (ADR-12 §2), and nothing joins what is out of circulation.
+ *   alias, and nothing joins what is out of circulation.
  * - A value never connects to itself, nor to the group it is already in.
- * - A proposal (`Created` or `Rejected`, which ADR-12 §3 lets an admin reconsider) is accepted into it.
+ * - A proposal (`Created` or `Rejected`, which an admin may reconsider) is accepted into it.
  * - An alias moves; a head carries its group and merges - only if it is accepted, like the server's
  *   merge asks.
  *

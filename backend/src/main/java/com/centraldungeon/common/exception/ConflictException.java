@@ -13,28 +13,28 @@ public final class ConflictException extends ApiException {
     private static final String DEFAULT_ERROR_CODE = "CONFLICT";
 
     /**
-     * A schedule clash of ADR-08 §2. It gets a code of its own because it is the one conflict the
+     * A schedule clash. It gets a code of its own because it is the one conflict the
      * interface has to <b>explain</b> rather than merely report: the message names the table the
      * agenda collides with, and a screen that cannot tell this 409 from any other has nothing to
-     * show but a generic failure (principle 2 of diseno §1).
+     * show but a generic failure.
      */
     public static final String SCHEDULE_CONFLICT = "SCHEDULE_CONFLICT";
 
     /**
-     * The same clash of ADR-08 §2, seen from the other side: a master accepting somebody whose own
-     * commitments collide with this table (R3).
+     * The same clash, seen from the other side: a master accepting somebody whose own
+     * commitments collide with this table.
      *
      * <p>It gets a code of its own and not {@link #SCHEDULE_CONFLICT} because the sentence is about
      * a <b>third person</b>, not about the reader - "it clashes with a table where you are already
      * committed" is simply false when what clashed is the candidate's week. Two situations, two
-     * messages, and the backend picks neither of them (ADR-23 §3).
+     * messages, and the backend picks neither of them.
      */
     public static final String CANDIDATE_SCHEDULE_CONFLICT = "CANDIDATE_SCHEDULE_CONFLICT";
 
     /**
-     * The same clash of ADR-08 §2, when the week that collides is <b>another master's</b> of the table
+     * The same clash, when the week that collides is <b>another master's</b> of the table
      * and not the reader's: an agenda is measured against every master who runs it, not only the one
-     * editing (ADR-08 §2).
+     * editing.
      *
      * <p>Its own code for the reason {@link #CANDIDATE_SCHEDULE_CONFLICT} has one: the sentence is
      * about a third person, so it carries {@link #PARAM_MASTER_NAME} besides the table.
@@ -47,15 +47,15 @@ public final class ConflictException extends ApiException {
     /**
      * The placeholder the clash message fills in: the name of the table the agenda collides with.
      *
-     * <p>It travels as data rather than baked into a sentence (ADR-23 §3), which is what lets the same
-     * clash read as "se pisa con «La Cripta»" or "clashes with “La Cripta”" depending on the
+     * <p>It travels as data rather than baked into a sentence, which is what lets the same
+     * clash read as "clashes with “The Crypt”" or its Spanish equivalent depending on the
      * language the reader chose.
      */
     public static final String PARAM_OTHER_TABLE_NAME = "otherTableName";
 
     /**
      * The operation would leave the platform with no active Owner. The one global invariant of roles
-     * (roles-y-alcance.md §3): a system where nobody can grant Owner has no way back from the
+     * (see the role scope rules): a system where nobody can grant Owner has no way back from the
      * inside, and MySQL cannot express the rule, so the service is the only place it can live.
      */
     public static final String LAST_OWNER = "LAST_OWNER";
@@ -68,18 +68,18 @@ public final class ConflictException extends ApiException {
      */
     public static final String CANNOT_REVOKE_OWN_OWNER = "CANNOT_REVOKE_OWN_OWNER";
 
-    /** Blocking an account that cannot be blocked because it is not usable already (ADR-05 §7). */
+    /** Blocking an account that cannot be blocked because it is not usable already. */
     public static final String USER_ALREADY_BLOCKED = "USER_ALREADY_BLOCKED";
 
     /** Unblocking an account that is not blocked. */
     public static final String USER_NOT_BLOCKED = "USER_NOT_BLOCKED";
 
     /**
-     * A second request of the same type from the same person while the first is still Pending (ADR-16 §1).
+     * A second request of the same type from the same person while the first is still Pending.
      *
      * <p>Its own code because the screen has something specific to do with it: stop offering the
      * button and show the pending request instead. A button whose only possible answer is this 409
-     * is a button that should not be there (principle 2 of diseno §1) - which is also why
+     * is a button that should not be there - which is also why
      * {@code GET /requests/mine} exists.
      */
     public static final String REQUEST_ALREADY_PENDING = "REQUEST_ALREADY_PENDING";
@@ -94,11 +94,11 @@ public final class ConflictException extends ApiException {
     public static final String REQUEST_ALREADY_RESOLVED = "REQUEST_ALREADY_RESOLVED";
 
     /**
-     * The entity a request points at is gone (ADR-16 §2).
+     * The entity a request points at is gone.
      *
      * <p>The direct consequence of a polymorphic reference with no foreign key: the row outlives what
-     * it points at, which ADR-16 §2 accepts on purpose - «una solicitud sobre una mesa borrada sigue
-     * siendo un hecho» - but resolving it would be acting on a ghost. Its own code because it is the
+     * it points at, which is accepted on purpose - a request about a deleted table is still a
+     * fact - but resolving it would be acting on a ghost. Its own code because it is the
      * one 409 here that is nobody's fault and that no retry fixes.
      */
     public static final String REQUEST_ENTITY_GONE = "REQUEST_ENTITY_GONE";
@@ -131,7 +131,7 @@ public final class ConflictException extends ApiException {
     public static final String REQUESTER_NOT_ACTIVE = "REQUESTER_NOT_ACTIVE";
 
     /**
-     * Acting on an item of the shared admin tray that <b>another admin holds</b> (ADR-16 §5) - reserving
+     * Acting on an item of the shared admin tray that <b>another admin holds</b> - reserving
      * it, giving it back, or resolving it.
      *
      * <p>Its own code because it is the one 409 here whose sentence names <b>somebody else</b>: the
@@ -148,7 +148,7 @@ public final class ConflictException extends ApiException {
     public static final String ITEM_ALREADY_CLAIMED = "ITEM_ALREADY_CLAIMED";
 
     /**
-     * Vetoing somebody who is already vetoed on this table (ADR-09 §5).
+     * Vetoing somebody who is already vetoed on this table.
      *
      * <p>Its own code because the screen has something to do with it: the row is already showing the
      * veto and its reason, so the answer is "refresh, it is done", not a failure. The likeliest way
@@ -158,7 +158,7 @@ public final class ConflictException extends ApiException {
     public static final String REGISTRATION_ALREADY_BLOCKED = "REGISTRATION_ALREADY_BLOCKED";
 
     /**
-     * Lifting a veto on somebody who is not vetoed (ADR-09 §5).
+     * Lifting a veto on somebody who is not vetoed.
      *
      * <p>The mirror of {@link #REGISTRATION_ALREADY_BLOCKED}, and it exists for the same reason a
      * veto is reversible at all: the two buttons sit on the same row, and a screen that cannot tell
@@ -167,7 +167,7 @@ public final class ConflictException extends ApiException {
     public static final String REGISTRATION_NOT_BLOCKED = "REGISTRATION_NOT_BLOCKED";
 
     /**
-     * Asking for a pause of a table that is already waiting on one (ADR-07 §2).
+     * Asking for a pause of a table that is already waiting on one.
      *
      * <p>Its own code for the same reason as {@link #REQUEST_ALREADY_PENDING}, which it deliberately
      * does not reuse: that one is about the person - «you already asked for this» - and this one is
@@ -177,11 +177,11 @@ public final class ConflictException extends ApiException {
     public static final String PAUSE_ALREADY_REQUESTED = "PAUSE_ALREADY_REQUESTED";
 
     /**
-     * An admin lowered a table's capacity below the players it already has (ADR-09 §3, ADR-06 §8).
+     * An admin lowered a table's capacity below the players it already has.
      *
      * <p>Only an admin can get here: the master rewrites a table before anybody plays at it, so there
      * is no roster for the new number to fall short of. Nobody is removed to make the number fit -
-     * which player would leave is a person's decision, never a side effect of an edit (ADR-15 §2). The
+     * which player would leave is a person's decision, never a side effect of an edit. The
      * frontend names how many there are, from {@link #PARAM_PLAYER_COUNT}.
      */
     public static final String CAPACITY_BELOW_PLAYERS = "CAPACITY_BELOW_PLAYERS";
@@ -199,12 +199,12 @@ public final class ConflictException extends ApiException {
     public static final String TABLE_FULL = "TABLE_FULL";
 
     /**
-     * Completing onboarding twice (ADR-10 §4). The step is blocking and happens once; editing the
+     * Completing onboarding twice. The step is blocking and happens once; editing the
      * name and country afterwards has its own endpoint, so this door refuses instead of working as an edit.
      */
     public static final String ONBOARDING_ALREADY_COMPLETED = "ONBOARDING_ALREADY_COMPLETED";
 
-    /** Editing the profile before onboarding is done (ADR-10 §4): the first fill-in has its own endpoint. */
+    /** Editing the profile before onboarding is done: the first fill-in has its own endpoint. */
     public static final String ONBOARDING_PENDING = "ONBOARDING_PENDING";
 
     /**
@@ -214,7 +214,7 @@ public final class ConflictException extends ApiException {
     public static final String CATALOG_VALUE_NOT_CANONICAL = "CATALOG_VALUE_NOT_CANONICAL";
 
     /**
-     * @param message what state made the request impossible, in English and for a log (ADR-23 §3)
+     * @param message what state made the request impossible, in English and for a log
      */
     public ConflictException(String message) {
         this(message, DEFAULT_ERROR_CODE);
@@ -232,7 +232,7 @@ public final class ConflictException extends ApiException {
     /**
      * @param message     what state made the request impossible, in English
      * @param errorCode   the stable code the frontend branches on
-     * @param errorParams the values the translated message needs, keyed by placeholder name (ADR-23 §3)
+     * @param errorParams the values the translated message needs, keyed by placeholder name
      */
     public ConflictException(String message, String errorCode, Map<String, String> errorParams) {
         super(HttpStatus.CONFLICT, errorCode, message, errorParams);

@@ -46,18 +46,18 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * The six endpoints of F3.2, over a socket and against MySQL.
+ * The six approval-request endpoints, over a socket and against MySQL.
  *
  * <p>Four things exist nowhere else, and a service test cannot reach any of them: the
  * {@code @PreAuthorize} on each method, Jackson's binding of {@link ApprovalRequestType} from a
- * request body, the shape of the {@code ProblemDetail} the frontend branches on (ADR-23 §3) - the four
+ * request body, the shape of the {@code ProblemDetail} the frontend branches on - the four
  * new codes included - and the {@code @PageableDefault}. The {@code Location} of the 201 is a fifth.
  *
- * <p><b>The matrix of roles-y-alcance.md §3, walked.</b> §7 of that document names the risk:
+ * <p><b>The role matrix, walked.</b> The risk:
  * {@code hasRole('ADMIN')} where {@code hasAnyRole('ADMIN','OWNER')} was meant locks the owner out
  * of a screen and nobody notices, because in development the test actor is usually an admin. The
  * same shape {@code AdminUserApiIT.everyRouteAnswersTheSameToAnAdminAndToAnOwner} has, for the four
- * admin routes of this slice.
+ * admin routes of this controller.
  *
  * <p>And the IDOR of {@code /requests/mine}, proven against the database rather than read off the
  * service: the actor filter is forced with an {@code AND} inside
@@ -136,7 +136,7 @@ class ApprovalRequestApiIT {
     @Autowired
     private TableRegistrationRepository registrationRepository;
 
-    /** Used once, to put a row into a state no endpoint of F3.2 can produce - see {@code breakTheReferenceOf}. */
+    /** Used once, to put a row into a state no endpoint can produce - see {@code breakTheReferenceOf}. */
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -212,7 +212,7 @@ class ApprovalRequestApiIT {
         reject(player, request, "rejecting myself").andExpect(status().isForbidden());
     }
 
-    /** And the asking end is open to anybody logged in - that is what makes ADR-16 §1 a door, not a privilege. */
+    /** And the asking end is open to anybody logged in - that is what makes it a door, not a privilege. */
     @Test
     void thePlainPlayerCanAskAndCanReadTheirOwn() throws Exception {
         submit(player, "General", "I need help with something").andExpect(status().isCreated());
@@ -260,7 +260,7 @@ class ApprovalRequestApiIT {
 
     /**
      * {@link ApprovalRequestType} crosses HTTP, so its {@code @JsonValue} carries the binding in both
-     * directions. This is the bloqueante of ADR-04 §5 in the one place it could repeat: the API publishes
+     * directions. This is the enum-serialization bug in the one place it could repeat: the API publishes
      * {@code "MasterGrant"}, and a body that sends anything else is a 400 with the code the frontend
      * reads - never a 500, and never a silent success.
      */
@@ -273,9 +273,9 @@ class ApprovalRequestApiIT {
         submit(other, "master_grant", "the snake one")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
-        // The two F3.4 added ARE types now, so they bind - and this endpoint still refuses them, with
+        // The table and registration types ARE types now, so they bind - and this endpoint still refuses them, with
         // a code that says why instead of pretending they do not exist. Both are opened from the
-        // aggregate they are about, because here the entity is not the person asking (F3.2 §0d).
+        // aggregate they are about, because here the entity is not the person asking.
         // 400 and not 403: the type travels in the body, and no change of actor would make it work.
         submit(other, "TablePause", "opened from the table, not here")
                 .andExpect(status().isBadRequest())
@@ -285,7 +285,7 @@ class ApprovalRequestApiIT {
                 .andExpect(jsonPath("$.errorCode").value("REQUEST_TYPE_NOT_ACCEPTED_HERE"));
     }
 
-    /** The justification is mandatory at both ends (ADR-16 §1), and a missing type is a 400 too. */
+    /** The justification is mandatory at both ends, and a missing type is a 400 too. */
     @Test
     void aBlankReasonIsRejectedOnBothEnds() throws Exception {
         submit(player, "General", "   ")
@@ -311,7 +311,7 @@ class ApprovalRequestApiIT {
 
     // ---------------------------------------------------------------- the four new codes
 
-    /** The four 409s of the contract, each over the wire and each with its own code (ADR-23 §3). */
+    /** The four 409s of the contract, each over the wire and each with its own code. */
     @Test
     void theFourNewConflictCodesTravelAsTheContractDeclaresThem() throws Exception {
         // REQUEST_ALREADY_PENDING: the same type twice.
@@ -351,16 +351,16 @@ class ApprovalRequestApiIT {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("REQUEST_ALREADY_RESOLVED"));
 
-        // REQUEST_ENTITY_GONE: the row outlives what it points at (ADR-16 §2), but resolving it would be
+        // REQUEST_ENTITY_GONE: the row outlives what it points at, but resolving it would be
         // acting on a ghost.
         //
         // The reference is broken with one UPDATE rather than by deleting the account, and that is
-        // not a shortcut - it is the only way in. **In F3.2 this 409 cannot be reached by any
-        // sequence of API calls**: all three types point at the requester, and `requested_by` has a
+        // not a shortcut - it is the only way in. **For a request about the requester this 409 cannot be reached by any
+        // sequence of API calls**: the type points at the requester, and `requested_by` has a
         // real foreign key, so the row the reference names is exactly the row the database refuses to
         // delete while the request exists. The guard is still worth having and worth pinning here -
-        // F3.4 adds `game_table` and `table_registration`, neither of which any foreign key protects,
-        // and that is the day it starts firing. See the report: this is an observation, not a defect.
+        // `game_table` and `table_registration` types are not protected by any foreign key,
+        // and that is where it starts firing. This is an observation, not a defect.
         String orphaned = openRequest(other, ApprovalRequestType.TableOpen, "about to point at nothing");
         breakTheReferenceOf(orphaned);
         approve(admin, orphaned, "cannot")
@@ -385,7 +385,7 @@ class ApprovalRequestApiIT {
     // ---------------------------------------------------------------- what approving does
 
     /**
-     * The sentence of roles-y-alcance.md §4, F3.2, over HTTP: approving a {@code MasterGrant} grants
+     * The core sentence over HTTP: approving a {@code MasterGrant} grants
      * the role <b>through {@code UserRoleService}</b>, which is visible from outside precisely
      * because that service is what writes the audit row and evicts the snapshot. A second path that
      * wrote {@code users_roles} directly would leave the trail empty.
@@ -467,7 +467,7 @@ class ApprovalRequestApiIT {
                 .isEqualTo(ApprovalStatus.Pending);
     }
 
-    /** Rejecting has no effect beyond being resolved - and the reason is as mandatory as on a yes (ADR-16 §1). */
+    /** Rejecting has no effect beyond being resolved - and the reason is as mandatory as on a yes. */
     @Test
     void rejectingAMasterGrantGrantsNothing() throws Exception {
         String request = openRequest(player, ApprovalRequestType.MasterGrant, "quiero dirigir");
@@ -482,14 +482,14 @@ class ApprovalRequestApiIT {
     }
 
     /**
-     * Submitting rings no bell (ADR-16 §5) and resolving rings exactly one, for the person who asked - and
+     * Submitting rings no bell and resolving rings exactly one, for the person who asked - and
      * it points where they can actually go: their own profile, never {@code /admin/requests}.
      */
     @Test
     void theResolutionNotifiesTheRequesterAndNothingElseDoes() throws Exception {
         String request = openRequest(player, ApprovalRequestType.MasterGrant, "quiero dirigir");
         assertThat(notificationRepository.findAll())
-                .as("a request notifies nobody: the queue is a view over the row (ADR-16 §5)")
+                .as("a request notifies nobody: the queue is a view over the row")
                 .isEmpty();
 
         approve(admin, request, "adelante").andExpect(status().isOk());
@@ -548,7 +548,7 @@ class ApprovalRequestApiIT {
     /**
      * The question the screen actually asks, in the string the frontend builds: "do I have one of
      * these open?". If the parser and the builder disagree the answer is silently wrong and the
-     * button comes back - which is the fragile point F3.1 found the expensive way.
+     * button comes back - which is a fragile point.
      */
     @Test
     void mineAnswersTheDoIAlreadyHaveOneQuestion() throws Exception {
@@ -566,7 +566,7 @@ class ApprovalRequestApiIT {
         as(get(MINE + "/mine").param("q", "/status Pending /and /request_type General"), player)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1));
-        // A value outside the enum is empty, never a 400 (arquitectura §2.5).
+        // A value outside the enum is empty, never a 400.
         as(get(MINE + "/mine").param("q", "/status Maybe"), player)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -574,7 +574,7 @@ class ApprovalRequestApiIT {
 
     // ---------------------------------------------------------------- the admin listing
 
-    /** {@code @PageableDefault}: twenty per page, oldest first with a tie-break by id (ADR-07 §9, ADR-04 §6). */
+    /** {@code @PageableDefault}: twenty per page, oldest first with a tie-break by id. */
     @Test
     void theAdminListingDefaultsToTwentyPerPageOldestFirst() throws Exception {
         for (int i = 0; i < 25; i++) {
@@ -591,7 +591,7 @@ class ApprovalRequestApiIT {
                 .andExpect(jsonPath("$.content[0].justification").value("motivo 00"))
                 .andExpect(jsonPath("$.content[19].justification").value("motivo 19"));
 
-        // The tie-break is what makes page two the rest of them rather than a reshuffle (ADR-07 §9).
+        // The tie-break is what makes page two the rest of them rather than a reshuffle.
         as(get(ADMIN).param("page", "1"), admin)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(5))
@@ -636,13 +636,13 @@ class ApprovalRequestApiIT {
         // Bare text: the justification *and* the requester's name at once.
         as(get(ADMIN).param("q", "terror"), admin).andExpect(jsonPath("$.totalElements").value(2));
         as(get(ADMIN).param("q", "carla"), admin).andExpect(jsonPath("$.totalElements").value(1));
-        // The connectors fold left to right with no precedence (ADR-22 §1).
+        // The connectors fold left to right with no precedence.
         as(get(ADMIN).param("q", "/request_type MasterGrant /or /request_type TableOpen"), admin)
                 .andExpect(jsonPath("$.totalElements").value(2));
         as(get(ADMIN).param("q", "terror /and /request_type TableOpen"), admin)
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].requestedByName").value(other.getName()));
-        // A value outside either enum matches nothing and is never a 400 (arquitectura §2.5).
+        // A value outside either enum matches nothing and is never a 400.
         as(get(ADMIN).param("q", "/request_type TablePause"), admin)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -658,7 +658,7 @@ class ApprovalRequestApiIT {
      * a second {@code CriteriaQuery} for the count, and the join to {@code users} that
      * {@code /requested_by} adds has to survive it - the failure being guarded against is a screen
      * showing rows with a total of zero, silently and only for one command. It is the same shape
-     * {@code UserRoleServiceIT.theRoleFilterCountsTheSamePeopleItLists} pins for F3.1.
+     * {@code UserRoleServiceIT.theRoleFilterCountsTheSamePeopleItLists} pins for the user listing.
      */
     @Test
     void aFilteredListingCountsTheSameRowsItShows() throws Exception {
@@ -685,10 +685,10 @@ class ApprovalRequestApiIT {
     }
 
     /**
-     * A request is born unreserved, and the shared tray is the only thing that reserves it (ADR-16 §5).
+     * A request is born unreserved, and the shared tray is the only thing that reserves it.
      *
-     * <p>This used to assert that <em>nothing</em> ever claimed a request, which was true of F3.2 and
-     * is exactly the half F3.3 came to add. What is still true - and what it pins now - is that
+     * <p>This used to assert that <em>nothing</em> ever claimed a request, which was once true and
+     * is exactly the half the tray later added. What is still true - and what it pins now - is that
      * opening a request reserves nothing, and that the reservation appears only once somebody takes
      * the item from the tray.
      *
@@ -770,8 +770,8 @@ class ApprovalRequestApiIT {
     /**
      * Points one request at an id nothing has, with an UPDATE and no JPA in the way.
      *
-     * <p>There is no API that does this and there cannot be one in F3.2 - see the comment at the call
-     * site. A plain UPDATE is the honest way to put the row into the state F3.4 will produce on its
+     * <p>There is no API that does this and there cannot be one for the requester-bound types - see the comment at the call
+     * site. A plain UPDATE is the honest way to put the row into the state the table types can reach on their
      * own, so that the guard reading it is exercised rather than assumed.
      */
     private void breakTheReferenceOf(String requestId) {

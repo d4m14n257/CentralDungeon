@@ -8,7 +8,7 @@ import com.centraldungeon.common.search.SearchTerm;
 import org.junit.jupiter.api.Test;
 
 /**
- * F3.1 taught {@code UserSearchSpecification} to serve two audiences, and the risk it introduced is
+ * {@code UserSearchSpecification} serves two audiences, and the risk that creates is
  * that the picker learns what only the admin listing should know. These tests pin the line.
  *
  * <p>The other half of that line - that {@code GET /users/search} still refuses to return a blocked
@@ -30,7 +30,7 @@ class UserSearchFieldTest {
 
     /**
      * The picker cannot even <em>express</em> a filter by status: {@code /status} is not in its vocabulary,
-     * so the parser leaves it as literal text (§2.5) and never as a criterion.
+     * so the parser leaves it as literal text and never as a criterion.
      */
     @Test
     void thePickerSearchesSlashStatusAsLiteralTextAndNotAsACriterion() {
@@ -59,7 +59,7 @@ class UserSearchFieldTest {
         });
     }
 
-    /** Un rol que no existe no es un 400: no matchea nada (§2.5). */
+    /** A role that does not exist is not a 400: it matches nothing. */
     @Test
     void anUnknownRoleNameResolvesToNoConstant() {
         assertThat(PlatformRole.fromRoleName("Wizard")).isEmpty();

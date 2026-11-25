@@ -22,7 +22,7 @@ export interface CatalogComboboxProps {
   selected: CatalogValue[]
   /** Called with the value the person picked, or with the one they just proposed. */
   onSelect: (value: CatalogValue) => void
-  /** Whether the person may propose a value that does not exist yet. Masters and admins may (ADR-12 §3). */
+  /** Whether the person may propose a value that does not exist yet. Masters and admins may. */
   canPropose?: boolean
 }
 
@@ -30,7 +30,7 @@ export interface CatalogComboboxProps {
  * Picks a value from a catalog, and - when the person is allowed to - proposes one that is not
  * there yet.
  *
- * The list only ever holds accepted values, because that is all the backend returns (ADR-12 §3). What
+ * The list only ever holds accepted values, because that is all the backend returns. What
  * makes this component more than a select is the second half: a master who does not find their
  * system can add it without leaving the wizard, and what comes back is marked as pending so they
  * are not left thinking everyone can already see it.
@@ -75,7 +75,7 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
   }
 
   async function handlePropose() {
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('admin.proposeConfirmTitle', { name: trimmed }),
       description: t('admin.proposeConfirmDescription'),
@@ -133,7 +133,7 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
                   <PlusIcon className="mr-2 size-4" aria-hidden="true" />
                   {t('combobox.propose', { name: trimmed })}
                 </CommandItem>
-                {/* ADR-12 §3 in one line: what the master is about to create is not visible to anyone else yet. */}
+                {/* In one line: what the master is about to create is not visible to anyone else yet. */}
                 <p className="text-fg-subtle px-3 pb-2 text-xs">{t('combobox.proposeHint')}</p>
               </CommandGroup>
             )}

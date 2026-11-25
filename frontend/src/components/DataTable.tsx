@@ -37,9 +37,9 @@ export interface DataTableProps<T> {
   /** Stable identity for a row - its React key. */
   getRowId: (row: T) => string
   /**
-   * Optional per-row actions, as a fragment of `IconAction`s (ADR-21 §11). The table wraps them in
+   * Optional per-row actions, as a fragment of `IconAction`s. The table wraps them in
    * `.row-actions` itself - one line, never wrapping - in the last column and at the foot of each
-   * card, so no screen writes that container and every table lines its icons up the same way (ADR-21 §5).
+   * card, so no screen writes that container and every table lines its icons up the same way.
    */
   renderActions?: (row: T) => ReactNode
   /** Accessible name for the table, since these screens rarely have a visible caption per table. */
@@ -54,7 +54,7 @@ export interface DataTableProps<T> {
 /**
  * A wide table that **stops being a table** when the screen is narrow.
  *
- * This is the expensive case of the responsive rules (skill `diseno` §5.b): /admin/catalogs,
+ * This is the expensive case of the responsive rules: /admin/catalogs,
  * /admin/users and /owner/audit all have five or more columns. Below `md` each row becomes a card -
  * identity and state at the top, the rest as labelled lines, actions at the foot - and **there is
  * never horizontal scroll**. A table you have to drag sideways on a phone is a table nobody reads.
@@ -68,7 +68,7 @@ export interface DataTableProps<T> {
  * Both layouts are built from the same column definitions, which is the point: there is one
  * description of what a row contains, not a table and a card list that drift apart.
  *
- * It knows nothing about any domain - no entity crosses its props, only columns and rows (arquitectura §3.1.2).
+ * It knows nothing about any domain - no entity crosses its props, only columns and rows.
  * The four states (loading, empty, error, forbidden) belong to the screen around it, not here: this
  * component's job is rows it was handed.
  *

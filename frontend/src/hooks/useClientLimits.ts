@@ -6,16 +6,16 @@ import { DEFAULT_CLAIM_TIMEOUT_MINUTES, DEFAULT_MAX_FILE_BYTES, DEFAULT_MAX_PLAY
 import type { ClientLimits } from '@/types/api'
 
 /**
- * The platform limits the interface states **before** somebody breaks one (principle 2 of
- * diseno §1).
+ * The platform limits the interface states **before** somebody breaks one, so a
+ * refusal never comes as a surprise.
  *
- * **Why it exists.** Until F3.5 the per-file cap and the tray's reservation timeout were constants on
+ * **Why it exists.** Until they became editable, the per-file cap and the tray's reservation timeout were constants on
  * both sides that happened to agree. Now an admin can change either from `/admin/settings` without a
- * deploy (ADR-17 §3), and a hardcoded mirror becomes a client that refuses files the server would take —
+ * deploy, and a hardcoded mirror becomes a client that refuses files the server would take —
  * or a help page promising fifteen minutes when the platform gives thirty. Asking the server is what
  * keeps the two in step.
  *
- * **It lives in `hooks/` and not in a feature** (regla dura 16). A feature never imports another
+ * **It lives in `hooks/` and not in a feature**. A feature never imports another
  * one, and these are read by `features/files`, `features/help` and `/admin/queue` while the screen
  * that edits them is `features/settings` — so the shared thing is not domain at all: it is platform
  * configuration, the same shelf `useBackendStatus` sits on.
@@ -26,7 +26,7 @@ import type { ClientLimits } from '@/types/api'
  * waiting on a fetch costs the whole screen.
  *
  * @returns the limits a client states rules with. Never the authority: the server applies the same
- *          cap and answers `FILE_TOO_LARGE` with the real number (ADR-23 §3), and the release job is what
+ *          cap and answers `FILE_TOO_LARGE` with the real number, and the release job is what
  *          actually hands a stale reservation back
  */
 export function useClientLimits(): ClientLimits {

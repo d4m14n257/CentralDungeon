@@ -30,7 +30,7 @@ interface BlockPlayerDialogProps {
    * The explanation of what this act does, shown above the note.
    *
    * A node rather than a `HelpLink` raised in here: `features/help` is another feature and a feature
-   * never imports one (arquitectura §3.1.5). The screen composes the two.
+   * never imports one. The screen composes the two.
    */
   help?: ReactNode
 }
@@ -44,7 +44,7 @@ interface BlockPlayerDialogProps {
  * a request an admin decides, and nothing changes for the person meanwhile.
  *
  * **It is not `JustifiedTableActionDialog`**, which is the identical shape one feature over. A
- * feature never imports from another (regla dura 16), and this form belongs to whoever owns the
+ * feature never imports from another, and this form belongs to whoever owns the
  * registration. The shared component of `components/` is the move if a third feature ever needs it.
  *
  * **The refusal lands inline and not in a toast**: the form is still open, and the races this
@@ -79,7 +79,7 @@ export function BlockPlayerDialog({ tableId, registrationId, playerName, action,
   }
 
   async function onSubmit(values: BlockRegistrationForm) {
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t(`veto.${variant}ConfirmTitle`, { name: playerName }),
       description: t(`veto.${variant}ConfirmDescription`),

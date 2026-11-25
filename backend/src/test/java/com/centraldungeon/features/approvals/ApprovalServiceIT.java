@@ -53,17 +53,17 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * What only a real database can answer about F3.2: the two check-then-act rules under a real race,
- * and the orphan sweep of ADR-16 §2 over real rows.
+ * What only a real database can answer about approval requests: the two check-then-act rules under a real race,
+ * and the orphan sweep over real rows.
  *
  * <p>{@code REQUEST_ALREADY_RESOLVED} and {@code REQUEST_ALREADY_PENDING} both read a row, decide,
  * and then write - with nothing serialising the two halves. Every unit test of them runs one thread,
- * so the rule reads correct and the interleaving is invisible; F3.1 learned what that costs when the
- * last-owner invariant turned out to break for real against MySQL (ADR-06 §2). These are the same shape,
+ * so the rule reads correct and the interleaving is invisible; the role tests learned what that costs when the
+ * last-owner invariant turned out to break for real against MySQL. These are the same shape,
  * so they get the same treatment: two threads, one latch, and an assertion about the row afterwards.
  *
  * <p>And {@link ApprovalOrphanCheckService}, which is a third of the price of the polymorphic
- * reference (ADR-16 §2) and had only ever run against mocks. A job nobody ever ran against a database is a
+ * reference and had only ever run against mocks. A job nobody ever ran against a database is a
  * job nobody knows runs.
  *
  * <p>Wired with {@code @DynamicPropertySource}, not {@code @ServiceConnection}: see
@@ -257,7 +257,7 @@ class ApprovalServiceIT {
      * it: nothing else can interfere, so what comes out is the guard on its own.
      *
      * <p>A {@code General} request is the right shape for that, and it is also the common one - two
-     * of the three types of this slice do nothing when approved.
+     * of the three requester-bound types do nothing when approved.
      */
     @Test
     void twoAdminsApprovingTheSameRequestAtOnceProduceOneAnswerAndOneConflict() throws InterruptedException {
@@ -340,7 +340,7 @@ class ApprovalServiceIT {
     // ---------------------------------------------------------------- the orphan sweep, for real
 
     /**
-     * <b>The sweep of ADR-16 §2, over rows instead of mocks.</b> One Pending request whose reference no
+     * <b>The orphan sweep, over rows instead of mocks.</b> One Pending request whose reference no
      * longer resolves is reported; a healthy one is not; and a resolved one is not looked at, because
      * whether a two-year-old approval still points at a live entity is a question nobody can act on.
      */
@@ -375,10 +375,10 @@ class ApprovalServiceIT {
      * <b>The ERROR branch, from a real row.</b> An {@code entity_type} the resolver has no case for
      * throws - which is the right diagnosis for a flow added without teaching it - but a sweep is a
      * report over many rows, and one misconfigured row must not cost the report on every row behind
-     * it. The row written here is exactly what the next phase produces the day it points a request at
+     * it. The row written here is exactly what a future type produces the day it points a request at
      * something new and forgets the resolver.
      *
-     * <p>The sentinel <b>used to be {@code game_table}</b>, and F3.4 turning that into a case the
+     * <p>The sentinel <b>used to be {@code game_table}</b>, and turning that into a case the
      * resolver answers is what made this test start reporting two orphans instead of one: the fixture
      * stopped being unknown and became a request pointing at a table that is not there. So the
      * sentinel moved to a type nothing resolves - and the fact that it had to move is the point of the
@@ -631,9 +631,9 @@ class ApprovalServiceIT {
     /**
      * Points a request at an id nothing has.
      *
-     * <p>An UPDATE and not a delete, because in F3.2 there is no way to delete what a request points
-     * at: all three types point at the requester and {@code requested_by} is a real foreign key, so
-     * the database refuses. F3.4's types point at rows nothing protects, and this is the state they
+     * <p>An UPDATE and not a delete, because for the types that point at the requester there is no way to delete what a request points
+     * at: {@code requested_by} is a real foreign key, so the database refuses. The table and registration
+     * types point at rows nothing protects, and this is the state they
      * will reach on their own.
      */
     private void pointAtNothing(String requestId) {

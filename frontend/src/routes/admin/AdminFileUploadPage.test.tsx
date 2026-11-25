@@ -35,7 +35,7 @@ function renderPage() {
 const pdf = (name: string) => new File(['hoja'], name, { type: 'application/pdf' })
 
 describe('AdminFileUploadPage', () => {
-  /** Each dropped file gets its own select, so several can go up at once, each as what it is (ADR-14 §7). */
+  /** Each dropped file gets its own select, so several can go up at once, each as what it is. */
   it('gives every staged file its own select', async () => {
     renderPage()
 
@@ -48,10 +48,10 @@ describe('AdminFileUploadPage', () => {
   })
 
   /**
-   * Nothing lands in the library without saying which flow it is for (ADR-14 §7, M24.1): with a file still
-   * unclassified, «Subir» sends nothing and says what is missing instead of greying out silently.
+   * Nothing lands in the library without saying which flow it is for: with a file still
+   * unclassified, the upload button sends nothing and says what is missing instead of greying out silently.
    */
-  it('sends nothing and says so while a file has no cajón', async () => {
+  it('sends nothing and says so while a file has no category', async () => {
     renderPage()
 
     await userEvent.upload(document.querySelector('input[type="file"]') as HTMLInputElement, pdf('ficha.pdf'))
@@ -63,8 +63,8 @@ describe('AdminFileUploadPage', () => {
   })
 
   /**
-   * ADR-14 §7: nothing goes up on the click. The confirmation says what the choice does first; cancelling
-   * sends nothing, and confirming sends each file with its cajón and the choice that was made.
+   * Nothing goes up on the click. The confirmation says what the choice does first; cancelling
+   * sends nothing, and confirming sends each file with its category and the choice that was made.
    */
   it('asks before uploading, and sends the choice only once confirmed', async () => {
     uploadToLibrary.mockResolvedValue({ file: { id: 'file-1' }, deduplicated: false })

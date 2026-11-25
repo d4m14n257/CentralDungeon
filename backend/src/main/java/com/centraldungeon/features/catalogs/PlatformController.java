@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/platforms")
 public class PlatformController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final PlatformService platformService;
 
     /**
@@ -35,10 +35,10 @@ public class PlatformController {
     }
 
     /**
-     * Accepted values only (ADR-12 §3): what the wizard's combobox offers and what a filter can use.
+     * Accepted values only: what the wizard's combobox offers and what a filter can use.
      *
      * @param query    the search box, or null for the whole catalog
-     * @param pageable page, size and sort; by name, with a tie-break by id (ADR-07 §9)
+     * @param pageable page, size and sort; by name, with a tie-break by id
      * @return 200 with one page of accepted platforms
      */
     @GetMapping
@@ -50,16 +50,16 @@ public class PlatformController {
     }
 
     /**
-     * Whoever writes a table proposes - a Master, an admin, or somebody assigned to run one (ADR-06 §4);
-     * only an admin accepts and classifies (ADR-12 §3).
+     * Whoever writes a table proposes - a Master, an admin, or somebody assigned to run one;
+     * only an admin accepts and classifies.
      *
      * @param request     the name to add to the catalog
-     * @param currentUser the proposer, from the token (ADR-05 §5)
+     * @param currentUser the proposer, from the token
      * @return 201 with the created platform, in {@code Created}. 409 if the
      *         name is already taken, 403 if the proposer writes no table
      */
     @PostMapping
-    // Authenticated here, decided in the service: proposing is pertenencia as well as role (ADR-06 §4).
+    // Authenticated here, decided in the service: proposing is membership as well as role.
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CatalogValueResponse> propose(
             @Valid @RequestBody CreateCatalogValueRequest request, @AuthenticationPrincipal CurrentUser currentUser) {

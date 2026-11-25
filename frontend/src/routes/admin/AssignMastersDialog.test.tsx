@@ -35,8 +35,8 @@ vi.mock('@/features/tables', () => ({
 
 function renderDialog() {
   return render(
-    // The provider is real and not a stub: FormDialog asks it before discarding a dirty form
-    // (ADR-20 §5), so a dialog rendered without it throws rather than rendering.
+    // The provider is real and not a stub: FormDialog asks it before discarding a dirty form,
+    // so a dialog rendered without it throws rather than rendering.
     <MemoryRouter>
       <ConfirmDialogProvider>
         <AssignMastersDialog tableId="table-1" tableName="Curse of Strahd" open onOpenChange={vi.fn()} />
@@ -60,7 +60,7 @@ describe('AssignMastersDialog', () => {
     )
   })
 
-  it('tocar el chip de un Secondary lo asciende y degrada al Primary anterior', async () => {
+  it('tapping the chip of a Secondary promotes it and demotes the previous Primary', async () => {
     renderDialog()
 
     await userEvent.click(screen.getByRole('button', { name: 'Elegir juanma' }))

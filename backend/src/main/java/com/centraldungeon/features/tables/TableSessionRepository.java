@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-/** Reads and writes {@code table_sessions} - a table's materialized calendar (ADR-08 §3). */
+/** Reads and writes {@code table_sessions} - a table's materialized calendar. */
 public interface TableSessionRepository extends JpaRepository<TableSession, String> {
 
     /**
@@ -27,7 +27,7 @@ public interface TableSessionRepository extends JpaRepository<TableSession, Stri
 
     /**
      * A table's sessions in one status, in playing order. With {@code Scheduled} it is what a resume
-     * re-lays (ADR-08 §3) and what a pause hides.
+     * re-lays and what a pause hides.
      *
      * @param gameTableId the table
      * @param status      the status to match
@@ -46,7 +46,7 @@ public interface TableSessionRepository extends JpaRepository<TableSession, Stri
     boolean existsByGameTable_Id(String gameTableId);
 
     /**
-     * The highest {@code sequence_number} the table has used. The replacement session of ADR-08 §3 takes
+     * The highest {@code sequence_number} the table has used. The replacement session of a cancelled one takes
      * the next one, so it can never collide with the row it is replacing.
      *
      * @param gameTableId the table
@@ -58,7 +58,7 @@ public interface TableSessionRepository extends JpaRepository<TableSession, Stri
     /**
      * Locks one session for the rest of the transaction. Correcting, holding and cancelling all read
      * the row, decide on its status and write it back, and two masters of the same table can do that
-     * at the same time - the replacement of ADR-08 §3 in particular reads the table's highest sequence
+     * at the same time - the replacement of a cancelled session in particular reads the table's highest sequence
      * number, which two concurrent cancellations would otherwise both read as the same value.
      *
      * @param id the session to lock
@@ -70,12 +70,12 @@ public interface TableSessionRepository extends JpaRepository<TableSession, Stri
 
     /**
      * Sessions whose date has gone by and that nobody closed, across several tables at once - the
-     * third probe of the master dashboard (ADR-20 §4).
+     * third probe of the master dashboard.
      *
      * @param gameTableIds the tables somebody runs. A table with nothing overdue is absent from the
      *                     result rather than reported as zero
      * @param status       the status that means "still open", always {@code Scheduled}
-     * @param before       the cutoff, in UTC (ADR-03 §6) - in practice now
+     * @param before       the cutoff, in UTC - in practice now
      * @return one row per table that has at least one overdue open session
      */
     @Query("""

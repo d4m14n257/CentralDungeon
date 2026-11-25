@@ -58,7 +58,7 @@ beforeEach(() => {
 
 describe('RoleChangeDialog', () => {
   /**
-   * Principio 2 de diseno §1, taken literally: **absent, not disabled**. An admin does
+   * A button that cannot be used is not shown, taken literally: **absent, not disabled**. An admin does
    * not find a greyed-out "make this person an admin" and does not find one that fails when pressed.
    */
   it('an admin finds no way at all to hand out Admin or Owner', () => {
@@ -71,7 +71,7 @@ describe('RoleChangeDialog', () => {
     expect(screen.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
   })
 
-  /** Owner is not granted from the application, not even by an owner (ADR-06 §1). */
+  /** Owner is not granted from the application, not even by an owner. */
   it('the owner is offered three roles and never Owner to grant', () => {
     renderDialog(OWNER_GRANTABLE_ROLES)
 
@@ -143,7 +143,7 @@ describe('RoleChangeDialog', () => {
     expect(grantRole).not.toHaveBeenCalled()
   })
 
-  /** Every audit row carries a reason (ADR-06 §1): the server enforces it, and so does the form. */
+  /** Every audit row carries a reason: the server enforces it, and so does the form. */
   it('refuses to send without a role or without a reason', async () => {
     renderDialog(ADMIN_GRANTABLE_ROLES)
 
@@ -158,8 +158,8 @@ describe('RoleChangeDialog', () => {
   })
 
   /**
-   * The invariante global of the phase (roles-y-alcance.md §3), read back in the
-   * reader's own language from the code and not from the backend's English `detail` (ADR-23 §3).
+   * The global invariant, read back in the
+   * reader's own language from the code and not from the backend's English `detail`.
    */
   it.each([
     ['LAST_OWNER', 'La plataforma no puede quedarse sin ningún Owner. Dale el rol a otra persona antes de quitar este.'],

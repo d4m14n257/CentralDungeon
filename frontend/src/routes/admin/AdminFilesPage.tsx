@@ -51,31 +51,30 @@ const DELETE_ACTION = 'delete'
 const MAX_LINKED_TABLES = 3
 
 /**
- * /admin/files — the platform's library: what the community publishes for every table (ADR-13 §2, ADR-14 §1,
- * ADR-14 §7).
+ * /admin/files — the platform's library: what the community publishes for every table.
  *
  * The screen exists for one capability the rest of the file story depends on: **publishing**. Once
  * the community's default character sheet is here, masters attach *that* file instead of uploading
  * their own copy, so correcting it corrects every table at once and the same bytes are stored once
- * rather than once per master. Without this screen, ADR-14 §1 would be a rule nothing could exercise.
+ * rather than once per master. Without this screen, publishing would be a rule nothing could exercise.
  *
- * **The library and its lifecycle** (ADR-14 §7). A file here is unpublished, published or hidden,
+ * **The library and its lifecycle**. A file here is unpublished, published or hidden,
  * and the column says which; publishing and hiding are row actions, each confirmed with what it does
- * to masters. Uploading happens on its own page, /admin/files/upload, where each file gets the cajón
+ * to masters. Uploading happens on its own page, /admin/files/upload, where each file gets the category
  * it goes into and the admin chooses whether it goes out now. Somebody's private file
  * — what a player applied with or handed in — never shows up, because it is theirs and not the
- * library's. That is also why the screen speaks of three cajones and not five: the two player-side
- * ones hold people's answers, and nothing is ever published into them (ADR-14 §4).
+ * library's. That is also why the screen speaks of three categories and not five: the two player-side
+ * ones hold people's answers, and nothing is ever published into them.
  *
  * The tables column is not decoration either: one file naming its three tables, each linked to its
  * admin page, is what makes "linking is not copying" something an admin can see rather than something
  * a document claims. Past the third, «and N more» is a button that opens every table of the file,
- * each one linked (ADR-14 §7): the row already carries them all.
+ * each one linked: the row already carries them all.
  *
- * **What was searched and which page are in the URL**, like /admin/catalogs (ADR-12 §7): a row is
+ * **What was searched and which page are in the URL**, like /admin/catalogs: a row is
  * something one admin sends to another, and state that only lives in `useState` cannot be linked to.
  *
- * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
+ * One of the wide tables: below `md` it stops being a table and each row
  * becomes a card, from the same column definitions — never horizontal scroll.
  */
 export function AdminFilesPage() {
@@ -85,21 +84,21 @@ export function AdminFilesPage() {
   const { batch, press, isMarked, clear, apply } = useShiftBatch()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page: in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
   const timeZone = browserTimeZone()
 
   // The search box holds a structured value, but what travels - to the URL and to the API - is the
-  // raw string of ADR-22 §1. Hydrating from the URL on mount is what makes a filtered view linkable
-  // (ADR-12 §7), the same property /admin/catalogs has. One list of commands, given to the box, used to
-  // read `?q=` and shown in the help; the wiring is the shared hook (ADR-22 §3).
+  // raw string of the query. Hydrating from the URL on mount is what makes a filtered view linkable,
+  // the same property /admin/catalogs has. One list of commands, given to the box, used to
+  // read `?q=` and shown in the help; the wiring is the shared hook.
   const fields = useMemo(() => adminFileSearchFields(t), [t])
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
-  // isLoadingError, not isError: see ADR-19 §4.
-  // The category is a filter and not a search term (ADR-14 §4): three known values are chosen from, never
-  // typed at. A hand-edited URL naming one of the player-side cajones is dropped rather than sent,
-  // since the library has no such shelf and the server would refuse it (ADR-14 §7).
+  // isLoadingError, not isError: a failed refetch keeps the rows already on screen.
+  // The category is a filter and not a search term: three known values are chosen from, never
+  // typed at. A hand-edited URL naming one of the player-side categories is dropped rather than sent,
+  // since the library has no such shelf and the server would refuse it.
   const requestedCategory = searchParams.get('category')
   const category = PUBLISHABLE_CATEGORIES.find((value) => value === requestedCategory) ?? null
   const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(search.query, undefined, category ?? undefined, page, size)
@@ -114,7 +113,7 @@ export function AdminFilesPage() {
    *
    * It builds on the **previous** params rather than the ones this render read: «clear filters» writes
    * the query and the category in the same click, and the second write would otherwise start from a
-   * copy that does not have the first one yet (ADR-22 §4).
+   * copy that does not have the first one yet.
    */
   function updateParams(changes: Record<string, string>) {
     // Marks belong to the rows on screen: another page or search would apply them out of sight.
@@ -199,7 +198,7 @@ export function AdminFilesPage() {
         </>
       ),
     },
-    // Where it stands in the library (ADR-14 §7): whether masters can see it is the first thing to know.
+    // Where it stands in the library: whether masters can see it is the first thing to know.
     {
       id: 'state',
       header: t('admin.columns.state'),
@@ -209,7 +208,7 @@ export function AdminFilesPage() {
     {
       id: 'category',
       header: t('admin.columns.category'),
-      // Plural: a published blank can serve more than one flow at once (ADR-14 §4).
+      // Plural: a published blank can serve more than one flow at once.
       cell: (file) => (
         <div className="flex flex-wrap gap-1">
           {file.categories.map((category) => (
@@ -227,7 +226,7 @@ export function AdminFilesPage() {
         </Link>
       ),
     },
-    // The tables that make ADR-14 §1 visible: one file, three tables, each one a link. Past a few the
+    // The tables that make the sharing visible: one file, three tables, each one a link. Past a few the
     // rest are only counted: a published sheet can serve many tables and a cell is not a list.
     {
       id: 'uses',
@@ -321,7 +320,7 @@ export function AdminFilesPage() {
                 <FilePreviewButton fileId={file.id} name={file.name} mimeType={file.mimeType} />
                 {/* An action a row's state would make the server refuse is absent or explained, never
                     silently greyed out: a disabled button that does not say why is worse than no
-                    button (principle 2). Publishing a file that does not say what it is stays in view
+                    button. Publishing a file that does not say what it is stays in view
                     because the fix is the next button along, and the tooltip says so. */}
                 {(libraryStateOf(file) === 'Unpublished' || libraryStateOf(file) === 'Hidden') && (
                   <>

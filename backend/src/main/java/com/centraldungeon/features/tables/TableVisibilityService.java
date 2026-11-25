@@ -9,26 +9,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The one gate every read of a concrete table goes through, and the reason F3.4 could be built at
- * all.
+ * The one gate every read of a concrete table goes through, and the reason a veto can be
+ * added in one place.
  *
  * <p>Before this class there were <b>three</b> copies of the same lookup - {@code
  * GameTableService.getEntityById}, whose own Javadoc claimed to be «the single lookup every read
  * goes through» and was not, {@code TableSessionService.getTable}, and {@code
  * TableTaskService.requireLiveTable}. Each of them answered the same question ("is this table there,
  * and is it gone?") with the same four lines, which is survivable while the only answer is
- * {@code Deleted}. The veto of ADR-09 §4 is the second answer, and a rule with three homes is a rule that
- * gets added to two of them. §7 of {@code roles-y-alcance.md} named that failure in advance: «el
- * veto toca seis vías de lectura y es fácil cerrar cinco».
+ * {@code Deleted}. The veto (a blocked player no longer sees the table) is the second answer, and a rule with
+ * three homes is a rule that gets added to two of them: the veto touches six read paths and it is
+ * easy to close five.
  *
  * <p>So the three copies became calls to this class, and the veto is written here <b>once</b>.
  * {@code ProfileVisibilityService.requireVisible} is the shape it copies: a public {@code require*}
  * that is the single place a visibility rule lives, throwing {@link NotFoundException} and never
- * {@code ForbiddenActionException} - a 403 confirms exactly what the 404 denies (ADR-09 §4, ADR-10 §3).
+ * {@code ForbiddenActionException} - a 403 confirms exactly what the 404 denies.
  *
  * <p><b>Two doors, and the narrow one is the default.</b> {@link #requireVisible} is for a read
  * somebody performs; {@link #requireExisting} is for the reads that have no reader to be vetoed -
- * a master managing their own table, an admin resolving a request - where pertenencia is checked
+ * a master managing their own table, an admin resolving a request - where membership is checked
  * immediately afterwards and a veto is not a question that can be asked. Both go through the same
  * private load, so «the table is gone» is still decided in one place.
  */
@@ -38,10 +38,10 @@ public class TableVisibilityService {
     /** The tables themselves - this class never reaches for one any other way. */
     private final GameTableRepository gameTableRepository;
 
-    /** Where the veto lives: a {@code Blocked} row of {@code table_registrations} (ADR-09 §4, §5). */
+    /** Where the veto lives: a {@code Blocked} row of {@code table_registrations}. */
     private final TableRegistrationRepository registrationRepository;
 
-    /** Who may still read a table that was never public: its masters and the admins (ADR-07 §1, ADR-06 §8). */
+    /** Who may still read a table that was never public: its masters and the admins. */
     private final MasterService masterService;
 
     /**
@@ -61,12 +61,12 @@ public class TableVisibilityService {
     /**
      * The one lookup every read of a concrete table goes through.
      *
-     * <p>404 for the deleted (ADR-03 §7, ADR-07 §6), 404 for the vetoed (ADR-09 §4), and 404 for a
-     * table that was never public when the reader neither runs it nor is an admin (ADR-07 §1) -
+     * <p>404 for the deleted, 404 for the vetoed, and 404 for a
+     * table that was never public when the reader neither runs it nor is an admin -
      * deliberately the same 404: any answer that distinguishes them tells the reader the table is there.
      *
      * @param gameTableId the table
-     * @param actorId     who is reading, always from the token (ADR-05 §5)
+     * @param actorId     who is reading, always from the token
      * @return the table
      * @throws NotFoundException when the table is not there, was soft-deleted, was never public and
      *                          the actor is outside it, or the actor is vetoed on it - never a 403
@@ -100,9 +100,9 @@ public class TableVisibilityService {
      * The same lookup, for the reads where nobody can be vetoed.
      *
      * <p>Used by the flows whose actor is a master of the table or an admin: a master holds a row in
-     * {@code masters} and the two sets are disjoint (ADR-18 §4), so «is this master vetoed here» has no
+     * {@code masters} and the two sets are disjoint, so «is this master vetoed here» has no
      * answer to give. What it still decides is the part that is common to every read - a
-     * soft-deleted table is gone for everyone (ADR-03 §7, ADR-07 §6).
+     * soft-deleted table is gone for everyone.
      *
      * <p>It exists so that a caller that genuinely has no reader does not have to invent one; it is
      * <b>not</b> an escape hatch for a public read. Anything a player can reach uses
@@ -118,13 +118,13 @@ public class TableVisibilityService {
     }
 
     /**
-     * Whether this person is vetoed on this table (ADR-09 §4, §5).
+     * Whether this person is vetoed on this table.
      *
      * <p>Only one part of what {@link #requireVisible} and {@link #canSee} decide: a caller that needs
      * to know whether somebody may read the table asks one of those, not this.
      *
      * @param gameTableId the table
-     * @param actorId     the person, always from the token (ADR-05 §5)
+     * @param actorId     the person, always from the token
      * @return true when they hold a {@code Blocked} registration on it
      */
     @Transactional(readOnly = true)
@@ -133,7 +133,7 @@ public class TableVisibilityService {
                 gameTableId, actorId, List.of(TableRegistrationStatus.Blocked));
     }
 
-    /** The part every door shares: the row, and the soft delete that makes it gone (ADR-03 §7, ADR-07 §6). */
+    /** The part every door shares: the row, and the soft delete that makes it gone. */
     private GameTable load(String gameTableId) {
         return findLive(gameTableId).orElseThrow(() -> notFound(gameTableId));
     }

@@ -15,14 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Public profiles: the caller's own, and everybody else's under the five rules of arquitectura §4.5
- * ("Visibilidad de perfiles": ADR-10 §1, §2, ADR-06 §8).
+ * Public profiles: the caller's own, and everybody else's under the five profile visibility rules.
  */
 @RestController
 @RequestMapping("/api/v1/users")
 public class ProfileController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final ProfileService profileService;
 
     /**
@@ -36,7 +35,7 @@ public class ProfileController {
      * The caller's own profile.
      *
      * @param currentUser the actor, from the token. There is no id parameter, so this can only ever
-     *                    answer about the caller (ADR-05 §5)
+     *                    answer about the caller
      * @return 200 with their profile
      */
     @GetMapping("/me/profile")
@@ -49,14 +48,13 @@ public class ProfileController {
      * Somebody else's profile.
      *
      * <p>{@code id} names the person the profile describes, never the actor - the actor still only
-     * ever comes from the token (ADR-05 §5). Whether it may be read is the five rules of §5.
+     * ever comes from the token. Whether it may be read is decided by the five profile visibility rules.
      *
      * @param id          whose profile this is
      * @param currentUser the actor, from the token
      * @return 200 with the profile
      * @throws com.centraldungeon.common.exception.NotFoundException 404 if the person does not exist,
      *         or the actor may not see them - the two never distinguish themselves in the response
-     *         (ADR-10 §3)
      */
     @GetMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
@@ -65,7 +63,7 @@ public class ProfileController {
     }
 
     /**
-     * Every table a person runs, plays at or applied to, for an admin reading their record (ADR-06 §8).
+     * Every table a person runs, plays at or applied to, for an admin reading their record.
      *
      * @param id       whose tables these are
      * @param pageable page and size; newest table first, always
@@ -79,7 +77,7 @@ public class ProfileController {
     }
 
     /**
-     * The tables a person played to the end, behind the «finished tables» count of their profile.
+     * The tables a person played to the end, behind the "finished tables" count of their profile.
      *
      * <p>Readable by exactly whoever may read that person's profile (the same rules, the same gate).
      *

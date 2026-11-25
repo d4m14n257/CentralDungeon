@@ -9,9 +9,9 @@ package com.centraldungeon.features.tasks;
  *
  * @param taskId    the request the blank is attached to, which is what the service groups by
  * @param fileId    the file
- * @param name      the original filename. Metadata only (ADR-13 §6)
+ * @param name      the original filename. Metadata only
  * @param mimeType  the declared MIME type
- * @param sizeBytes the size as it was uploaded, before compression (ADR-13 §3)
+ * @param sizeBytes the size as it was uploaded, before compression
  */
 public record TaskFileRow(String taskId, String fileId, String name, String mimeType, long sizeBytes) {
 }

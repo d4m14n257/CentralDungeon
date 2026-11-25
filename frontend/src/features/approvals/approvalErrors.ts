@@ -24,7 +24,7 @@ export const APPROVAL_ERROR_CODES = [
   'REQUEST_ALREADY_PENDING',
   /** Approving or rejecting something that somebody else already resolved. */
   'REQUEST_ALREADY_RESOLVED',
-  /** What the request pointed at is gone (ADR-16 §2): the row outlived its reference, so it cannot be acted on. */
+  /** What the request pointed at is gone: the row outlived its reference, so it cannot be acted on. */
   'REQUEST_ENTITY_GONE',
   /** Asking for the master role, or for a single table, while already holding the role. */
   'MASTER_ROLE_ALREADY_HELD',
@@ -35,10 +35,10 @@ export const APPROVAL_ERROR_CODES = [
   /** Approving a veto the admin asked for themselves, as a master of the table: another admin decides it. */
   'OWN_REQUEST_NOT_APPROVABLE',
   /**
-   * Resolving a request another admin has taken from the shared tray (ADR-16 §5, F3.3).
+   * Resolving a request another admin has taken from the shared tray.
    *
    * **This screen has no way to reserve anything and does not need one**: resolving something nobody
-   * holds reserves it implicitly, which is the whole of the correction F3.3 made to the rule. What is
+   * holds reserves it implicitly, which is the whole of the correction the rule received. What is
    * still refused is resolving what a colleague is already working on — and `/admin/requests` lists
    * every request there is, including the ones somebody took, so unlike `/admin/queue` this screen
    * really can show a row it cannot resolve.
@@ -54,9 +54,9 @@ const KNOWN_CODES: ReadonlySet<string> = new Set(APPROVAL_ERROR_CODES)
  * **Pointed at rather than copied.** `ITEM_ALREADY_CLAIMED` is not this feature's vocabulary — the
  * reservation belongs to the shared tray, and the same refusal reaches `/admin/queue` and
  * `/admin/requests` about the same fact. Writing it twice, once per screen, is how two sentences that
- * mean one thing start to disagree (ADR-16 §7). It is a key in the same `admin` namespace both screens
+ * mean one thing start to disagree. It is a key in the same `admin` namespace both screens
  * translate against, not an import: `features/approvals` still imports nothing from
- * `features/queue` (§3.1.5).
+ * `features/queue`.
  */
 const CLAIM_ERROR_KEY = 'queue.errors.ITEM_ALREADY_CLAIMED'
 

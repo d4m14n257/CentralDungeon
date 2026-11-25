@@ -17,7 +17,7 @@ const DESTINATION: Record<MasterWorkItemKind, (tableId: string) => string> = {
   OverdueTaskMissing: masterTableTasksPath,
   SessionToRecord: masterTableSessionsPath,
   ChangesRequested: masterTableEditPath,
-  // Starting is a decision of the status notice, which every tab shows (ADR-21 §10).
+  // Starting is a decision of the status notice, which every tab shows.
   ReadyToStart: masterTableDetailPath,
 }
 
@@ -27,18 +27,18 @@ interface MasterWorkItemListProps {
 }
 
 /**
- * The master's work tray, rendered (ADR-20 §4).
+ * The master's work tray, rendered.
  *
  * It receives the items and does not fetch them: the screen composes. The phrasing is built here
- * from the `kind` and its numbers, because the backend sends a code and never a sentence (ADR-23 §3).
+ * from the `kind` and its numbers, because the backend sends a code and never a sentence.
  *
  * @param props.items what is waiting, longest wait first
  */
 export function MasterWorkItemList({ items }: MasterWorkItemListProps) {
   const { t, i18n } = useTranslation('master')
-  // ADR-03 §6 took `users.timezone` out of the model, so the browser is the only source today; `lib/date.ts`
+  // The model has no `users.timezone`, so the browser is the only source today; `lib/date.ts`
   // takes the zone as a parameter precisely so a profile preference would change this line and no
-  // other (ADR-19 §7).
+  // other.
   const timeZone = useMemo(() => browserTimeZone(), [])
 
   return (

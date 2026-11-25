@@ -13,12 +13,12 @@ import { browserTimeZone, formatDateTime } from '@/lib/date'
 /**
  * A table's lifecycle history, oldest first: who moved it, where to, and why.
  *
- * Exported for the admin's history tab (ADR-06 §8), which shows the same history next to the admin's own
+ * Exported for the admin's history tab, which shows the same history next to the admin's own
  * actions instead of the master's transitions.
  *
  * @param props.tableId        the table
  * @param props.onOpenPerson opens the card of whoever made a change; the screen that mounts the tab decides
- *                           what that is (ADR-10 §6). Absent, the name is plain text
+ *                           what that is. Absent, the name is plain text
  * @param props.canOpen      which of those people the reader may open. Absent, every one of them
  */
 export function StatusTimeline({
@@ -73,7 +73,7 @@ export function StatusTimeline({
 }
 
 /**
- * The History tab of `/master/tables/:id` (ADR-21 §10): every step of the table's life, who took it and why.
+ * The History tab of `/master/tables/:id`: every step of the table's life, who took it and why.
  *
  * **Reading, not deciding.** It was the "Status" tab and carried the master's transitions too; those
  * moved to `MasterTableStatusNotice` above the tabs, where they are seen from every tab, and what is

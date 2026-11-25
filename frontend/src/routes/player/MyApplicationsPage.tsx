@@ -19,18 +19,18 @@ import type { Registration } from '@/features/registrations'
  * /player/applications - everything they applied to and how it went, rejections and their reasons
  * included.
  *
- * It is also where a pending application is taken back (ADR-08 §2). That action exists because R4's
+ * It is also where a pending application is taken back. That action exists because the
  * clash notice needs somewhere to lead: being told that two of your tables now fall at the same
  * hour is only useful if there is a way out, and this is it.
  */
 export function MyApplicationsPage() {
   const { t, i18n } = useTranslation('registrations')
-  // The page lives in the URL like every work list (ADR-21 §11): reloading or sharing keeps it.
+  // The page lives in the URL like every work list: reloading or sharing keeps it.
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Number(searchParams.get('page') ?? '0')
   const withdraw = useWithdrawApplication()
   // Withdrawing has no way back: the row is marked and applying again is a new application, so it
-  // goes through ConfirmDialog explaining the consequence (principle 3 of diseno §1).
+  // goes through ConfirmDialog explaining the consequence.
   const confirm = useConfirm()
 
   async function onWithdraw(registration: Registration) {
@@ -47,7 +47,7 @@ export function MyApplicationsPage() {
     })
   }
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (ADR-19 §4).
+  // loaded.
   const { data, isPending, isLoadingError, refetch } = useMyApplications(page)
 
   return (
@@ -78,14 +78,14 @@ export function MyApplicationsPage() {
               <div className="min-w-0 flex-1 basis-56 space-y-1 wrap-anywhere">
                 <p className="text-sm font-medium">{registration.gameTableName}</p>
                 <p className="text-fg-subtle text-xs">
-                  {/* The date goes through lib/date.ts: locale and zone are parameters, never constants (ADR-19 §7). */}
+                  {/* The date goes through lib/date.ts: locale and zone are parameters, never constants. */}
                   {t('myApplications.appliedOn', {
                     date: formatDate(registration.createdAt, i18n.language, browserTimeZone()),
                   })}
                 </p>
-                {/* A rejection always has a reason (ADR-09 §3). A master's own words are shown exactly as
+                {/* A rejection always has a reason. A master's own words are shown exactly as
                     typed; the one the application writes itself is a code, so it can be read in the
-                    reader's language (ADR-23 §3). */}
+                    reader's language. */}
                 {registration.rejectionJustification && (
                   <p className="text-state-canceled-fg text-xs">{registration.rejectionJustification}</p>
                 )}
@@ -98,7 +98,7 @@ export function MyApplicationsPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <RegistrationStatusBadge status={registration.status} />
                 {/* Only while it is pending: once accepted there is a table counting on you, and
-                    leaving is a conversation with the master, not a button (ADR-08 §2). */}
+                    leaving is a conversation with the master, not a button. */}
                 {registration.status === 'Candidate' && (
                   <Button
                     variant="ghost"

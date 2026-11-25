@@ -1,14 +1,14 @@
 /**
  * What may be uploaded. Mirrors `app.storage.allowed-mime-types`, which took it from the legacy's
- * own whitelist (M21.4) — the one part of its file handling worth keeping.
+ * own whitelist — the one part of its file handling worth keeping.
  *
  * **A mirror and not the authority**: the server enforces it and answers `FILE_TYPE_NOT_ALLOWED`;
  * this is what makes the refusal immediate instead of arriving after four wizard steps, which is the
- * "a limit you only meet by breaking it" of principle 2.
+ * point of stating a limit instead of letting somebody meet it by breaking it.
  *
- * Unlike the size cap, this one is still deployment configuration and **not** a setting (ADR-17 §3): which
- * MIME types the parser accepts is a decision of whoever deploys the application. The cap left this
- * file in F3.5 — see `hooks/useClientLimits`.
+ * Unlike the size cap, this one is still deployment configuration and **not** a setting: which
+ * MIME types the parser accepts is a decision of whoever deploys the application. The cap no longer lives
+ * in this file — see `hooks/useClientLimits`.
  */
 export const ALLOWED_MIME_TYPES = [
   'image/png',
@@ -43,11 +43,11 @@ export function allowedTypesLabel(language: string): string {
  * Why a file cannot be staged, or null when it can.
  *
  * Returns the **error code the backend would have used**, so the screen renders the same sentence
- * either way and there is exactly one wording per problem (ADR-23 §3). A file refused here and a file
+ * either way and there is exactly one wording per problem. A file refused here and a file
  * refused there read identically, because they are the same refusal arriving sooner.
  *
- * **The cap arrives as a parameter since F3.5**, because it stopped being a constant: an admin
- * changes it from `/admin/settings` without a deploy (ADR-17 §3), so a hardcoded mirror here would refuse
+ * **The cap arrives as a parameter**, because it stopped being a constant: an admin
+ * changes it from `/admin/settings` without a deploy, so a hardcoded mirror here would refuse
  * files the server would take. The caller reads it from `useClientLimits`.
  *
  * @param file     the file somebody just picked

@@ -16,16 +16,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * {@code /admin/settings}: the values the community changes without a deploy (ADR-17 §3).
+ * {@code /admin/settings}: the values the community changes without a deploy.
  *
  * <p>Admin and Owner are enumerated on every method, as they are on every other administrative
  * endpoint: there is no {@code RoleHierarchy} in this project and an owner can do what an admin can
- * by being listed, not by inheriting (ADR-06 §1, ADR-05 §4). <b>Editing settings is where the two roles
- * are the same</b> - the matrix of roles-y-alcance.md §3 says so in one line, and the only
- * difference F3 draws between them is who may grant the rank.
+ * by being listed, not by inheriting. <b>Editing settings is where the two roles
+ * are the same</b> - the role matrix says so in one line, and the only
+ * difference between them is who may grant the rank.
  *
- * <p>The actor always comes from {@code @AuthenticationPrincipal} and never from the body
- * (arquitectura §2.6): the audit row this writes is only worth anything if the name on it is not
+ * <p>The actor always comes from {@code @AuthenticationPrincipal} and never from the body:
+ * the audit row this writes is only worth anything if the name on it is not
  * one the caller chose.
  *
  * <p>No listing is paginated here. There are four settings and adding one is a line of an enum;
@@ -60,15 +60,15 @@ public class AdminSettingsController {
     /**
      * Changes one setting.
      *
-     * <p>A {@code PUT} and not a {@code POST} with an action verb, unlike the rest of F3: this really
+     * <p>A {@code PUT} and not a {@code POST} with an action verb, unlike the other administrative actions: this really
      * is an assignment - the same call with the same value twice leaves the platform in the same
      * state - where {@code grant-role} and {@code block} are acts that happen once. The reason
      * travels in the body all the same, because a change nobody explained is a change nobody can
-     * review (ADR-17 §3).
+     * review.
      *
      * @param key         which setting to change, as {@link SettingKey#wireName()} spells it
      * @param request     the new value and why
-     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @param currentUser the actor, from the token
      * @return 200 with the setting afterwards. 400 when the value is outside the key's range, 404
      *         when no setting has that name
      */

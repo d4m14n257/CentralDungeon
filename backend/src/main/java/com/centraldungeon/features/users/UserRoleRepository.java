@@ -39,9 +39,9 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
 
     /**
      * The roles a person holds right now. Called on every authenticated request by
-     * {@code JwtAuthenticationFilter}, which is the whole point of ADR-05 §3: authorization is read from
-     * the database, not lifted from the token's claims. The cost is absorbed by the Caffeine cache
-     * (ADR-05 §3), whose TTL is the revocation window.
+     * {@code JwtAuthenticationFilter}, which is the whole point of the JWT asserting identity only: authorization is read from
+     * the database, not lifted from the token's claims. The cost is absorbed by the Caffeine cache,
+     * whose TTL is the revocation window.
      *
      * @param userId the person, resolved from the token's subject
      * @return their live role names. Never null; someone with no roles gets an empty set
@@ -70,7 +70,7 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
      * How many people hold a role and can actually use it. <b>An observation, not a decision.</b>
      *
      * <p>"Can actually use it" is the whole point when the role is Owner: the platform is never left
-     * without one (roles-y-alcance.md §3), and an owner whose account is Blocked cannot
+     * without one, and an owner whose account is Blocked cannot
      * log in to grant the role to anybody, so counting them would satisfy the invariant on paper
      * while breaking it in fact.
      *

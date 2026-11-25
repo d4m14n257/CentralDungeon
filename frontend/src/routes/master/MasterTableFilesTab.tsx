@@ -34,7 +34,7 @@ import {
 
 interface OutletContext {
   tableId: string
-  /** Set by /admin/tables/:id (ADR-06 §8): every attachment, private ones included, with nothing to attach or detach. */
+  /** Set by /admin/tables/:id: every attachment, private ones included, with nothing to attach or detach. */
   readOnly?: boolean
 }
 
@@ -44,18 +44,18 @@ const DETACH_ACTION = 'detach'
 /**
  * The **Archivos** tab of /master/tables/:id — what the table has attached and who can see each thing.
  *
- * Two ideas the screen has to keep apart, because confusing them is the easiest mistake here (ADR-14 §1):
+ * Two ideas the screen has to keep apart, because confusing them is the easiest mistake here:
  *
  * - **Sharing is about this table.** The same map can be shared here and kept private on another
  *   table; the toggle acts on the attachment, never on the file.
  * - **Removing is about this table too.** Taking a file off does not delete it — it stays in the
  *   owner's own list and on every other table that has it. The confirmation says so, because
- *   "remove" reads like "delete" unless something says otherwise (principle 3 of diseno §1).
+ *   "remove" reads like "delete" unless something says otherwise.
  *
- * A child route rather than local state (§3.1.6 regla 5), so the tab has its own URL, survives a
+ * A child route rather than local state, so the tab has its own URL, survives a
  * refresh and can be linked to.
  *
- * Mounted under /admin/tables/:id too, read-only (ADR-06 §8): the admin opens every attachment, the
+ * Mounted under /admin/tables/:id too, read-only: the admin opens every attachment, the
  * private ones included, and changes none of them.
  */
 export function MasterTableFilesTab() {
@@ -76,14 +76,14 @@ export function MasterTableFilesTab() {
   const [isPrivate, setIsPrivate] = useState(false)
 
   /**
-   * Sends what was staged and attaches it (ADR-13 §5).
+   * Sends what was staged and attaches it.
    *
    * Nothing uploaded when the file was picked, so this is both steps: upload, then link. A file that
    * fails leaves the others attached and stays listed to try again - the table is the master's and
    * editable, so there is nothing to roll back.
    */
   async function attachStaged() {
-    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
+    // A review before anything is written: what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('table.attachConfirmTitle', { count: staged.length }),
       description: t(isPrivate ? 'table.attachConfirmPrivate' : 'table.attachConfirmShared'),
@@ -240,12 +240,12 @@ export function MasterTableFilesTab() {
 
             {/* Everything published is offered, not only the `Masters` audience: the community's
               default character sheet is published *for players* and the master is the one attaching
-              it, which is ADR-14 §1's own example (ADR-13 §2). */}
+              it, which is the typical case. */}
             <FilePicker
               onPick={(picked) => setStaged((current) => [...current, picked])}
               isBusy={commit.isPending || attach.isPending}
               offerPublished
-              cajon="TableMaterial"
+              category="TableMaterial"
               staged={staged}
               onRemove={(key) =>
                 setStaged((current) => current.filter((entry) => (entry.kind === 'new' ? entry.localId : entry.fileId) !== key))

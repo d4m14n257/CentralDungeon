@@ -38,7 +38,7 @@ describe('GameTableCard', () => {
     expect(screen.queryByText('Public')).not.toBeInTheDocument()
   })
 
-  it('shows verbatim the type a person named, because that one has no code (ADR-23 §4)', () => {
+  it('shows verbatim the type a person named, because that one has no code', () => {
     renderCard({ ...baseTable, tableTypeCode: null, tableTypeName: 'Mesa de campaña larga' })
 
     expect(screen.getByText('Mesa de campaña larga')).toBeInTheDocument()
@@ -95,7 +95,7 @@ describe('GameTableCard', () => {
   })
 
   /**
-   * The agenda travels in UTC and is shown in local time (ADR-03 §6): Wednesday 01:00 UTC is Tuesday 22:00
+   * The agenda travels in UTC and is shown in local time: Wednesday 01:00 UTC is Tuesday 22:00
    * in the zone the suite runs in (`vite.config.ts`), so the day shifts one back.
    */
   it('shows the agenda converted to the reader zone, not the UTC it travels in', () => {
@@ -104,7 +104,7 @@ describe('GameTableCard', () => {
     expect(screen.getByText(/Martes 22:00/)).toBeInTheDocument()
   })
 
-  /** ADR-08 §2: the warning shows on the card, not only when somebody tries to apply. */
+  /** The warning shows on the card, not only when somebody tries to apply. */
   it('warns when the table clashes with something the reader is already in', () => {
     renderCard({ ...baseTable, scheduleConflict: true })
 

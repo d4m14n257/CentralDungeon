@@ -6,11 +6,11 @@ import { settingsApi } from './settingsApi'
 import type { SettingKey } from '../types'
 
 /**
- * What was done to one setting, and why (ADR-17 §3).
+ * What was done to one setting, and why.
  *
  * It is what keeps the audit table from being write-only. A platform-wide change produces no
  * notification and no visible event, so without somewhere to read it back the row would be born
- * orphaned — the failure `roles-y-alcance.md` §7 names.
+ * orphaned — the classic failure of audit tables.
  *
  * @param key the setting to read, or null while no panel is open — which is what `enabled` keys off,
  *            so opening the screen does not fetch four histories nobody asked for

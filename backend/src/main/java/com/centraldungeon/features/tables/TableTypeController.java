@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The gap F1 opened with: V2__seed.sql has been seeding table types since E1 and nothing could list
- * them, so the wizard had no way to offer the field.
+ * Lists the table types. V2__seed.sql seeds them and nothing else could list them, so the wizard
+ * would have no way to offer the field.
  *
- * <p>Paginated like every other collection (arquitectura §2.5), even though there are two rows
+ * <p>Paginated like every other collection, even though there are two rows
  * today: it is reference data an admin will eventually extend, and an endpoint that answers with a
  * bare list is one that has to change shape the day it grows.
  */
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/table-types")
 public class TableTypeController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The only collaborator: a controller never reaches a repository. */
     private final TableTypeService tableTypeService;
 
     /**
@@ -36,7 +36,7 @@ public class TableTypeController {
      * inside, and a catalog of the community's table formats is not something to open wider than its
      * consumers need.
      *
-     * @param pageable page, size and sort; by name with a tie-break by id (ADR-07 §9). The default size
+     * @param pageable page, size and sort; by name with a tie-break by id. The default size
      *                 is 50 because the whole list is meant to arrive in one page
      * @return 200 with one page of table types
      */

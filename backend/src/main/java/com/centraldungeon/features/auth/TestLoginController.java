@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Stands in for the Discord OAuth2 dance in e2e runs, where there is no real Discord app yet
- * (plan-desarrollo.md, E1). Only registered under the "test" profile - absent from the
+ * Stands in for the Discord OAuth2 dance in e2e runs, where there is no real Discord app yet.
+ * Only registered under the "test" profile - absent from the
  * bean graph in dev/prod, so the route 404s there regardless of the permitAll matcher in
  * SecurityConfig covering it.
  */
@@ -77,8 +77,8 @@ public class TestLoginController {
      * would be testing something the users never do.
      *
      * <p>The actor comes out holding <strong>exactly one role</strong>, not the requested one on top
-     * of whatever they already had. A real account gets Player on first login (ADR-05 §1) and accumulates
-     * from there (ADR-06 §1), which is right for the product and wrong for a fixture: an actor who is
+     * of whatever they already had. A real account gets Player on first login and accumulates
+     * from there, which is right for the product and wrong for a fixture: an actor who is
      * Master <em>and</em> Player cannot show what a master alone sees, and every crossing between
      * contexts stays invisible. So the roles that were not asked for are revoked on the way in, which
      * also repairs an account that a previous run left with two.
@@ -89,7 +89,7 @@ public class TestLoginController {
      * @param asMaster  whether the actor is a Master. Their only role, unless {@code asAdmin} too
      * @param asAdmin   whether the actor is an Admin. Their only role, unless {@code asMaster} too
      * @param asOwner   whether the actor is the platform Owner. Never together with {@code asAdmin}:
-     *                  the two are one rank at two scopes and never coexist (ADR-06 §1), so Owner wins
+     *                  the two are one rank at two scopes and never coexist, so Owner wins
      * @param response  the response the refresh cookie is written onto
      * @return the access token and its lifetime, exactly as a real login would answer
      */
@@ -102,7 +102,7 @@ public class TestLoginController {
             HttpServletResponse response) {
         User user = userService.findOrCreateByDiscordId(discordId, discordId);
         if (!user.hasCompletedOnboarding()) {
-            // Onboarding blocks every route (ADR-10 §4): a fixture without it would land every spec on /onboarding.
+            // Onboarding blocks every route: a fixture without it would land every spec on /onboarding.
             userService.completeOnboarding(user.getId(), new UpdateUserRequest(discordId, FIXTURE_COUNTRY));
         }
         testDataService.setRolesExactly(user, wantedRoles(asMaster, asAdmin, asOwner));
@@ -116,9 +116,9 @@ public class TestLoginController {
     /**
      * Player when nothing is asked for: the actor with no flags is a plain member of the community.
      *
-     * <p><b>Owner excludes Admin, here as everywhere</b> (ADR-06 §1). The two are the same rank at two
+     * <p><b>Owner excludes Admin, here as everywhere</b>. The two are the same rank at two
      * scopes, and a fixture that handed out both would be the one place in the application where they
-     * coexist - which is exactly the state F3.1's rules assume cannot happen.
+     * coexist - which is exactly the state the role rules assume cannot happen.
      */
     private Set<PlatformRole> wantedRoles(boolean asMaster, boolean asAdmin, boolean asOwner) {
         Set<PlatformRole> wanted = EnumSet.noneOf(PlatformRole.class);

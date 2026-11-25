@@ -9,13 +9,13 @@ import type { FileCategory } from '../types'
 
 /**
  * /admin/files: the platform's library — only what it published — with each file's owner and usage
- * count (ADR-14 §7).
+ * count.
  *
- * @param query      the search box in the language of ADR-22 §1, or undefined for everything
+ * @param query      the search box in the explorer's search language, or undefined for everything
  * @param statuses   the statuses to keep, or undefined for all of them
- * @param category   the cajón to keep (ADR-14 §4), or undefined for all of them
+ * @param category   the category to keep, or undefined for all of them
  * @param page       zero-based page number
- * @param size       rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
+ * @param size       rows per page, one of `adminPageSizeOptions`
  * @returns the query for one page of files
  */
 export function useAdminFiles(query?: string, statuses?: string[], category?: FileCategory, page = 0, size: number = pageSize.admin) {

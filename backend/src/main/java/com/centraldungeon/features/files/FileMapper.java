@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
  * common/config/MapperConfig.java, like every other mapper - see that class for why.
  *
  * <p>Five shapes and not one with nullable fields, because they have five different audiences and
- * each is allowed to see a different amount (arquitectura §2.3): the owner, an admin, the people
+ * each is allowed to see a different amount: the owner, an admin, the people
  * running a table, the people playing at one, and anybody picking from what the platform published.
  *
  * <p>The enums leave as strings, which is what the API contract asks for and what the frontend
@@ -32,13 +32,13 @@ public interface FileMapper {
      * The owner's view of their own file.
      *
      * <p>{@code usages} arrives from the service for the same reason {@code uses} does below: it
-     * needs a query, and a mapper never touches a repository (arquitectura §2.2). Callers that
+     * needs a query, and a mapper never touches a repository. Callers that
      * have no reason to pay for it - an upload, a single read - pass an empty list rather than null,
      * so the field is a list that happens to be empty and never a special case to check for.
      *
      * @param file       the entity to describe
-     * @param categories the cajones it belongs to (ADR-14 §4), or empty when nobody asked
-     * @param usages     where it is being used right now (ADR-14 §3), or empty when nobody asked
+     * @param categories the categories it belongs to, or empty when nobody asked
+     * @param usages     where it is being used right now, or empty when nobody asked
      * @return the file as its owner sees it, in the reuse history and after an upload
      */
     @Mapping(target = "id", source = "file.id")
@@ -69,11 +69,11 @@ public interface FileMapper {
      * The /admin/files view.
      *
      * <p>{@code tables} is resolved by the service, not here: it needs a query, and a mapper never
-     * touches a repository (arquitectura §2.2).
+     * touches a repository.
      *
      * @param file       the entity to describe
-     * @param tables     the tables that hold a live link to it (ADR-14 §1)
-     * @param categories the cajones it belongs to (ADR-14 §4)
+     * @param tables     the tables that hold a live link to it
+     * @param categories the categories it belongs to
      * @return the file as an admin sees it, owner and tables included
      */
     @Mapping(target = "id", source = "file.id")
@@ -103,7 +103,7 @@ public interface FileMapper {
      * One row of the master's Archivos tab: the file and the link that put it there.
      *
      * @param file        the attached file
-     * @param link        the attachment itself, which is where {@code isPrivate} lives (ADR-14 §1)
+     * @param link        the attachment itself, which is where {@code isPrivate} lives
      * @param isOwnedByMe whether the actor uploaded the file, resolved by the service from the token
      * @return the attachment as the people running the table see it
      */
@@ -133,10 +133,10 @@ public interface FileMapper {
     SharedFileResponse toSharedResponse(StoredFile file, TableFile link);
 
     /**
-     * One row of what the platform published, for whoever is choosing one to attach (ADR-13 §2, ADR-14 §1).
+     * One row of what the platform published, for whoever is choosing one to attach.
      *
      * @param file       the published file
-     * @param categories the cajones it is offered in (ADR-14 §4)
+     * @param categories the categories it is offered in
      * @return the file as the picker offers it
      */
     @Mapping(target = "id", source = "file.id")

@@ -27,27 +27,27 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Every rule of the three catalogs, written once (arquitectura §2.4, case 2). Systems, tags and
+ * Every rule of the three catalogs, written once. Systems, tags and
  * platforms are the same row with a different table name: same columns, same lifecycle, same eight
- * admin operations, and not one rule in arquitectura §4.5 that applies to one of them and not to the
+ * admin operations, and not one rule that applies to one of them and not to the
  * other two. That is "equal by definition", not "similar today".
  *
- * <p>The extraction condition of 2.4 was met before this class existed: {@code SystemService} was
+ * <p>The condition for extracting a shared base was met before this class existed: {@code SystemService} was
  * written whole first, and {@code TagService} and {@code PlatformService} came out identical to it
  * except for one thing - which bridge table counts a value's uses. That single difference is
  * {@link #countUses}; there is no {@code instanceof} anywhere.
  *
  * <p><b>No authorization is decided here.</b> Who may propose and who may accept is declared on each
- * concrete controller method (ADR-05 §4, CVE-2025-41248) - putting a {@code @PreAuthorize} on a generic
+ * concrete controller method (CVE-2025-41248) - putting a {@code @PreAuthorize} on a generic
  * base is exactly the shape that CVE describes.
  *
- * <p>The rules implemented, all from arquitectura §4.5:
+ * <p>The rules implemented:
  * <ul>
- *   <li>groups are flat, depth 1: an alias points at the canonical entry, never at another alias (ADR-12 §2)</li>
- *   <li>searching by any member resolves the whole group (ADR-12 §2, §4)</li>
- *   <li>whoever writes a table proposes - by role or by pertenencia; only an admin accepts and classifies (ADR-12 §3)</li>
- *   <li>a value in {@code Created} neither shows to players nor filters; accepted, it does (ADR-12 §3)</li>
- *   <li>disabling a value breaks no link, and restoring it puts everything back (ADR-12 §5)</li>
+ *   <li>groups are flat, depth 1: an alias points at the canonical entry, never at another alias</li>
+ *   <li>searching by any member resolves the whole group</li>
+ *   <li>whoever writes a table proposes - by role or by membership; only an admin accepts and classifies</li>
+ *   <li>a value in {@code Created} neither shows to players nor filters; accepted, it does</li>
+ *   <li>disabling a value breaks no link, and restoring it puts everything back</li>
  * </ul>
  */
 public abstract class AbstractCatalogService<E extends CatalogValue> {
@@ -61,10 +61,10 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     /** The catalog's own table. Protected so a subclass can add a read the base does not need. */
     protected final CatalogValueRepository<E> repository;
 
-    /** Turns entities into the two response shapes. Never sees a repository (arquitectura §2.2). */
+    /** Turns entities into the two response shapes. Never sees a repository. */
     private final CatalogMapper catalogMapper;
 
-    /** Answers who may propose: whoever writes a table, by role or by pertenencia (ADR-06 §4). */
+    /** Answers who may propose: whoever writes a table, by role or by membership. */
     private final MasterService masterService;
 
     /**
@@ -135,13 +135,13 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     // ----------------------------------------------------------------- reads
 
     /**
-     * What a master's combobox and a player's filter see: accepted values only (ADR-12 §3, §5). Anything
-     * proposed, rejected or disabled is invisible here on purpose - the whole point of ADR-12 §3 is that a
+     * What a master's combobox and a player's filter see: accepted values only. Anything
+     * proposed, rejected or disabled is invisible here on purpose - the whole point of the review flow is that a
      * value nobody reviewed does not get to pollute what everyone else searches.
      *
-     * @param query    the search box, in the language of {@code common/search} (ADR-22 §1), or null for
+     * @param query    the search box, in the language of {@code common/search}, or null for
      *                 everything. An unknown {@code /field} is searched as literal text, never a 400
-     * @param pageable page, size and sort. Callers pass a tie-break by id (ADR-07 §9)
+     * @param pageable page, size and sort. Callers pass a tie-break by id
      * @return one page of accepted values
      */
     @Transactional(readOnly = true)
@@ -173,7 +173,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      *                   default, because reviewing what was proposed is the point of the screen
      * @param groupsOnly true to list only the rows that head a group - canonical entries and
      *                   proposals nobody has classified yet - and find each one by any of its
-     *                   members' names (ADR-12 §7); false for every row, aliases included
+     *                   members' names; false for every row, aliases included
      * @param pageable   page, size and sort
      * @return one page of values with their group, their usage count and their alias count
      */
@@ -202,9 +202,9 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      * <p><b>Every member, whatever its status</b> - unlike {@link #resolveGroupIds}, which is what a
      * search filters by and therefore only carries accepted values. This one is what /admin/catalogs
      * needs to answer two questions it cannot answer from a single row: which synonyms a value has,
-     * and who can take over the group when its canonical entry is disabled (ADR-12 §2).
+     * and who can take over the group when its canonical entry is disabled.
      *
-     * <p>Not paginated: depth is 1 (ADR-12 §2), so a group is bounded by how many synonyms a community
+     * <p>Not paginated: depth is 1, so a group is bounded by how many synonyms a community
      * writes for one thing, and it is read as a whole or not at all.
      *
      * @param valueId any member of the group, canonical entry or alias alike
@@ -228,10 +228,10 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
 
     /**
      * Every accepted id equivalent to this one, the value itself included - what a filter by catalog
-     * has to match against (ADR-12 §2, §4). Depth is 1, so the group is one query and no recursion.
+     * has to match against. Depth is 1, so the group is one query and no recursion.
      *
-     * <p>Non-accepted members are left out: a disabled or still-unreviewed synonym does not filter
-     * (ADR-12 §3, §5). The result can be empty - that is the correct answer for a group nobody accepted.
+     * <p>Non-accepted members are left out: a disabled or still-unreviewed synonym does not filter. The
+     * result can be empty - that is the correct answer for a group nobody accepted.
      *
      * @param valueId any member of the group, canonical entry or alias alike
      * @return the accepted ids of the whole group, possibly empty
@@ -248,23 +248,23 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * The same answer as {@link #resolveGroupIds}, asked with words instead of an id (ADR-12 §2, §4).
+     * The same answer as {@link #resolveGroupIds}, asked with words instead of an id.
      *
-     * <p><b>This is what makes the explorer's {@code /table_tag} command work</b> (ADR-12 §8). Somebody
+     * <p><b>This is what makes the explorer's {@code /table_tag} command work</b>. Somebody
      * types {@code D&D}; every table tagged with any accepted synonym of it has to come back, and the
-     * tables were never rewritten - each one still carries the alias its master chose (ADR-12 §4). So
+     * tables were never rewritten - each one still carries the alias its master chose. So
      * the text is resolved here, to a set of ids, and the caller matches against that set.
      *
      * <p>Two steps and three queries, whatever the group's size. First the <b>seeds</b>: the accepted
      * values whose name contains any of the words, which is the same predicate the public catalog
      * search uses - a typo finds nothing rather than failing. Then their <b>groups</b>: every seed is
-     * folded to its group's root, and the whole group comes back in two reads. Depth is 1 (ADR-12 §2), so
+     * folded to its group's root, and the whole group comes back in two reads. Depth is 1, so
      * there is no recursion and no third level to chase.
      *
      * <p><b>Only accepted values resolve, on both steps.</b> A value still in {@code Created} does not
-     * filter and is not shown (ADR-12 §3), and a disabled one is out of circulation (ADR-12 §5) - so a table
+     * filter and is not shown, and a disabled one is out of circulation - so a table
      * carrying a tag its master just proposed is findable by nobody but its master, which is exactly
-     * what ADR-12 §3 asks for.
+     * what the review flow asks for.
      *
      * <p>The empty set is a real answer and means «no accepted value is called that». The caller has
      * to read it as «matches no table», never as «no filter»: treating it as the second would turn a
@@ -273,12 +273,12 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      * <p><b>Known limit, deliberate:</b> the seed query is not capped, so a one-letter search loads
      * every accepted value whose name contains that letter and hands the caller a set that large. It
      * is bounded by the size of the catalog, not by the size of the platform - three tables of a few
-     * hundred rows each, changing only when an admin accepts a proposal (ADR-12 §3). A cap would have to
+     * hundred rows each, changing only when an admin accepts a proposal. A cap would have to
      * choose which synonyms to drop, and dropping one silently is worse than the query: it would make
-     * the search quietly stop being symmetric, which is the one property ADR-12 §2 is about.
+     * the search quietly stop being symmetric, which is the one property synonym groups are about.
      *
      * @param texts the words to resolve. Alternatives, not a conjunction: any of them seeds the
-     *              search, because the values of one criterion are alternatives (ADR-22 §1)
+     *              search, because the values of one criterion are alternatives
      * @return the accepted ids of every group the words landed on, possibly empty
      */
     @Transactional(readOnly = true)
@@ -304,13 +304,13 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     // ----------------------------------------------------- proposing a value
 
     /**
-     * Whoever writes a table proposes a value (ADR-12 §3): a {@code Master}, an admin, or a player an admin
-     * assigned to run a table (ADR-06 §4). It is born in {@code Created}: it does not show to players and
-     * does not filter until an admin accepts it (ADR-12 §3), but the table that uses it publishes anyway -
-     * that decoupling is the reason ADR-12 §3 exists.
+     * Whoever writes a table proposes a value: a {@code Master}, an admin, or a player an admin
+     * assigned to run a table. It is born in {@code Created}: it does not show to players and
+     * does not filter until an admin accepts it, but the table that uses it publishes anyway -
+     * that decoupling is the reason the review flow exists.
      *
      * @param rawName the name as it was typed; surrounding whitespace is stripped here
-     * @param actorId the proposer, from the token (ADR-05 §5)
+     * @param actorId the proposer, from the token
      * @return the created value, in {@code Created}
      * @throws ForbiddenActionException if the actor writes no table at all
      * @throws com.centraldungeon.common.exception.ConflictException if the name is already taken,
@@ -332,11 +332,11 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     // -------------------------------------------------- the admin operations
 
     /**
-     * An admin adds a value straight into the catalog, already accepted as a group of its own (ADR-12 §9).
+     * An admin adds a value straight into the catalog, already accepted as a group of its own.
      *
      * <p>Not a proposal: the admin is the one who accepts, so a {@code Created} row waiting for the
      * same person to accept it would be a step with nobody on the other side. It is born canonical,
-     * and joining it to a group afterwards is the canvas's job (ADR-12 §7), like any other value.
+     * and joining it to a group afterwards is the canvas's job, like any other value.
      *
      * @param rawName the name as it was typed; surrounding whitespace is stripped here
      * @return the created value, in {@code Accepted}, heading its own group
@@ -356,10 +356,10 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
 
 
     /**
-     * Accept a proposal and classify it in the same step (ADR-12 §3): either it is a canonical entry of
+     * Accept a proposal and classify it in the same step: either it is a canonical entry of
      * its own, or it joins an existing group as an alias.
      *
-     * <p>The target has to be canonical itself. That is the depth-1 invariant of ADR-12 §2, and enforcing
+     * <p>The target has to be canonical itself. That is the depth-1 invariant, and enforcing
      * it here is what makes cycles ({@code A -> B -> A}) impossible instead of merely unlikely.
      *
      * @param id          the proposal to accept
@@ -395,7 +395,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Reject a proposal: it never shows and never filters (ADR-12 §3).
+     * Reject a proposal: it never shows and never filters.
      *
      * <p>Only from {@code Created}. Taking an accepted value out of circulation is
      * {@link #disable}, and the two are not interchangeable - one says "this should never have been
@@ -420,10 +420,10 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
 
     /**
      * Merge two synonym groups: the source stops being a group and everything it held - its aliases
-     * and itself - points at the target (ADR-12 §3, §2).
+     * and itself - points at the target.
      *
      * <p>Not one row of table_systems / table_tags / table_platforms is touched, and that is the
-     * point of ADR-12 §4: a table tagged "DANDD" becomes findable by "D&amp;D 5e" the moment this runs,
+     * point: a table tagged "DANDD" becomes findable by "D&amp;D 5e" the moment this runs,
      * without migrating anything.
      *
      * @param sourceCanonicalId the group that stops being one
@@ -458,7 +458,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Take one alias out of its group: it becomes a canonical entry of its own (ADR-12 §3).
+     * Take one alias out of its group: it becomes a canonical entry of its own.
      *
      * @param memberId the alias that leaves
      * @return the value, now canonical
@@ -479,15 +479,15 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Move one alias from its group to another, in one step (ADR-12 §6).
+     * Move one alias from its group to another, in one step.
      *
-     * <p>What dragging an alias onto another group does on the catalog canvas (ADR-12 §7). Before this
+     * <p>What dragging an alias onto another group does on the catalog canvas. Before this
      * existed it took a {@link #split} and then a {@link #merge}, two requests with a moment in
      * between where the alias was a group of its own - and a failure in the second left it there.
      *
      * <p>Only an alias moves this way. A canonical entry carries its whole group with it, and that is
      * {@link #merge}, whose name says so; moving a head alone would leave its aliases pointing at a
-     * value that is no longer a head, which is the second level ADR-12 §2 forbids.
+     * value that is no longer a head, which is the second level that groups forbid.
      *
      * @param memberId    the alias that moves
      * @param canonicalId the group it moves to
@@ -514,15 +514,15 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Make an alias the canonical entry of its own group (ADR-12 §6): the group keeps every member, and
+     * Make an alias the canonical entry of its own group: the group keeps every member, and
      * only which one heads it changes.
      *
      * <p>The group is turned around in one transaction: the promoted alias stops pointing anywhere,
-     * and the old head and every other alias point at it. Depth stays 1 (ADR-12 §2) the whole time, and no
-     * link table is touched, because a table keeps the alias its master picked (ADR-12 §4).
+     * and the old head and every other alias point at it. Depth stays 1 the whole time, and no
+     * link table is touched, because a table keeps the alias its master picked.
      *
-     * <p>Before this, the only way to change a group's head was to disable it and pick a successor
-     * (ADR-12 §5) - which also took the old head out of circulation, and that is not always what is meant.
+     * <p>Before this, the only way to change a group's head was to disable it and pick a successor, which also took the old head
+     * out of circulation, and that is not always what is meant.
      *
      * @param memberId the alias that becomes the group's canonical entry
      * @return the promoted value, now canonical
@@ -554,11 +554,11 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Take a value out of circulation (ADR-12 §5). Logical, never physical: the links that point at it
+     * Take a value out of circulation. Logical, never physical: the links that point at it
      * keep their rows, so {@link #restore} puts everything back with no migration.
      *
      * <p>Disabling a canonical entry that still has live aliases <b>is</b> changing the group's
-     * canonical (ADR-12 §2), so it needs a successor, and the admin picks it (ADR-12 §3) - never an arbitrary
+     * canonical, so it needs a successor, and the admin picks it - never an arbitrary
      * "first alias". The disabled value then stays in the group as an alias of the successor, which
      * is what keeps the tables tagged with it findable by the rest of the group.
      *
@@ -599,7 +599,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Put a disabled value back in circulation, in the group it was in (ADR-12 §5).
+     * Put a disabled value back in circulation, in the group it was in.
      *
      * @param id the value to bring back
      * @return the restored value, accepted again
@@ -633,7 +633,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
 
     /**
      * The target of a canonical_id must itself be canonical, accepted, and not the value being
-     * classified (ADR-12 §2).
+     * classified.
      *
      * @param value       the value being classified
      * @param canonicalId the group it wants to join
@@ -652,7 +652,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
 
     /**
      * Resolves who takes over a group whose canonical entry is being disabled. The admin picks, so a
-     * missing choice is an error rather than a default (ADR-12 §3).
+     * missing choice is an error rather than a default.
      *
      * @param value          the canonical entry being disabled
      * @param aliases        the group's live aliases, guaranteed non-empty by the caller
@@ -687,7 +687,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * Guards the depth-1 invariant (ADR-12 §2): only a canonical entry can play the role being checked.
+     * Guards the depth-1 invariant: only a canonical entry can play the role being checked.
      *
      * @param value the value to check
      * @param role  what it was being used as ("source", "target", "canonical"), to name it in the
@@ -795,7 +795,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
 
     /**
      * Counts, for a whole page, how many aliases each canonical entry on it has. One query instead
-     * of one per row; aliases on the page are skipped, since nothing points at an alias (ADR-12 §2).
+     * of one per row; aliases on the page are skipped, since nothing points at an alias.
      *
      * @param values the page's values
      * @return canonical id to alias count. A value with no aliases is absent, and reads as zero

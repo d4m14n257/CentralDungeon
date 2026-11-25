@@ -4,10 +4,10 @@ import org.springframework.http.HttpStatus;
 
 /**
  * The actor is authenticated but has no business doing this - typically because the resource is not
- * theirs (ADR-05 §5). Answers 403.
+ * theirs. Answers 403.
  *
  * <p>Not to be used to hide a resource's existence: a table someone is vetoed from answers 404, not
- * this (ADR-07 §1).
+ * this.
  */
 public final class ForbiddenActionException extends ApiException {
 
@@ -16,17 +16,17 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * An admin reaching for the Admin or Owner role, granting it or taking it away. Only an owner
-     * moves the rank (roles-y-alcance.md §3, ADR-06 §1).
+     * moves the rank.
      *
      * <p>It gets a code of its own because it is the one 403 the screen has to <b>explain</b>: the
      * reader is an admin who legitimately administers the platform and is being told that this one
-     * role is above their line. A generic "no tenés permiso" reads as a bug to them.
+     * role is above their line. A generic "you have no permission" reads as a bug to them.
      */
     public static final String ROLE_GRANT_FORBIDDEN = "ROLE_GRANT_FORBIDDEN";
 
     /**
      * Granting the Owner role through the application. Nobody can, not even an owner: for now the
-     * role is given from the database only (ADR-06 §1), and revoking it is untouched.
+     * role is given from the database only, and revoking it is untouched.
      *
      * <p>403 like its siblings - it is a question of what the application offers, not of what the
      * body said, and no rewrite of the body would make it succeed. Its own code because the reader
@@ -37,7 +37,7 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * Blocking somebody who holds Admin or Owner. Nobody can, not even an owner: among peers there
-     * is no authority, and the same limit already governs "ver como" (ADR-06 §9).
+     * is no authority, and the same limit already governs "view as".
      *
      * <p>Its own code for the same reason as the one above - and because it also covers blocking
      * yourself, where "you cannot block an admin" is the whole explanation the reader needs.
@@ -46,19 +46,19 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * A {@code Secondary} reaching for something only the table's {@code Primary} may do: vetoing
-     * somebody, lifting a veto, or answering a co-master's request for one (ADR-09 §5, ADR-06 §3).
+     * somebody, lifting a veto, or answering a co-master's request for one.
      *
-     * <p><b>403 and not 400</b>, the same shape F3.1 settled on: it is a question of who you are,
+     * <p><b>403 and not 400</b>, the same shape as the other role refusals: it is a question of who you are,
      * not of what you sent. Nothing about the body would make it succeed.
      *
      * <p>Its own code because the screen has to explain it rather than report it. A {@code Secondary}
      * genuinely co-runs the table and is being told that this one act is the {@code Primary}'s - and
-     * that there is a door for them, which is asking for it. A generic "no tenés permiso" reads as a
+     * that there is a door for them, which is asking for it. A generic "you have no permission" reads as a
      * bug to somebody who legitimately runs the table.
      *
      * <p>In practice the frontend should never provoke it: the screen knows whether the reader is
-     * the {@code Primary} and says, before the button is pressed, that what it sends is a request
-     * (roles-y-alcance.md §4). This is what answers the stale tab and the hand-written call.
+     * the {@code Primary} and says, before the button is pressed, that what it sends is a request.
+     * This is what answers the stale tab and the hand-written call.
      */
     public static final String NOT_PRIMARY_MASTER = "NOT_PRIMARY_MASTER";
 
@@ -70,7 +70,7 @@ public final class ForbiddenActionException extends ApiException {
     }
 
     /**
-     * @param message   what the actor is not allowed to do, in English and for a log (ADR-23 §3)
+     * @param message   what the actor is not allowed to do, in English and for a log
      * @param errorCode the stable code the frontend branches on. Use {@link #ROLE_GRANT_FORBIDDEN},
      *                  {@link #OWNER_NOT_GRANTABLE} or {@link #CANNOT_BLOCK_PRIVILEGED} where the screen has to say something
      *                  specific; anything else has no reason not to be the default

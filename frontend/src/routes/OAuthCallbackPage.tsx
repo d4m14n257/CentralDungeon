@@ -39,7 +39,7 @@ function CallbackCard({ tone, title, children }: { tone?: 'pending' | 'canceled'
 }
 
 /**
- * Backend redirect target after the OAuth2 handshake (ADR-05 §1, §2). A full page
+ * Backend redirect target after the OAuth2 handshake. A full page
  * reload, not an SPA navigation: AuthProvider remounts and picks up the refresh cookie the
  * backend just set - no chicken-and-egg 401 needed to discover the session. Whoever still owes the
  * onboarding is sent there by the session guard in `RootLayout`, not by this screen.

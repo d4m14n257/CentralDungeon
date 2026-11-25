@@ -1,10 +1,10 @@
 import type { TFunction } from 'i18next'
 
 /**
- * How a table type is read on screen (ADR-23 §4).
+ * How a table type is read on screen.
  *
  * The two types the application ships carry a `code`, so their label comes from the reader's
- * language file — the backend never writes the sentence (ADR-23 §3, regla dura 18). A type an admin
+ * language file — the backend never writes the sentence. A type an admin
  * creates carries no code, and then its `name` is shown exactly as they typed it, the same way
  * `systems`, `tags` and `platforms` already work: what a person wrote is theirs.
  *

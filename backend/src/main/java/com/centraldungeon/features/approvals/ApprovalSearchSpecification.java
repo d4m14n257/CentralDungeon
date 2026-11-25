@@ -18,10 +18,10 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns a parsed search box into a predicate over {@code approval_requests}. Criteria API and not a
  * derived query, for the reason {@code UserSearchSpecification} gives: the shape is only known at
- * runtime - how many criteria, over which fields, joined by which connectors (arquitectura §2.2).
+ * runtime - how many criteria, over which fields, joined by which connectors.
  *
  * <p>Connectors fold left to right with no precedence, so {@code a or b and c} is
- * {@code (a or b) and c} - which is how the chip row reads on screen (ADR-22 §1).
+ * {@code (a or b) and c} - which is how the chip row reads on screen.
  *
  * <p><b>Two audiences, two entry points</b>, the same shape {@code UserSearchSpecification} uses for
  * the same reason. {@link #forAdmin(SearchQuery)} has no implicit filter at all: an empty query lists
@@ -62,7 +62,7 @@ final class ApprovalSearchSpecification {
      * here rather than by translating some {@code /requested_by} into the actor, because a filter the
      * caller can express is a filter the caller can express differently: the whole reason this
      * endpoint cannot leak somebody else's requests is that no string arriving over HTTP reaches this
-     * predicate. The id comes from the token and from nowhere else (ADR-05 §5, arquitectura §2.6).
+     * predicate. The id comes from the token and from nowhere else.
      *
      * <p>The rest of the language works exactly as it does for an admin, which is the point of
      * routing it through the same builder. The screen needs {@code /status Pending} to be able to ask
@@ -124,7 +124,7 @@ final class ApprovalSearchSpecification {
         return connector == SearchConnector.OR ? builder.or(left, right) : builder.and(left, right);
     }
 
-    /** The values of one criterion are alternatives: any of them satisfies it (ADR-22 §1). */
+    /** The values of one criterion are alternatives: any of them satisfies it. */
     private static Predicate termPredicate(
             Root<ApprovalRequest> root, CriteriaBuilder builder, Joins joins, SearchTerm term) {
         Predicate matched = null;
@@ -195,7 +195,7 @@ final class ApprovalSearchSpecification {
         return builder.like(lowered, "%" + escapeLikeWildcards(value.toLowerCase(Locale.ROOT)) + "%", LIKE_ESCAPE);
     }
 
-    /** Somebody typing "100%" is searching for that text, not for "anything" (ADR-03 §2 in spirit: never build SQL by hand). */
+    /** Somebody typing "100%" is searching for that text, not for "anything". */
     private static String escapeLikeWildcards(String value) {
         return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }

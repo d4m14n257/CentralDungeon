@@ -7,7 +7,7 @@ import type { TaskStatus } from '../types'
 /**
  * Which tone each state wears. **The map stays here and not in `StatusBadge`**: which of this
  * feature's states counts as "open" is a decision about this domain, and a shared component that knew
- * it would be the wrong kind of shared (`arquitectura` §3.1.2).
+ * it would be the wrong kind of shared.
  */
 const STATE_TONES: Record<TaskStatus, StatusTone> = {
   Open: 'open',
@@ -16,10 +16,10 @@ const STATE_TONES: Record<TaskStatus, StatusTone> = {
 
 /**
  * Whether a task is still taking answers. Its variants come from a `Record` over `TaskStatus`, so a
- * new status cannot be added without deciding how it looks (§3.2 regla 9).
+ * new status cannot be added without deciding how it looks.
  *
- * Closed reads as *done*, not as *cancelled*: what was handed in is still there and still readable
- * (ADR-15 §2), so a red badge would say something untrue about it.
+ * Closed reads as *done*, not as *cancelled*: what was handed in is still there and still readable,
+ * so a red badge would say something untrue about it.
  *
  * @param props.status the task's status
  */

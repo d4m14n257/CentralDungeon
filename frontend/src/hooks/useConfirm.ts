@@ -15,7 +15,7 @@ export type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>
  * The channel between the hook and the dialog that renders it.
  *
  * **A subtree Context and not a global store**: what is being shared is something that has to be
- * *rendered*, so the state belongs to the subtree that provides it (ADR-19 §5). It is declared here, with
+ * *rendered*, so the state belongs to the subtree that provides it. It is declared here, with
  * the hook, so that `ConfirmDialog.tsx` exports only components — a file that exports both a
  * component and a hook is what breaks fast refresh.
  */
@@ -28,7 +28,7 @@ export const ConfirmOpenContext = createContext(false)
  * Asks for confirmation from anywhere, without each caller mounting its own dialog.
  *
  * Every irreversible action goes through this, never a generic "are you sure?" — the question names
- * what is about to happen (diseno §1, principle 3).
+ * what is about to happen.
  *
  * @returns a function that opens the dialog and resolves to whether the person confirmed
  * @throws when called outside `ConfirmDialogProvider`, which is a wiring mistake and not a state

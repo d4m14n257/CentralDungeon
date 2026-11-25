@@ -68,7 +68,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * The file's own rules: what gets in, what gets stored once, and who is allowed to read it back.
  *
  * <p>Two of these cases are about holes the legacy actually had rather than features being added -
- * the filename that became a path (M21.5) and the upload with no limit of any kind (M21.3). They are
+ * the filename that became a path and the upload with no limit of any kind. They are
  * written as tests so the fix cannot quietly regress.
  */
 @ExtendWith(MockitoExtension.class)
@@ -81,15 +81,15 @@ class FileServiceTest {
     @Mock
     private TableFileRepository tableFileRepository;
 
-    /** The cajones a file belongs to (ADR-14 §4). Add-only: nothing here ever revokes one. */
+    /** The categories a file belongs to. Add-only: nothing here ever revokes one. */
     @Mock
     private FileCategoryLinkRepository categoryRepository;
 
-    /** The blanks a master attached to a request - the third source of uses and the sixth read (ADR-15 §1). */
+    /** The blanks a master attached to a request - the third source of uses and the sixth read. */
     @Mock
     private TaskFileRepository taskFileRepository;
 
-    /** The fifth way a file is reachable: it was handed in to a task of a table the actor runs (ADR-15 §1). */
+    /** The fifth way a file is reachable: it was handed in to a task of a table the actor runs. */
     @Mock
     private SubmissionFileRepository submissionFileRepository;
 
@@ -103,22 +103,22 @@ class FileServiceTest {
     private MasterService masterService;
 
     /**
-     * The veto gate (ADR-09 §4, §5). A mock and not the real one here: this class has no
+     * The veto gate. A mock and not the real one here: this class has no
      * {@code GameTableRepository} to build it from, and what the read rule needs from it is one
      * boolean - which defaults to «not vetoed» and is stubbed in the test that is about the veto.
      */
     @Mock
     private TableVisibilityService tableVisibilityService;
 
-    /** Who belongs to a table, for the sixth way a file is reachable (ADR-15 §1). */
+    /** Who belongs to a table, for the sixth way a file is reachable. */
     @Mock
     private TableRegistrationRepository registrationRepository;
 
-    /** The seventh way a file is reachable, and the fourth source of uses: an application's own file (ADR-13 §1 uso 2, ADR-09 §2). */
+    /** The seventh way a file is reachable, and the fourth source of uses: an application's own file. */
     @Mock
     private RegistrationFileRepository registrationFileRepository;
 
-    /** The actor's platform roles, for deciding which cajones are their own to use (ADR-14 §5). */
+    /** The actor's platform roles, for deciding which categories are their own to use. */
     @Mock
     private UserRoleRepository userRoleRepository;
 
@@ -128,7 +128,7 @@ class FileServiceTest {
             new StorageProperties("target/test-storage", Set.of("application/pdf", "image/png"), Duration.ofDays(90));
 
     /**
-     * The per-file cap, which stopped being configuration and became a setting in F3.5 (ADR-17 §3).
+     * The per-file cap, which is a setting and no longer configuration.
      *
      * <p>Stubbed to the same 2 MB the property used to carry, so every size assertion in this class
      * keeps asserting the same rule against the same number - what moved is where the number comes
@@ -180,8 +180,8 @@ class FileServiceTest {
     }
 
     /**
-     * The legacy's path traversal (M21.5), from the other side: the name is kept verbatim because it
-     * is only ever metadata, and what reaches storage is a key that cannot contain it (ADR-13 §6).
+     * The legacy's path traversal, from the other side: the name is kept verbatim because it
+     * is only ever metadata, and what reaches storage is a key that cannot contain it.
      */
     @Test
     void aTraversalFilenameIsKeptAsMetadataAndNeverReachesStorage() {
@@ -213,7 +213,7 @@ class FileServiceTest {
         verify(storageService, never()).store(anyString(), any());
     }
 
-    /** The cap carries its number, because "too large" without one tells nobody what to do (ADR-23 §3). */
+    /** The cap carries its number, because "too large" without one tells nobody what to do. */
     @Test
     void refusesAFileOverTheCapAndSaysWhatTheCapIs() {
         MockMultipartFile huge = new MockMultipartFile("file", "mapa.png", "image/png", new byte[3 * 1024 * 1024]);
@@ -238,7 +238,7 @@ class FileServiceTest {
                         .isEqualTo("FILE_CANNOT_SELF_PUBLISH"));
     }
 
-    /** ADR-13 §3's first lever: the same sheet uploaded twice is one row and one blob. */
+    /** The first deduplication lever: the same sheet uploaded twice is one row and one blob. */
     @Test
     void recognisesContentTheSamePersonAlreadyUploadedAndDoesNotStoreItTwice() {
         User owner = persistedUser("player-1");
@@ -251,8 +251,8 @@ class FileServiceTest {
         var response = fileService().upload(pdf("otra-copia.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-1");
 
         assertThat(response.file().id()).isEqualTo("file-1");
-        // ADR-13 §4: the caller has to be able to tell this apart from a fresh write, which is what turns
-        // the cheapest lever of ADR-13 §3 into something the person who triggered it can actually see.
+        // The caller has to be able to tell this apart from a fresh write, which is what turns
+        // the cheapest lever into something the person who triggered it can actually see.
         assertThat(response.deduplicated()).isTrue();
         verify(storageService, never()).store(anyString(), any());
         verify(fileRepository, never()).save(any(StoredFile.class));
@@ -276,11 +276,11 @@ class FileServiceTest {
         verify(storageService).store(anyString(), any());
     }
 
-    // ---------------------------------------------------------------- whose cajón is whose (ADR-14 §5)
+    // ---------------------------------------------------------------- whose category is whose
 
-    /** A plain member of the community gets the two cajones their own flows fill, and nothing else. */
+    /** A plain member of the community gets the two categories their own flows fill, and nothing else. */
     @Test
-    void aPlayerGetsOnlyThePlayerSideCajones() {
+    void aPlayerGetsOnlyThePlayerSideCategories() {
         givenRoles("player-1", PlatformRole.PLAYER);
 
         assertThat(fileService().personalCategoriesOf("player-1"))
@@ -288,22 +288,22 @@ class FileServiceTest {
     }
 
     /**
-     * <b>A master who does not hold {@code Player} sees only the master-side cajones</b> (ADR-14 §5).
+     * <b>A master who does not hold {@code Player} sees only the master-side categories</b>.
      *
      * <p>The rule follows the roles and never assumes them. In production nearly everybody holds
-     * {@code Player} too, because every account is created with it (ADR-05 §1) - but "nearly everybody" is
+     * {@code Player} too, because every account is created with it - but "nearly everybody" is
      * not "everybody", and an account without it has to be told the truth rather than offered a
-     * cajón no flow of theirs could ever fill.
+     * category no flow of theirs could ever fill.
      */
     @Test
-    void aMasterWithoutThePlayerRoleGetsOnlyTheMasterSideCajones() {
+    void aMasterWithoutThePlayerRoleGetsOnlyTheMasterSideCategories() {
         givenRoles("master-1", PlatformRole.MASTER);
 
         assertThat(fileService().personalCategoriesOf("master-1"))
                 .containsExactly(FileCategory.TableMaterial, FileCategory.MasterRequest);
     }
 
-    /** Holding both accumulates, which is the ordinary case in production (ADR-05 §1). */
+    /** Holding both accumulates, which is the ordinary case in production. */
     @Test
     void holdingBothRolesGetsAllFour() {
         givenRoles("both-1", PlatformRole.PLAYER, PlatformRole.MASTER);
@@ -316,9 +316,9 @@ class FileServiceTest {
                         FileCategory.PlayerSubmission);
     }
 
-    /** Running a table opens the master side by the row in {@code masters}, without the role (ADR-06 §4). */
+    /** Running a table opens the master side by the row in {@code masters}, without the role. */
     @Test
-    void runningATableOpensTheMasterSideCajonesEvenWithoutTheRole() {
+    void runningATableOpensTheMasterSideCategoriesEvenWithoutTheRole() {
         givenRoles("assigned-1");
         when(masterService.runsAnyTable("assigned-1")).thenReturn(true);
 
@@ -327,13 +327,13 @@ class FileServiceTest {
     }
 
     /**
-     * {@code Announcement} is nobody's own, whoever is asking (ADR-14 §5).
+     * {@code Announcement} is nobody's own, whoever is asking.
      *
      * <p>Not a permission: an announcement is the community's by definition and lives only in the
      * platform's library, where an admin puts it there by publishing.
      */
     @Test
-    void announcementIsNeverSomebodysOwnCajon() {
+    void announcementIsNeverSomebodysOwnCategory() {
         givenRoles("admin-1", PlatformRole.PLAYER, PlatformRole.MASTER, PlatformRole.ADMIN);
 
         assertThat(fileService().personalCategoriesOf("admin-1")).doesNotContain(FileCategory.Announcement);
@@ -341,15 +341,15 @@ class FileServiceTest {
 
     /** An account that is neither gets nothing, and that is an answer rather than a failure. */
     @Test
-    void anAccountThatNeitherPlaysNorRunsTablesHasNoCajonOfItsOwn() {
+    void anAccountThatNeitherPlaysNorRunsTablesHasNoCategoryOfItsOwn() {
         givenRoles("admin-only-1", PlatformRole.ADMIN);
 
         assertThat(fileService().personalCategoriesOf("admin-only-1")).isEmpty();
     }
 
-    /** The rule is the service's and not the screen's: a request naming another cajón is refused. */
+    /** The rule is the service's and not the screen's: a request naming another category is refused. */
     @Test
-    void refusesAnUploadFiledUnderACajonThatIsNotTheirs() {
+    void refusesAnUploadFiledUnderACategoryThatIsNotTheirs() {
         User owner = persistedUser("player-1");
         when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
         givenRoles("player-1", PlatformRole.PLAYER);
@@ -363,9 +363,9 @@ class FileServiceTest {
         verify(storageService, never()).store(anyString(), any());
     }
 
-    /** No cajón declared is the normal case, and it never trips the check: the link classifies it. */
+    /** No category declared is the normal case, and it never trips the check: the link classifies it. */
     @Test
-    void anUploadFromInsideAFlowDeclaresNoCajonAndIsNotRefused() {
+    void anUploadFromInsideAFlowDeclaresNoCategoryAndIsNotRefused() {
         User owner = persistedUser("player-1");
         when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
         when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
@@ -381,7 +381,7 @@ class FileServiceTest {
     // ---------------------------------------------------------------- the owner's own list
 
     /**
-     * The owner's list merges both sources of uses into one row, in two queries (ADR-14 §3).
+     * The owner's list merges both sources of uses into one row, in two queries.
      *
      * <p>Two matters as much as the merge does. The whole reason the origin is derived rather than
      * stored is that deriving it stays honest when a file is used in more than one way - and that is
@@ -411,7 +411,7 @@ class FileServiceTest {
         verify(submissionFileRepository).findUsagesByFileIds(List.of("file-1"));
     }
 
-    /** A file nobody uses reports no uses - which is the owner's warning that ADR-13 §3 has its eye on it. */
+    /** A file nobody uses reports no uses - which is the owner's warning that the purge has its eye on it. */
     @Test
     void reportsNoUsesForAFileNothingPointsAt() {
         User owner = persistedUser("player-1");
@@ -426,7 +426,7 @@ class FileServiceTest {
     }
 
     /**
-     * Each use says how the reader is joined to its table (ADR-14 §3): a live master row, an accepted
+     * Each use says how the reader is joined to its table: a live master row, an accepted
      * registration, or neither - and master wins when both hold. Two reads for the whole page.
      */
     @Test
@@ -481,7 +481,7 @@ class FileServiceTest {
         assertThat(file.getLastUsedAt()).isNotNull();
     }
 
-    /** A master reads everything on their own table - and it is the row in masters that says so (ADR-06 §4). */
+    /** A master reads everything on their own table - and it is the row in masters that says so. */
     @Test
     void whoeverRunsTheTableReadsEvenAPrivateAttachment() {
         StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.SingleUse);
@@ -517,16 +517,16 @@ class FileServiceTest {
     }
 
     /**
-     * <b>Read paths 6 and 6b of F3.4</b>, and the bug ADR-14 §2 anticipated in writing: the vetoed person
+     * <b>The veto reaches the file download</b>: the vetoed person
      * who cannot see the table but <em>does download its file</em>.
      *
-     * <p>It was real. Until F3.4 the fourth way's condition was {@code !link.isPrivate()} alone, so a
+     * <p>It was a real bug. The fourth way's condition used to be {@code !link.isPrivate()} alone, so a
      * shared attachment was opened by <b>any authenticated person</b> - the vetoed included. The fourth
-     * way is now «a table shares it <b>and you may see that table</b>», asked through the same
+     * way is now "a table shares it <b>and you may see that table</b>", asked through the same
      * {@code TableVisibilityService} that answers {@code GET /game-tables/{id}} rather than through a
      * second copy of the question.
      *
-     * <p>And it answers 404, just like the table: the file stops existing for that person (ADR-09 §4).
+     * <p>And it answers 404, just like the table: the file stops existing for that person.
      */
     @Test
     void aVetoedPersonCannotDownloadWhatTheTableShares() {
@@ -544,7 +544,7 @@ class FileServiceTest {
     /**
      * And the veto is <b>per table</b> and not per file: if another table the person is not vetoed on
      * shares the same file, they keep reading it through that one. It is the difference between hiding
-     * a table and punishing somebody across the whole platform (ADR-09 §4).
+     * a table and punishing somebody across the whole platform.
      */
     @Test
     void theVetoIsPerTableAndNotPerFile() {
@@ -564,7 +564,7 @@ class FileServiceTest {
 
     /**
      * A master of the table reads it anyway, and is not even asked about the veto: pertenencia and
-     * having applied are disjoint sets (ADR-18 §4), so the question has no answer to give.
+     * having applied are disjoint sets, so the question has no answer to give.
      */
     @Test
     void aMasterIsNeverAskedAboutAVetoOnTheirOwnTable() {
@@ -664,7 +664,7 @@ class FileServiceTest {
                 .isInstanceOf(ForbiddenActionException.class);
     }
 
-    /** Deleting marks; the bytes wait for the platform owner, which is F5 (ADR-03 §7, ADR-13 §8). */
+    /** Deleting marks; the bytes wait for the platform owner to purge them. */
     @Test
     void deletingMarksTheRowAndLeavesTheBytesAlone() {
         StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
@@ -680,12 +680,12 @@ class FileServiceTest {
     // ---------------------------------------------------------------- publishing
 
     /**
-     * Uploading into the platform's library is publishing (ADR-14 §7): the file comes out {@code Public},
-     * in the cajones asked for, and still the uploader's. Content the admin already had comes back as
+     * Uploading into the platform's library is publishing: the file comes out {@code Public},
+     * in the categories asked for, and still the uploader's. Content the admin already had comes back as
      * that row - which is also how an unpublished file returns to the library.
      */
     @Test
-    void anAdminUploadIsPublishedIntoTheCajonesChosenBeforehand() {
+    void anAdminUploadIsPublishedIntoTheCategoriesChosenBeforehand() {
         User admin = persistedUser("admin-1");
         StoredFile existing = persistedFile("file-1", admin, FileType.Private);
         when(userRepository.findById("admin-1")).thenReturn(Optional.of(admin));
@@ -707,11 +707,11 @@ class FileServiceTest {
     }
 
     /**
-     * The two player-side cajones are refused before a byte is stored (ADR-14 §4, §7): they hold people's
+     * The two player-side categories are refused before a byte is stored: they hold people's
      * answers, and a blank offered to everybody is not one.
      */
     @Test
-    void refusesToUploadIntoAPlayerSideCajonAndStoresNothing() {
+    void refusesToUploadIntoAPlayerSideCategoryAndStoresNothing() {
         assertThatThrownBy(() -> fileService().uploadToLibrary(
                         pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.PlayerSubmission), true), "admin-1"))
                 .isInstanceOf(InvalidRequestException.class)
@@ -722,14 +722,14 @@ class FileServiceTest {
 
     /** The library has no player-side shelf, so asking it for one is a bad request, not an empty page. */
     @Test
-    void theLibraryRefusesToBeFilteredByAPlayerSideCajon() {
+    void theLibraryRefusesToBeFilteredByAPlayerSideCategory() {
         assertThatThrownBy(() -> fileService()
                         .listForAdmin(null, List.of(), FileCategory.PlayerApplication, PageRequest.of(0, 20)))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
     /**
-     * ADR-14 §7: hiding keeps the file in the library - it used to go back to its uploader as a Private,
+     * Hiding keeps the file in the library - it used to go back to its uploader as a Private,
      * and an admin with no library of their own lost it for good. The first publication is kept: it
      * is what tells a hidden file from one never published.
      */
@@ -745,7 +745,7 @@ class FileServiceTest {
 
         assertThat(file.getFileType()).isEqualTo(FileType.Library);
         assertThat(response.publishedAt()).isEqualTo(firstPublished);
-        // The cajones stay: hiding says the platform no longer offers the file, not what it is (ADR-14 §4).
+        // The categories stay: hiding says the platform no longer offers the file, not what it is.
         verify(categoryRepository, never()).delete(any(FileCategoryLink.class));
     }
 
@@ -772,7 +772,7 @@ class FileServiceTest {
     }
 
     /**
-     * Somebody's private file is not the library's to remove (ADR-14 §7): an admin reaches it by acting as
+     * Somebody's private file is not the library's to remove: an admin reaches it by acting as
      * that person, so from here it is simply not there.
      */
     @Test
@@ -784,7 +784,7 @@ class FileServiceTest {
         assertThat(file.getStatus()).isEqualTo(FileStatus.Current);
     }
 
-    /** A published file is the library's, and removing it is still a mark (ADR-03 §7, ADR-13 §8). */
+    /** A published file is the library's, and removing it is still a mark. */
     @Test
     void anAdminRemovesAPublishedFileByMarkingIt() {
         StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
@@ -796,7 +796,7 @@ class FileServiceTest {
         verify(storageService, never()).delete(anyString());
     }
 
-    /** ADR-14 §7: an upload that does not ask to be published waits in the library, offered to nobody. */
+    /** An upload that does not ask to be published waits in the library, offered to nobody. */
     @Test
     void anAdminUploadLeftUnpublishedWaitsInTheLibrary() {
         User admin = persistedUser("admin-1");
@@ -811,7 +811,7 @@ class FileServiceTest {
         verify(categoryRepository).save(any(FileCategoryLink.class));
     }
 
-    /** ADR-14 §7: re-uploading a published file without publishing never hides it - hiding is its own act. */
+    /** Re-uploading a published file without publishing never hides it - hiding is its own act. */
     @Test
     void reUploadingAPublishedFileWithoutPublishingLeavesItPublished() {
         User admin = persistedUser("admin-1");
@@ -824,11 +824,11 @@ class FileServiceTest {
         assertThat(existing.getFileType()).isEqualTo(FileType.Public);
     }
 
-    /** ADR-14 §7: publishing stamps the first publication once; publishing a hidden file again keeps it. */
+    /** Publishing stamps the first publication once; publishing a hidden file again keeps it. */
     @Test
     void publishingStampsTheFirstPublicationOnce() {
         StoredFile fresh = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
-        givenInLibraryWithCajon(fresh, FileCategory.TableMaterial);
+        givenInLibraryWithCategory(fresh, FileCategory.TableMaterial);
 
         fileService().publish("file-1");
 
@@ -838,16 +838,16 @@ class FileServiceTest {
         LocalDateTime first = LocalDateTime.now().minusDays(10);
         StoredFile hidden = persistedFile("file-2", persistedUser("admin-1"), FileType.Library);
         hidden.setPublishedAt(first);
-        givenInLibraryWithCajon(hidden, FileCategory.Announcement);
+        givenInLibraryWithCategory(hidden, FileCategory.Announcement);
 
         fileService().publish("file-2");
 
         assertThat(hidden.getPublishedAt()).isEqualTo(first);
     }
 
-    /** A file that says no flow it is for is not offered anywhere (M24.1, ADR-14 §4). */
+    /** A file that says no flow it is for is not offered anywhere. */
     @Test
-    void refusesToPublishAFileWithNoCajon() {
+    void refusesToPublishAFileWithNoCategory() {
         StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
         when(categoryRepository.findByFileIds(List.of("file-1"))).thenReturn(List.of());
@@ -860,11 +860,11 @@ class FileServiceTest {
     }
 
     /**
-     * ADR-14 §7: while unpublished, what a file of the library is can be corrected - its declared cajones
-     * are replaced. Published, it is refused: masters are choosing it under the cajón it has.
+     * While unpublished, what a file of the library is can be corrected - its declared categories
+     * are replaced. Published, it is refused: masters are choosing it under the category it has.
      */
     @Test
-    void theCajonOfALibraryFileChangesOnlyWhileUnpublished() {
+    void theCategoryOfALibraryFileChangesOnlyWhileUnpublished() {
         StoredFile waiting = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(waiting));
         when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
@@ -884,7 +884,7 @@ class FileServiceTest {
                         .isEqualTo("FILE_ALREADY_PUBLISHED"));
     }
 
-    /** ADR-14 §7: a file waiting in the library is the platform's - its uploader cannot rename or remove it. */
+    /** A file waiting in the library is the platform's - its uploader cannot rename or remove it. */
     @Test
     void theUploaderCannotChangeOrRemoveAFileWaitingInTheLibrary() {
         StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
@@ -905,8 +905,8 @@ class FileServiceTest {
         when(tableFileRepository.findUsagesByFileIds(List.of(existing.getId()))).thenReturn(List.of());
     }
 
-    /** Stubs a live file of the library that is already filed under one cajón. */
-    private void givenInLibraryWithCajon(StoredFile file, FileCategory category) {
+    /** Stubs a live file of the library that is already filed under one category. */
+    private void givenInLibraryWithCategory(StoredFile file, FileCategory category) {
         when(fileRepository.findByIdAndStatus(file.getId(), FileStatus.Current)).thenReturn(Optional.of(file));
         when(categoryRepository.findByFileIds(List.of(file.getId())))
                 .thenReturn(List.of(new FileCategoryLink(file.getId(), category)));
@@ -1086,7 +1086,7 @@ class FileServiceTest {
      * The roles this person holds <b>right now</b>.
      *
      * <p>{@code findActiveRoleNames} and not {@code findAllGrants}: the second returns revoked rows
-     * too, and reading it is what handed a master the player-side cajones after their {@code Player}
+     * too, and reading it is what handed a master the player-side categories after their {@code Player}
      * role had been taken away.
      */
     private void givenRoles(String userId, PlatformRole... granted) {

@@ -7,7 +7,7 @@ import { runnableTableBody } from './helpers/tableApi'
  * Seeking players on a running table, end to end against the real backend.
  *
  * A table in progress with a free seat can open a call for players: it appears in the explorer with a
- * «Busca jugadores» chip, a newcomer applies, the master accepts, and when that acceptance fills the
+ * "seeking players" chip, a newcomer applies, the master accepts, and when that acceptance fills the
  * table the call turns itself off - so the explorer stops offering a table with no seat left, with
  * nobody having to remember to close it.
  *

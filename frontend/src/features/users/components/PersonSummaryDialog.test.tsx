@@ -21,7 +21,7 @@ vi.mock('../api/useUserProfile', () => ({
 
 describe('PersonSummaryDialog', () => {
   /**
-   * ADR-06 §8: the master's card is the general picture - who they are on the server and how many tables
+   * The master's card is the general picture - who they are on the server and how many tables
    * they saw through. Their standing and roles are the admin's record, not this.
    */
   it('shows the Discord user, the name and the finished tables, and nothing about the account', () => {

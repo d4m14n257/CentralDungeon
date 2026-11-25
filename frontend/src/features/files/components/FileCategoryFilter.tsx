@@ -13,16 +13,16 @@ interface FileCategoryFilterProps {
   onChange: (value: FileCategory | null) => void
   /** Extra classes for the caller's layout. */
   className?: string
-  /** Which cajones to offer, or undefined for all five. */
+  /** Which categories to offer, or undefined for all five. */
   options?: readonly FileCategory[]
 }
 
 /**
- * Narrowing a list of files to one cajón (ADR-14 §4).
+ * Narrowing a list of files to one category.
  *
  * **A row of toggles and not a `<Select>`**, because the whole set is five short values and the
  * point is to see what is on offer without opening anything — the same reason a filter bar beats a
- * dropdown whenever the options fit on one line (skill `diseno` §5.b).
+ * dropdown whenever the options fit on one line.
  *
  * Selecting the active one clears it, so there is no separate "all" button competing with the five
  * real answers, and no state the person can get stuck in.
@@ -30,7 +30,7 @@ interface FileCategoryFilterProps {
  * @param props.value     the category being shown, or null for all of them
  * @param props.onChange  called with the new category, or null when cleared
  * @param props.className extra classes for the caller's layout
- * @param props.options   which cajones to offer, or undefined for all five
+ * @param props.options   which categories to offer, or undefined for all five
  */
 export function FileCategoryFilter({ value, onChange, className, options }: FileCategoryFilterProps) {
   const { t } = useTranslation('files')

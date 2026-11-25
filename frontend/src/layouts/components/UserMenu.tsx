@@ -21,9 +21,9 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/providers/AuthProvider'
 
 /**
- * Avatar, language, theme and sign out (skill `diseno` §5, inventario de compuestos).
+ * Avatar, language, theme and sign out.
  *
- * Language sits next to theme because it is the same kind of thing (ADR-23 §2): a preference of the
+ * Language sits next to theme because it is the same kind of thing: a preference of the
  * person and not of the account, chosen once and remembered, with no server round trip.
  */
 export function UserMenu({ displayName }: { displayName: string | null }) {
@@ -34,11 +34,11 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
   const { resolvedTheme, setTheme } = useTheme()
   const { language, setLanguage } = useLanguage()
 
-  // Player or master (ADR-14 §5): the two roles whose flows fill a library. It reads the profile the
+  // Player or master: the two roles whose flows fill a library. It reads the profile the
   // header has already loaded for the context chip, so the menu costs no request of its own.
   const { hasPersonalLibrary } = useHasPersonalLibrary()
 
-  // Before onboarding there is no name to show yet (ADR-10 §4); the avatar cannot be left empty.
+  // Before onboarding there is no name to show yet; the avatar cannot be left empty.
   const label = displayName ?? t('nav.accountFallback')
   const initials = label
     .split(' ')
@@ -70,22 +70,22 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel className="truncate">{label}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {/* Name, country, roles and attendance (ADR-10 §5) — the entry point the sitemap otherwise left
+        {/* Name, country, roles and attendance — the entry point the sitemap otherwise left
             unreachable. In the account menu and not in a context's nav because it belongs to the
             person, the same reason `mySchedule` and `myFiles` are here and not in a context tab. */}
         <DropdownMenuItem onSelect={() => void navigate(profilePath())}>
           <CircleUser className="size-4" />
           {t('nav.myProfile')}
         </DropdownMenuItem>
-        {/* The reader's own week (ADR-08 §6). In the account menu and not in a context's nav, because it
+        {/* The reader's own week. In the account menu and not in a context's nav, because it
             belongs to the person: it is the one screen where what they run and what they play meet. */}
         <DropdownMenuItem onSelect={() => void navigate(mySchedulePath())}>
           <CalendarDays className="size-4" />
           {t('nav.mySchedule')}
         </DropdownMenuItem>
-        {/* And their own library, beside it and for the same reason (ADR-13 §2, ADR-14 §3): what somebody
+        {/* And their own library, beside it and for the same reason: what somebody
             uploaded as a player and as a master is one library, not one per context.
-            **Absent for whoever is neither player nor master** (ADR-14 §5): uploading happens inside
+            **Absent for whoever is neither player nor master**: uploading happens inside
             those two flows, so an account that is only an admin or the owner has nothing to find here
             — what the platform publishes is `/admin/files`, a different screen. The roles are
             cumulative, so an admin who also plays keeps the entry: what is asked is whether they hold
@@ -96,7 +96,7 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
             {t('nav.myFiles')}
           </DropdownMenuItem>
         )}
-        {/* The support screen (F3.2): where somebody who did not find their answer asks an admin
+        {/* The support screen: where somebody who did not find their answer asks an admin
             directly. In the account menu because it belongs to the person and to no context — and
             offered to everybody, since needing help is not a role. Without an entry here `/help`
             would be a route only a typed URL could reach. */}
@@ -105,8 +105,8 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
           {t('nav.help')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {/* Each language names itself — "English", never "Inglés": somebody looking for their own
-            language does not necessarily read the one currently on screen (ADR-23 §2). */}
+        {/* Each language names itself — "English", never its translation into the active language: somebody looking for their own
+            language does not necessarily read the one currently on screen. */}
         <DropdownMenuLabel className="text-fg-muted text-xs font-normal">
           <span className="flex items-center gap-2">
             <Languages className="size-4" />

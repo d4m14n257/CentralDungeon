@@ -19,28 +19,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Whether a stretch of the week is already taken for somebody. The whole of ADR-08 §2 is decided here,
- * and the four rules that decision names are enforced by the two services that call this one:
+ * Whether a stretch of the week is already taken for somebody. The whole schedule clash decision is made here,
+ * and its four rules are enforced by the services that call this one:
  *
  * <ul>
- *   <li><b>R1</b> - a master cannot run two live tables with overlapping agendas. {@code
+ *   <li><b>Master clash</b> - a master cannot run two live tables with overlapping agendas. {@code
  *       TableScheduleService} asks before saving an agenda.
- *   <li><b>R2</b> - nobody can apply to a table clashing with one they already play at. {@code
+ *   <li><b>Apply clash</b> - nobody can apply to a table clashing with one they already play at. {@code
  *       RegistrationService} asks before creating the application.
- *   <li><b>R3</b> - a master cannot accept a candidate who by now plays at a clashing table. The
+ *   <li><b>Accept clash</b> - a master cannot accept a candidate who by now plays at a clashing table. The
  *       same question, asked again at accept time, because the answer can have changed in between.
- *   <li><b>R4</b> - accepting somebody <em>notifies</em> them about their other pending
+ *   <li><b>Clash notification</b> - accepting somebody <em>notifies</em> them about their other pending
  *       applications that now clash. It does not reject them: until they are accepted somewhere
- *       there is no commitment, and choosing is theirs (ADR-15 §2, ADR-08 §2).
+ *       there is no commitment, and choosing is theirs.
  * </ul>
  *
  * <p><b>Running and playing weigh the same.</b> A person's commitments are their tables as a master
- * and their tables as a player, because they are one person and cannot be in two places at once
- * (ADR-08 §2).
+ * and their tables as a player, because they are one person and cannot be in two places at once.
  *
  * <p><b>{@code Pause} does not reserve a slot.</b> A paused table freezes its agenda and its
- * sessions do not happen (ADR-07 §2), so it is left out of {@link #COMMITTING_STATUSES} - and re-checked
- * when the table resumes, which is F1.3's job.
+ * sessions do not happen, so it is left out of {@link #COMMITTING_STATUSES} - and re-checked
+ * when the table resumes.
  *
  * <p>A table with no {@code duration} or no live slot never clashes with anything: there is no
  * interval to compare. That is a deliberate answer and not an oversight - a draft that has not said
@@ -54,7 +53,7 @@ public class ScheduleConflictService {
      *
      * <p>Drafts count: two drafts of the same master with the same agenda are a clash the moment
      * they exist, and letting both through only to have an admin approve both would move the problem
-     * to a place where nobody is looking for it. {@code Pause} does not count (ADR-07 §2, ADR-08 §2), and
+     * to a place where nobody is looking for it. {@code Pause} does not count, and
      * neither does anything past the end of a table's life.
      */
     private static final List<GameTableStatus> COMMITTING_STATUSES = List.of(
@@ -68,7 +67,7 @@ public class ScheduleConflictService {
     /** The agendas being compared. */
     private final TableScheduleRepository scheduleRepository;
 
-    /** The tables somebody runs - one half of their commitments (ADR-08 §2). */
+    /** The tables somebody runs - one half of their commitments. */
     private final GameTableRepository gameTableRepository;
 
     /** The tables somebody plays at - the other half. */
@@ -107,7 +106,7 @@ public class ScheduleConflictService {
     /**
      * One slot as the stretch it occupies, or null when it occupies nothing.
      *
-     * <p>The length is the slot's own since ADR-08 §1: a table can run three hours midweek and six on a
+     * <p>The length is the slot's own: a table can run three hours midweek and six on a
      * Saturday, and a slot that never got a duration claims no interval - which is the same answer
      * the table-wide column used to give when it was null.
      */
@@ -118,9 +117,9 @@ public class ScheduleConflictService {
 
     /**
      * The first table the person is already committed to that overlaps the given stretches. The
-     * question behind R1, R2 and R3.
+     * question behind the master, apply and accept clash rules.
      *
-     * @param userId         whose commitments to check, always from the token (ADR-05 §5)
+     * @param userId         whose commitments to check, always from the token
      * @param excludeTableId the table being edited, left out so a table never clashes with itself.
      *                       Null when what is being checked does not exist yet
      * @param intervals      the stretches being claimed. An empty list never clashes
@@ -144,7 +143,7 @@ public class ScheduleConflictService {
      * The same question as {@link #findClash}, asked about a table that already exists: does what
      * this table plays overlap what the person is already committed to?
      *
-     * @param userId whose commitments to check, always from the token (ADR-05 §5)
+     * @param userId whose commitments to check, always from the token
      * @param table  the table being applied to or accepted into
      * @return the clashing table, or null when the person is free
      */
@@ -155,9 +154,9 @@ public class ScheduleConflictService {
 
     /**
      * Which of a page of tables clash with what the person is already committed to - the derived
-     * field the explorer's cards show as a warning (ADR-08 §2).
+     * field the explorer's cards show as a warning.
      *
-     * <p>It is computed <b>for the actor of the token and for nobody else</b> (ADR-05 §5): there is no
+     * <p>It is computed <b>for the actor of the token and for nobody else</b>: there is no
      * parameter here that could name another person, which is what makes the field impossible to ask
      * for on somebody else's behalf.
      *
@@ -196,7 +195,7 @@ public class ScheduleConflictService {
     }
 
     /**
-     * Whether two tables' agendas overlap. What R4 asks about each of a freshly accepted player's
+     * Whether two tables' agendas overlap. What the clash notification asks about each of a freshly accepted player's
      * other pending applications.
      *
      * @param first  one table
@@ -209,8 +208,8 @@ public class ScheduleConflictService {
     }
 
     /**
-     * Whether two sets of slots of the <b>same</b> table overlap each other - the {@code 400} of
-     * ADR-08 §2, checked before anything is saved.
+     * Whether two sets of slots of the <b>same</b> table overlap each other - the {@code 400}
+     * checked before anything is saved.
      *
      * <p>It is a different failure from a clash with another table: nobody else is involved, the
      * agenda simply does not describe a week that can be played, so it is malformed input rather
@@ -231,16 +230,16 @@ public class ScheduleConflictService {
     }
 
     /**
-     * The reader's whole week, as tables and the stretches they occupy (ADR-08 §6).
+     * The reader's whole week, as tables and the stretches they occupy.
      *
      * <p>The same commitments {@link #findClash} measures, read instead of enforced. That is the
      * point: what the grid draws is what the rule compares, so a gap on screen is a gap the server
      * will accept. Building it from a second query would let the two drift, and the first anybody
      * would notice is a refusal over a slot that looked free.
      *
-     * <p><b>It answers for the actor and nobody else</b> (ADR-05 §5): the id comes from the token, and
+     * <p><b>It answers for the actor and nobody else</b>: the id comes from the token, and
      * there is no parameter here that could name another person - somebody else's week is not
-     * public, and ADR-10 §2's visibility rules would have to be answered first.
+     * public, and the profile visibility rules would have to be answered first.
      *
      * <p>A table with no agenda or no duration comes back with <b>no blocks</b> rather than being
      * dropped: it is still something the reader is committed to, and a screen that silently omitted

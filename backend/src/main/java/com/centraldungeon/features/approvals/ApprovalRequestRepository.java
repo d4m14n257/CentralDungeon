@@ -32,7 +32,7 @@ public interface ApprovalRequestRepository
      * answers to one request - and when the two answers differ, a row that says {@code Rejected} over
      * somebody who is now a Master.
      *
-     * <p><b>The locking read is also the status read, and that is the whole design</b> (ADR-06 §2). A lock
+     * <p><b>The locking read is also the status read, and that is the whole design</b>. A lock
      * taken first and followed by a plain {@code findById} would be wrong in the way that is hardest
      * to see: under MySQL's REPEATABLE READ the waiting transaction wakes up and answers from the
      * snapshot it opened before it started waiting, cheerfully reading {@code Pending} on a row the
@@ -65,13 +65,13 @@ public interface ApprovalRequestRepository
     /**
      * Whether an open request of this type already exists <b>about this entity</b>.
      *
-     * <p>The same guard as the one above, asked the other way round, and F3.4 needed both. For the
-     * three types of F3.2 the entity <em>is</em> the requester, so «one pending per type and per
-     * person» said everything there was to say. The two types F3.4 added are about something else,
+     * <p>The same guard as the one above, asked the other way round, and both are needed. For the
+     * three person-centred types the entity <em>is</em> the requester, so "one pending per type and per
+     * person" says everything there is to say. The two types about something else (a table, an application)
      * and asking by requester there refuses the second legitimate case: a master of two running
      * tables asking to pause the second one, and a {@code Secondary} asking to veto a second person
-     * while the first request is still open. The duplicate worth stopping is «this table is already
-     * waiting» and «somebody already asked about this person», which is this query.
+     * while the first request is still open. The duplicate worth stopping is "this table is already
+     * waiting" and "somebody already asked about this person", which is this query.
      *
      * @param requestType the kind of request
      * @param entityId    what the request is about - a table, or an application
@@ -115,16 +115,16 @@ public interface ApprovalRequestRepository
 
     /**
      * This source's contribution to the shared admin tray: the requests nobody has answered that are
-     * either free or already the reader's (ADR-16 §5).
+     * either free or already the reader's.
      *
      * <p><b>{@code claimed_by is null or claimed_by = :actorId} is the whole reservation rule seen
-     * from the reading end</b> (arquitectura §4.5): an item somebody took disappears from everybody
+     * from the reading end</b>: an item somebody took disappears from everybody
      * else's tray and stays in theirs, so two admins never start on the same thing. It is written in
      * the {@code WHERE} and not filtered afterwards, both because the index
      * {@code ix_ar_pending (status, claimed_by, created_at)} exists for exactly this question and
      * because a filter applied after a capped read would silently drop rows off the bottom.
      *
-     * <p>Oldest first, which is the tray's order and not a caller's choice (ADR-20 §4), and bounded by the
+     * <p>Oldest first, which is the tray's order and not a caller's choice, and bounded by the
      * caller: the tray merges its sources in memory, so each of them arrives with a ceiling.
      *
      * <p><b>Both people come with the row, and that is not an optimization detail.</b> The service
@@ -165,9 +165,9 @@ public interface ApprovalRequestRepository
     /**
      * The requests of one type, in one status, about a known set of entities.
      *
-     * <p>What {@code GET /game-tables/{id}/ban-requests} reads (ADR-09 §5). The entity ids are resolved
+     * <p>What {@code GET /game-tables/{id}/ban-requests} reads. The entity ids are resolved
      * first - the applications of that table - and handed in, because {@code entity_id} is a plain
-     * column with no foreign key behind it (ADR-16 §2) and therefore nothing to join through. It is the
+     * column with no foreign key behind it and therefore nothing to join through. It is the
      * price of the polymorphic reference, paid where it is visible rather than hidden in a native
      * query.
      *
@@ -182,7 +182,7 @@ public interface ApprovalRequestRepository
             ApprovalRequestType requestType, ApprovalStatus status, Collection<String> entityIds);
 
     /**
-     * The reservations that went stale - what the release job hands back (ADR-16 §5).
+     * The reservations that went stale - what the release job hands back.
      *
      * <p><b>Still-unresolved rows only.</b> A request that was answered keeps whatever
      * {@code claimed_by} it had as a record of who was working on it, and it is no longer in anybody's

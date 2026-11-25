@@ -2,7 +2,7 @@
  * Where an application stands. Four of them: `Deleted` exists in the database as a soft-delete
  * marker but no response ever carries it, so the union deliberately does not mirror it.
  *
- * **`Blocked` is the veto** (ADR-09 §4, §5, F3.4), and unlike `Deleted` it **does** travel — to the
+ * **`Blocked` is the veto**, and unlike `Deleted` it **does** travel — to the
  * masters of the table, and to nobody else. Whoever is vetoed stops seeing the table at all: the
  * explorer omits it, the detail answers `404` rather than `403`, and even the files they used to
  * download do. A status they could read back would be the rendija that undoes all of it.
@@ -13,12 +13,12 @@
 export type RegistrationStatus = 'Candidate' | 'Player' | 'Rejected' | 'Blocked'
 
 /**
- * A file attached to an application — a character sheet, most commonly (ADR-13 §5).
+ * A file attached to an application — a character sheet, most commonly.
  *
- * There is no endpoint of its own to read these: F2.2's contract nests them inside
+ * There is no endpoint of its own to read these: the API contract nests them inside
  * `RegistrationResponse` itself, in the same `{fileId, name, mimeType, sizeBytes}` shape every other
  * feature's file rows use — `SubmittedFile` in `features/tasks`, `SharedFile` in `types/file.ts`. A
- * fourth copy of that shape here would be exactly the kind of hand-redeclared variant §3.2 forbids,
+ * fourth copy of that shape here would be exactly the kind of hand-redeclared variant that is forbidden,
  * but it cannot be one of those three: it is a different response, from a different feature, and
  * `Pick`/`Omit` only derive from a type already in scope.
  */
@@ -42,28 +42,27 @@ export interface Registration {
   /** The master's own words, shown exactly as typed. Null when the system did the rejecting. */
   rejectionJustification: string | null
   /**
-   * The code of a rejection the application wrote itself, today only `TABLE_FULL` (ADR-09 §3). Rendered in
-   * the reader's language (ADR-23 §3). Null whenever a person did the rejecting.
+   * The code of a rejection the application wrote itself, today only `TABLE_FULL`. Rendered in
+   * the reader's language. Null whenever a person did the rejecting.
    */
   rejectionReasonCode: string | null
   /**
    * What the applicant attached, most commonly a character sheet. Empty when nothing was attached —
-   * attaching is optional (ADR-13 §5). Neither the master's candidate list nor the applicant's own "my
-   * applications" screen can ever add to or remove from this after the application is sent (ADR-13 §5,
-   * ADR-09 §2): there is no `PUT` on a registration and no endpoint to detach one of its files.
+   * attaching is optional. Neither the master's candidate list nor the applicant's own "my
+   * applications" screen can ever add to or remove from this after the application is sent: there is no `PUT` on a registration and no endpoint to detach one of its files.
    */
   attachedFiles: RegistrationFile[]
   /**
-   * Who applied the veto, and when. Both null on every row that is not `Blocked` (ADR-09 §5).
+   * Who applied the veto, and when. Both null on every row that is not `Blocked`.
    *
    * **They travel to the masters of the table and never to the person vetoed**, who by then does not
-   * see the table at all. What they are for is the other half of ADR-09 §5: a veto has to be reversible,
+   * see the table at all. What they are for is the other half of the veto rule: a veto has to be reversible,
    * and reversing one you cannot see the author of is a decision taken blind.
    */
   blockedByName: string | null
   blockedAt: string | null
   /**
-   * The reason that was written down when the veto was applied (ADR-09 §5), or null when the row is not
+   * The reason that was written down when the veto was applied, or null when the row is not
    * vetoed.
    *
    * **It is the point of making the reason obligatory.** A veto is reversible, and reversing one
@@ -76,17 +75,17 @@ export interface Registration {
 /**
  * Mirror of `TablePlayerResponse` — one row of a table's roster, as its masters see it.
  *
- * Derived from {@link Registration} rather than declared again (regla dura 6): it is the same facts
+ * Derived from {@link Registration} rather than declared again: it is the same facts
  * about the same person, minus everything that is about the application rather than about them. A
  * roster, not a queue.
  *
- * **It grew with F3.4, and the veto is why.** Until then a roster was three read-only facts; now it
+ * **It grew with the veto, and that is why.** Before it, a roster was three read-only facts; now it
  * is the screen the veto is applied and lifted from, so it carries what those two acts need:
  *
  * - `registrationId`, because the veto acts on the **application** and not on the person — vetoing
- *   is per table (ADR-09 §4), and the same account may be playing happily at four others.
+ *   is per table, and the same account may be playing happily at four others.
  * - `status`, because a vetoed row **stays in the list**. Dropping it would hide the one row with an
- *   action left on it, and an irreversible veto is exactly what ADR-09 §5 refused to build.
+ *   action left on it, and an irreversible veto is exactly what the veto rule refused to build.
  * - `blockedByName`, `blockedAt` and `blockJustification`, which are what whoever is about to lift
  *   one reads first: whose decision it was, how long ago, and why.
  * - `banRequestedByName` and `banRequestJustification`: a master asks for a veto and an admin decides
@@ -106,9 +105,9 @@ export type TablePlayer = Pick<Registration, 'userId' | 'userName' | 'status' | 
 
 /**
  * What applying sends. The table comes from the URL and the applicant from the session, so this is
- * the note plus whatever was attached (ADR-05 §5).
+ * the note plus whatever was attached.
  *
- * The files travel by id and **already uploaded** (ADR-13 §5, same split as `features/tasks`'
+ * The files travel by id and **already uploaded** (the same split as `features/tasks`'
  * `CreateSubmissionInput`): the review step's confirm is what turns a staged pick into bytes on the
  * server, and this is the shape that goes out once that has happened.
  */
